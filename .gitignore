@@ -1,0 +1,19 @@
+# وابستگی‌ها و ابزارهای محلی
+node_modules/
+vendor/
+package-lock.json
+
+# آرشیوهای ساخت قالب
+*.zip
+*.tar.gz
+
+# فایل‌های سیستم و ویرایشگر
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# گزارش‌ها و کش
+*.log
+.cache/

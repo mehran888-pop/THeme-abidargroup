@@ -1,0 +1,55 @@
+/**
+ * Abidar Group Holding Theme - RTL Stylesheet (v2.0.0)
+ * Automatically loaded by WordPress when language direction is RTL (Persian, Arabic, etc.)
+ */
+
+body.rtl,
+html[dir="rtl"] body {
+	direction: rtl;
+	unicode-bidi: embed;
+	text-align: right;
+	font-family: var(--abidar-font-primary);
+}
+
+html[dir="ltr"] body {
+	direction: ltr;
+	text-align: left;
+}
+
+.rtl .alignleft {
+	float: right;
+	margin-left: 1.5rem;
+	margin-right: 0;
+}
+
+.rtl .alignright {
+	float: left;
+	margin-right: 1.5rem;
+	margin-left: 0;
+}
+
+.rtl .abidar-icon-arrow {
+	transform: scaleX(-1);
+}
+
+.rtl .abidar-btn:hover .abidar-icon-arrow {
+	transform: scaleX(-1) translateX(4px);
+}
+
+html[dir="ltr"] .abidar-btn:hover .abidar-icon-arrow {
+	transform: translateX(4px);
+}
+
+.rtl .abidar-toc-list {
+	border-right: 2px solid var(--abidar-border);
+	border-left: none;
+	padding-right: 16px;
+	padding-left: 0;
+}
+
+html[dir="ltr"] .abidar-toc-list {
+	border-left: 2px solid var(--abidar-border);
+	border-right: none;
+	padding-left: 16px;
+	padding-right: 0;
+}

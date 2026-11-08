@@ -1,0 +1,53 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"useRootPaddingAwareAlignments": true,
+		"layout": {
+			"contentSize": "1320px",
+			"wideSize": "1520px"
+		},
+		"color": {
+			"custom": true,
+			"palette": [
+				{
+					"slug": "abidar-gold",
+					"color": "#D97706",
+					"name": "Abidar Industrial Gold"
+				},
+				{
+					"slug": "abidar-navy",
+					"color": "#0B192C",
+					"name": "Abidar Deep Petroleum Navy"
+				},
+				{
+					"slug": "abidar-slate",
+					"color": "#1E3E62",
+					"name": "Abidar Steel Blue"
+				},
+				{
+					"slug": "abidar-energy",
+					"color": "#0EA5E9",
+					"name": "Abidar Energy Cyan"
+				},
+				{
+					"slug": "abidar-light",
+					"color": "#F8FAFC",
+					"name": "Abidar Surface Light"
+				}
+			]
+		},
+		"typography": {
+			"customFontSize": true,
+			"lineHeight": true,
+			"fontFamilies": [
+				{
+					"fontFamily": "'Vazirmatn', 'Inter', 'Noto Sans SC', sans-serif",
+					"slug": "abidar-primary",
+					"name": "Vazirmatn / Inter / Noto Sans SC"
+				}
+			]
+		}
+	}
+}
