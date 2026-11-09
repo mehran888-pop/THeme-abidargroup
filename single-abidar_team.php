@@ -23,6 +23,15 @@ while ( have_posts() ) :
 	$abidar_experience = get_post_meta( get_the_ID(), '_abidar_experience', true );
 	$abidar_email      = get_post_meta( get_the_ID(), '_abidar_email', true );
 	$abidar_linkedin   = get_post_meta( get_the_ID(), '_abidar_linkedin', true );
+	$abidar_resume      = get_post_meta( get_the_ID(), '_abidar_resume_url', true );
+
+	if ( '' === $abidar_resume ) {
+		$abidar_resume_id = (int) get_post_meta( get_the_ID(), '_abidar_resume_id', true );
+
+		if ( $abidar_resume_id > 0 ) {
+			$abidar_resume = (string) wp_get_attachment_url( $abidar_resume_id );
+		}
+	}
 	$abidar_terms      = get_the_terms( get_the_ID(), 'team_department' );
 	?>
 
@@ -133,7 +142,13 @@ while ( have_posts() ) :
 								<?php endforeach; ?>
 							</dl>
 
-							<?php abidar_render_pdf_button( get_the_ID() ); ?>
+							<?php if ( ! empty( $abidar_resume ) ) : ?>
+								<a class="abidar-btn abidar-btn--outline-gold abidar-btn--sm abidar-btn--full abidar-pdf-btn"
+									href="<?php echo esc_url( $abidar_resume ); ?>" target="_blank" rel="noopener noreferrer">
+									<span aria-hidden="true">📄</span>
+									<?php esc_html_e( 'دریافت رزومه و سوابق (PDF)', 'abidar-group' ); ?>
+								</a>
+							<?php endif; ?>
 						</div>
 
 						<div class="abidar-sidebar-cta">

@@ -19,6 +19,15 @@ while ( have_posts() ) :
 
 	$abidar_metric  = get_post_meta( get_the_ID(), '_abidar_metric', true );
 	$abidar_pdf     = get_post_meta( get_the_ID(), '_abidar_pdf_url', true );
+
+	// اگر فایل PDF در کتابخانه رسانه انتخاب شده باشد اما آدرس دستی خالی باشد.
+	if ( '' === $abidar_pdf ) {
+		$abidar_pdf_id = (int) get_post_meta( get_the_ID(), '_abidar_pdf_id', true );
+
+		if ( $abidar_pdf_id > 0 ) {
+			$abidar_pdf = (string) wp_get_attachment_url( $abidar_pdf_id );
+		}
+	}
 	$abidar_terms   = get_the_terms( get_the_ID(), 'service_sector' );
 	?>
 
