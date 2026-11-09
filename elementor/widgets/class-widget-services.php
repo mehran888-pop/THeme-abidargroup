@@ -141,7 +141,12 @@ class Abidar_Widget_Services extends Abidar_Elementor_Widget_Base {
 		$layout        = isset( $settings['layout_style'] ) ? $settings['layout_style'] : 'layout_1';
 		$sector_filter = isset( $settings['sector_filter'] ) ? $settings['sector_filter'] : 'all';
 		$show_switcher = ! isset( $settings['show_layout_switcher'] ) || 'yes' === $settings['show_layout_switcher'];
-		$services      = Abidar_CPT::get_default_dataset( 'services' );
+		$services      = function_exists( 'abidar_get_content_dataset' ) ? abidar_get_content_dataset( 'abidar_service' ) : array();
+
+		// اگر هنوز هیچ خدمتی در پیشخوان ثبت نشده باشد، نمایش مجموعه دمو برای پیش‌نمایش.
+		if ( empty( $services ) ) {
+			$services = Abidar_CPT::get_default_dataset( 'services' );
+		}
 		$current_lang  = Abidar_I18n::get_current_lang();
 
 		if ( 'all' !== $sector_filter ) {
@@ -203,7 +208,13 @@ class Abidar_Widget_Services extends Abidar_Elementor_Widget_Base {
 									<strong><?php echo esc_html( $metric ); ?></strong>
 								</div>
 
-								<h3 class="abidar-service-card__title"><?php echo esc_html( $title ); ?></h3>
+								<h3 class="abidar-service-card__title">
+									<?php if ( ! empty( $srv['permalink'] ) ) : ?>
+										<a href="<?php echo esc_url( $srv['permalink'] ); ?>"><?php echo esc_html( $title ); ?></a>
+									<?php else : ?>
+										<?php echo esc_html( $title ); ?>
+									<?php endif; ?>
+								</h3>
 								<p class="abidar-service-card__desc"><?php echo esc_html( $desc ); ?></p>
 
 								<?php if ( ! empty( $srv['features'] ) && 'fa' === $current_lang ) : ?>
@@ -215,7 +226,7 @@ class Abidar_Widget_Services extends Abidar_Elementor_Widget_Base {
 								<?php endif; ?>
 
 								<div class="abidar-service-card__footer">
-									<a href="<?php echo esc_url( add_query_arg( 'dept', $sector, abidar_page_url( 'contact-us' ) ) ); ?>" class="abidar-link-gold">
+									<a href="<?php echo esc_url( ! empty( $srv['permalink'] ) ? $srv['permalink'] : add_query_arg( 'dept', $sector, abidar_page_url( 'contact-us' ) ) ); ?>" class="abidar-link-gold">
 										<span><?php echo esc_html( abidar_t( 'view_details' ) ); ?></span>
 										<span class="abidar-icon-arrow">→</span>
 									</a>

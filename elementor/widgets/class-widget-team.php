@@ -70,7 +70,12 @@ class Abidar_Widget_Team extends Abidar_Elementor_Widget_Base {
 
 	public static function render_output( $settings = array() ) {
 		$layout  = isset( $settings['layout_style'] ) ? $settings['layout_style'] : 'layout_1';
-		$members = Abidar_CPT::get_default_dataset( 'team' );
+		$members = function_exists( 'abidar_get_content_dataset' ) ? abidar_get_content_dataset( 'abidar_team' ) : array();
+
+		// اگر هنوز هیچ عضوی در پیشخوان ثبت نشده باشد، نمایش مجموعه دمو برای پیش‌نمایش.
+		if ( empty( $members ) ) {
+			$members = Abidar_CPT::get_default_dataset( 'team' );
+		}
 		?>
 		<section class="abidar-section abidar-team-sec" data-widget-section="team" data-active-layout="<?php echo esc_attr( $layout ); ?>">
 			<div class="abidar-container">
@@ -105,7 +110,13 @@ class Abidar_Widget_Team extends Abidar_Elementor_Widget_Base {
 							</div>
 
 							<div class="abidar-team-card__body">
-								<h3 class="abidar-team-card__name"><?php echo esc_html( $name ); ?></h3>
+								<h3 class="abidar-team-card__name">
+									<?php if ( ! empty( $member['permalink'] ) ) : ?>
+										<a href="<?php echo esc_url( $member['permalink'] ); ?>"><?php echo esc_html( $name ); ?></a>
+									<?php else : ?>
+										<?php echo esc_html( $name ); ?>
+									<?php endif; ?>
+								</h3>
 								<p class="abidar-team-card__role"><?php echo esc_html( $role ); ?></p>
 								<p class="abidar-team-card__bio"><?php echo esc_html( $bio ); ?></p>
 

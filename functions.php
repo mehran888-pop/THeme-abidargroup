@@ -1109,3 +1109,200 @@ function abidar_render_pdf_button( $post_id ) {
 	</a>
 	<?php
 }
+
+/**
+ * تبدیل پست‌های واقعی یک پست‌تایپ به ساختار داده‌ای ویجت‌های المنتور.
+ *
+ * ویجت‌های نمایش (خدمات، پروژه‌ها، تیم، مدارک) در ابتدا از یک مجموعه داده دمو
+ * تغذیه می‌شدند. این تابع همان ساختار کلیدها را از پیشخوان و متای پنل حرفه‌ای
+ * می‌سازد تا هر محتوایی که مدیر سایت ایجاد می‌کند در سایت دیده شود.
+ *
+ * @param string $post_type نوع پست (abidar_service|abidar_project|abidar_team|abidar_certificate).
+ * @param int    $limit     حداکثر تعداد.
+ * @param array  $args      آرگومان‌های اضافی WP_Query.
+ * @return array آرایه‌ای از ردیف‌های سازگار با ویجت‌ها (یا آرایه خالی).
+ */
+function abidar_get_content_dataset( $post_type, $limit = 24, $args = array() ) {
+	static $cache = array();
+
+	$cache_key = $post_type . '|' . (int) $limit . '|' . md5( (string) wp_json_encode( $args ) );
+
+	if ( isset( $cache[ $cache_key ] ) ) {
+		return $cache[ $cache_key ];
+	}
+
+	if ( ! post_type_exists( $post_type ) ) {
+		$cache[ $cache_key ] = array();
+		return array();
+	}
+
+	$query = new WP_Query(
+		wp_parse_args(
+			$args,
+			array(
+				'post_type'           => $post_type,
+				'post_status'         => 'publish',
+				'posts_per_page'      => (int) $limit,
+				'ignore_sticky_posts' => true,
+				'no_found_rows'       => true,
+				'meta_key'            => '_abidar_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'orderby'             => array(
+					'meta_value_num' => 'ASC',
+					'date'           => 'DESC',
+				),
+			)
+		)
+	);
+
+	// اگر هیچ محتوایی ترتیب دستی نداشت، بدون meta_key دوباره بخوان (پست‌های بدون این متا حذف نشوند).
+	if ( empty( $query->posts ) ) {
+		unset( $args['meta_key'] );
+
+		$query = new WP_Query(
+			wp_parse_args(
+				$args,
+				array(
+					'post_type'      => $post_type,
+					'post_status'    => 'publish',
+					'posts_per_page' => (int) $limit,
+					'no_found_rows'  => true,
+					'orderby'        => 'date',
+					'order'          => 'DESC',
+				)
+			)
+		);
+	}
+
+	$rows = array();
+
+	foreach ( $query->posts as $post ) {
+		$row = abidar_normalize_content_item( $post );
+
+		if ( $row ) {
+			$rows[] = $row;
+		}
+	}
+
+	wp_reset_postdata();
+
+	$cache[ $cache_key ] = $rows;
+
+	return $rows;
+}
+
+/**
+ * تبدیل یک پست به ساختار داده‌ای ویجت بر اساس نوع آن.
+ *
+ * @param WP_Post $post شیء پست.
+ * @return array|null
+ */
+function abidar_normalize_content_item( $post ) {
+	if ( ! $post instanceof WP_Post ) {
+		return null;
+	}
+
+	$id       = (int) $post->ID;
+	$title    = get_the_title( $id );
+	$sector   = abidar_meta( $id, 'sector', 'mining' );
+	$summary  = abidar_meta( $id, 'summary' );
+	$excerpt  = $summary ? $summary : wp_strip_all_tags( (string) $post->post_excerpt );
+	$image    = get_the_post_thumbnail_url( $id, 'large' );
+	$sectors  = array(
+		'mining' => 'معادن و صنایع معدنی',
+		'energy' => 'انرژی و نیروگاه‌ها',
+		'oil'    => 'نفت، گاز و پتروشیمی',
+	);
+	$row      = array(
+		'id'          => $id,
+		'permalink'   => get_permalink( $id ),
+		'sector'      => $sector,
+		'sector_label_fa' => isset( $sectors[ $sector ] ) ? $sectors[ $sector ] : '',
+		'image'       => $image ? $image : '',
+		'summary'     => $excerpt,
+	);
+
+	switch ( $post->post_type ) {
+		case 'abidar_service':
+			$features = get_post_meta( $id, '_abidar_features', true );
+
+			$row['title_fa']  = $title;
+			$row['desc_fa']   = $excerpt;
+			$row['metric']    = abidar_meta( $id, 'metric' );
+			$row['icon']      = abidar_meta( $id, 'icon', 'pickaxe' );
+			$row['features']  = is_array( $features )
+				? array_values( array_filter( array_map( 'wp_strip_all_tags', wp_list_pluck( $features, 'label' ) ) ) )
+				: array();
+			$row['title_en']  = abidar_meta( $id, 'title_en' );
+			$row['title_zh']  = abidar_meta( $id, 'title_zh' );
+			$row['desc_en']   = abidar_meta( $id, 'desc_en' );
+			$row['desc_zh']   = abidar_meta( $id, 'desc_zh' );
+			break;
+
+		case 'abidar_project':
+			$row['title_fa']     = $title;
+			$row['desc_fa']      = $excerpt;
+			$row['client_fa']    = abidar_meta( $id, 'client' );
+			$row['location_fa']  = abidar_meta( $id, 'location' );
+			$row['capacity']     = abidar_meta( $id, 'capacity' );
+			$row['progress']     = (int) abidar_meta( $id, 'progress', 0 );
+			$row['year']         = abidar_meta( $id, 'year' );
+			$row['title_en']     = abidar_meta( $id, 'title_en' );
+			$row['title_zh']     = abidar_meta( $id, 'title_zh' );
+			$row['desc_en']      = abidar_meta( $id, 'desc_en' );
+			$row['desc_zh']      = abidar_meta( $id, 'desc_zh' );
+			$row['client_en']    = '';
+			$row['location_en']  = '';
+			$row['sector_label_en'] = '';
+			break;
+
+		case 'abidar_team':
+			$row['name_fa']   = $title;
+			$row['role_fa']   = abidar_meta( $id, 'role_fa' );
+			$row['dept_fa']   = abidar_meta( $id, 'dept_fa' );
+			$row['bio_fa']    = $excerpt;
+			$row['education'] = abidar_meta( $id, 'education' );
+			$row['experience'] = abidar_meta( $id, 'experience' );
+			$row['email']     = abidar_meta( $id, 'email' );
+			$row['linkedin']  = abidar_meta( $id, 'linkedin' );
+			$row['initials']  = function_exists( 'abidar_first_char' ) ? abidar_first_char( $title ) : mb_substr( $title, 0, 1 );
+			$row['accent']    = 'gold';
+			$row['name_en']   = abidar_meta( $id, 'title_en' );
+			$row['name_zh']   = abidar_meta( $id, 'title_zh' );
+			$row['role_en']   = '';
+			$row['role_zh']   = '';
+			$row['dept_en']   = abidar_meta( $id, 'dept_en' );
+			$row['dept_zh']   = abidar_meta( $id, 'dept_zh' );
+			break;
+
+		case 'abidar_certificate':
+			$row['title_fa']     = $title;
+			$row['issuer_fa']    = abidar_meta( $id, 'cert_issuer' );
+			$row['code']         = abidar_meta( $id, 'cert_code' );
+			$row['year']         = abidar_meta( $id, 'cert_year' );
+			$row['badge']        = abidar_meta( $id, 'badge' );
+			$row['category_fa']  = abidar_meta( $id, 'badge_text' );
+			$row['title_en']     = abidar_meta( $id, 'title_en' );
+			$row['title_zh']     = abidar_meta( $id, 'title_zh' );
+			$row['issuer_en']    = '';
+			$row['issuer_zh']    = '';
+			$row['category_en']  = '';
+			$row['category_zh']  = '';
+			break;
+
+		default:
+			return null;
+	}
+
+	// عنوان و توضیح چندزبانه در قالب کلیدهای مورد انتظار ویجت‌ها.
+	foreach ( array( 'title', 'desc', 'name', 'role', 'dept', 'bio', 'client', 'location', 'sector_label', 'issuer', 'category' ) as $base ) {
+		foreach ( array( 'fa', 'en', 'zh' ) as $locale ) {
+			$key = $base . '_' . $locale;
+
+			if ( ! isset( $row[ $key ] ) ) {
+				$row[ $key ] = '';
+			}
+		}
+	}
+
+	return $row;
+}

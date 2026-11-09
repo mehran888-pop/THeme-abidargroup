@@ -69,7 +69,12 @@ class Abidar_Widget_Certificates extends Abidar_Elementor_Widget_Base {
 
 	public static function render_output( $settings = array() ) {
 		$layout       = isset( $settings['layout_style'] ) ? $settings['layout_style'] : 'layout_1';
-		$certificates = Abidar_CPT::get_default_dataset( 'certificates' );
+		$certificates = function_exists( 'abidar_get_content_dataset' ) ? abidar_get_content_dataset( 'abidar_certificate' ) : array();
+
+		// اگر هنوز هیچ مدرکی در پیشخوان ثبت نشده باشد، نمایش مجموعه دمو برای پیش‌نمایش.
+		if ( empty( $certificates ) ) {
+			$certificates = Abidar_CPT::get_default_dataset( 'certificates' );
+		}
 		?>
 		<section class="abidar-section abidar-certs-sec" data-widget-section="certificates" data-active-layout="<?php echo esc_attr( $layout ); ?>">
 			<div class="abidar-container">
@@ -105,7 +110,13 @@ class Abidar_Widget_Certificates extends Abidar_Elementor_Widget_Base {
 
 							<div class="abidar-cert-card__body">
 								<span class="abidar-cert-card__cat"><?php echo esc_html( $category ); ?></span>
-								<h3 class="abidar-cert-card__title"><?php echo esc_html( $title ); ?></h3>
+								<h3 class="abidar-cert-card__title">
+									<?php if ( ! empty( $cert['permalink'] ) ) : ?>
+										<a href="<?php echo esc_url( $cert['permalink'] ); ?>"><?php echo esc_html( $title ); ?></a>
+									<?php else : ?>
+										<?php echo esc_html( $title ); ?>
+									<?php endif; ?>
+								</h3>
 
 								<div class="abidar-cert-card__meta">
 									<div>

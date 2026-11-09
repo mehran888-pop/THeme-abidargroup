@@ -103,7 +103,12 @@ class Abidar_Widget_Projects extends Abidar_Elementor_Widget_Base {
 	public static function render_output( $settings = array() ) {
 		$layout        = isset( $settings['layout_style'] ) ? $settings['layout_style'] : 'layout_1';
 		$show_progress = ! isset( $settings['show_progress_bar'] ) || 'yes' === $settings['show_progress_bar'];
-		$projects      = Abidar_CPT::get_default_dataset( 'projects' );
+		$projects      = function_exists( 'abidar_get_content_dataset' ) ? abidar_get_content_dataset( 'abidar_project' ) : array();
+
+		// اگر هنوز هیچ پروژه‌ای در پیشخوان ثبت نشده باشد، نمایش مجموعه دمو برای پیش‌نمایش.
+		if ( empty( $projects ) ) {
+			$projects = Abidar_CPT::get_default_dataset( 'projects' );
+		}
 		?>
 		<section class="abidar-section abidar-section--dark abidar-projects-sec" data-widget-section="projects" data-active-layout="<?php echo esc_attr( $layout ); ?>">
 			<div class="abidar-container">
@@ -141,13 +146,19 @@ class Abidar_Widget_Projects extends Abidar_Elementor_Widget_Base {
 						$progress     = (int) $prj['progress'];
 						?>
 						<article class="abidar-project-card" data-sector-item="<?php echo esc_attr( $prj['sector'] ); ?>">
-							<div class="abidar-project-card__thumb" style="background-image: url('<?php echo esc_url( $prj['image'] ); ?>');">
+							<div class="abidar-project-card__thumb"<?php if ( ! empty( $prj['permalink'] ) ) : ?> role="link" tabindex="0" onclick="window.location.href='<?php echo esc_js( $prj['permalink'] ); ?>'"<?php endif; ?> style="background-image: url('<?php echo esc_url( $prj['image'] ); ?>');">
 								<span class="abidar-project-card__sector"><?php echo esc_html( $sector_label ); ?></span>
 								<span class="abidar-project-card__year"><?php echo esc_html( $prj['year'] ); ?></span>
 							</div>
 
 							<div class="abidar-project-card__content">
-								<h3 class="abidar-project-card__title"><?php echo esc_html( $title ); ?></h3>
+								<h3 class="abidar-project-card__title">
+									<?php if ( ! empty( $prj['permalink'] ) ) : ?>
+										<a href="<?php echo esc_url( $prj['permalink'] ); ?>"><?php echo esc_html( $title ); ?></a>
+									<?php else : ?>
+										<?php echo esc_html( $title ); ?>
+									<?php endif; ?>
+								</h3>
 								<p class="abidar-project-card__desc"><?php echo esc_html( $desc ); ?></p>
 
 								<dl class="abidar-project-card__specs">
