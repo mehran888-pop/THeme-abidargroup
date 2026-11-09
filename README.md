@@ -127,7 +127,10 @@ zip -r abidar-group-holding.zip . \
 - ثبت دسته‌بندی اختصاصی ویجت‌ها در ویرایشگر
 - ثبت ویجت‌ها با قلاب `elementor/widgets/register` (سازگار با المنتور ۳.۵+ و ۳.۲۵+)
 - افزودن پست‌تایپ‌های `abidar_hf`، `abidar_service` و `abidar_project` به پست‌تایپ‌های قابل ویرایش با المنتور
-- جایگزین امن `\Elementor\Widget_Base` در زمان غیرفعال بودن المنتور، تا قالب هرگز با خطای Fatal متوقف نشود
+- **اعلان تنبل (Lazy) کلاس پایه:** کلاس `Abidar_Elementor_Widget_Base` فقط در لحظه بارگذاری فایل‌های ویجت و پس از بررسی `class_exists( '\Elementor\Widget_Base' )` اعلان می‌شود. هرگز از `did_action( 'elementor/loaded' )` برای این تشخیص استفاده نمی‌شود، زیرا آن اکشن روی قلاب `init` اجرا می‌شود و در زمان بارگذاری پوسته همیشه مقدار `false` دارد.
+- **مسیر جانشین امن:** اگر المنتور نصب نباشد، نسخه سبک کلاس پایه اعلان می‌شود تا هدر، فوتر و سایر ویجت‌های داخلی قالب همچنان رندر شوند.
+- **محافظ نهایی در ثبت:** پیش از `register()`، هر نمونه با `$instance instanceof \Elementor\Widget_Base` بررسی می‌شود تا هرگز خطای `TypeError` رخ ندهد.
+- **بارگذاری تضمینی در رندر:** `render_site_header()`/`render_site_footer()` پیش از رندر، کلاس‌های ویجت را بارگذاری می‌کنند و در صورت نبود کلاس، یک هدر/فوتر ساده جانشین نمایش می‌دهند (هرگز صفحه سفید).
 - استفاده از `get_builder_content_for_display()` برای رندر هدر/فوتر ساخته‌شده با المنتور
 - کنترل‌های استایل (`Style Controls`) روی تمام ویجت‌ها: رنگ، تایپوگرافی، فاصله‌گذاری
 
@@ -460,6 +463,15 @@ window.AbidarConfig = {
 - پنل تنظیمات ۸ تبی با آپلود فونت و رسانه
 - ۸ قالب برگه و ۴ قالب نوشته اختصاصی
 - دسترس‌پذیری و `<code>prefers-reduced-motion</code>` در کل قالب
+
+### 2.0.1
+
+- **رفع خطای بحرانی `TypeError` در ثبت ویجت‌های المنتور:** کلاس پایه ویجت‌ها دیگر در زمان بارگذاری پوسته اعلان نمی‌شود. تشخیص با `did_action( 'elementor/loaded' )` (که همیشه در این مرحله `false` است) جایگزین شد با اعلان تنبل + بررسی `class_exists( '\Elementor\Widget_Base' )`.
+  - پیش از اصلاح: `Fatal error: Uncaught TypeError: Elementor\Widgets_Manager::register(): Argument #1 ($widget_instance) must be of type Elementor\Widget_Base, Abidar_Widget_Header_Nav given`
+  - پس از اصلاح: هر ۱۰ ویجت بدون خطا ثبت می‌شوند.
+- افزودن محافظ `instanceof \Elementor\Widget_Base` پیش از هر `register()`
+- بارگذاری تضمینی کلاس‌های ویجت در `render_site_header()`/`render_site_footer()` + هدر/فوتر جانشین در بدترین حالت
+- جایگزینی `did_action( 'elementor/loaded' )` با `is_elementor_active()` در مسیر رندر محتوای المنتور
 
 ---
 

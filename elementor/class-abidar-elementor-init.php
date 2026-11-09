@@ -16,25 +16,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * کلاس پایه سازگار با المنتور (در صورت فعال بودن المنتور از \Elementor\Widget_Base ارث‌بری می‌کند)
+ * اعلان کلاس پایه ویجت‌ها، دقیقاً در لحظه‌ای که فایل‌های ویجت بارگذاری می‌شوند.
+ *
+ * دلیل این طراحی: اگر کلاس پایه در سطح فایل و پیش از آماده شدن المنتور تعریف شود،
+ * نسخه «بدون المنتور» قفل می‌شود و در نتیجه کلاس‌های ویجت از \Elementor\Widget_Base
+ * ارث‌بری نمی‌کنند؛ سپس Elementor\Widgets_Manager::register() با خطای
+ * «TypeError: Argument #1 ($widget_instance) must be of type Elementor\Widget_Base»
+ * متوقف می‌شود. با اعلان تنبل (Lazy)، ویجت‌ها همیشه از کلاس صحیح ارث‌بری می‌کنند.
  */
-if ( ! class_exists( 'Abidar_Elementor_Widget_Base' ) ) {
-	if ( did_action( 'elementor/loaded' ) && class_exists( '\Elementor\Widget_Base' ) ) {
+function abidar_declare_elementor_widget_base() {
+	if ( class_exists( 'Abidar_Elementor_Widget_Base' ) ) {
+		return;
+	}
+
+	if ( class_exists( '\Elementor\Widget_Base' ) ) {
+		// مسیر اصلی: المنتور فعال است و ویجت‌ها با API رسمی آن ثبت می‌شوند.
 		abstract class Abidar_Elementor_Widget_Base extends \Elementor\Widget_Base {}
 	} else {
+		// مسیر جانشین: المنتور نصب نیست؛ هدر و فوتر داخلی قالب باید همچنان رندر شوند.
 		abstract class Abidar_Elementor_Widget_Base {
 			protected $settings = array();
+
 			public function __construct( $data = array(), $args = null ) {
 				if ( is_array( $data ) ) {
 					$this->settings = $data;
 				}
 			}
+
 			public function get_settings_for_display( $key = null ) {
 				if ( null !== $key ) {
 					return isset( $this->settings[ $key ] ) ? $this->settings[ $key ] : null;
 				}
 				return $this->settings;
 			}
+
 			public function start_controls_section( $id, $args = array() ) {}
 			public function end_controls_section() {}
 			public function add_control( $id, $args = array() ) {}
@@ -53,8 +68,12 @@ class Abidar_Elementor_Init {
 	 * راه‌اندازی قلاب‌های المنتور
 	 */
 	public static function init() {
-		// بارگذاری کلاس‌های ویجت اختصاصی
-		add_action( 'after_setup_theme', array( __CLASS__, 'load_widget_files' ), 20 );
+		// بارگذاری زودهنگام کلاس‌های ویجت، تنها زمانی که المنتور کاملاً آماده شده است.
+		add_action( 'elementor/loaded', array( __CLASS__, 'load_widget_files' ), 5 );
+
+		// مسیر جانشین (Fallback): اگر المنتور نصب/فعال نباشد، ویجت‌ها با کلاس پایه سبک
+		// بارگذاری می‌شوند تا هدر و فوتر داخلی قالب همچنان رندر شوند.
+		add_action( 'after_setup_theme', array( __CLASS__, 'load_widget_files_fallback' ), 20 );
 
 		// ثبت دسته‌بندی‌های اختصاصی در پنل المنتور
 		add_action( 'elementor/elements/categories_registered', array( __CLASS__, 'register_widget_categories' ) );
@@ -88,6 +107,8 @@ class Abidar_Elementor_Init {
 	 * بارگذاری فایل‌های ویجت‌های اختصاصی گروه آبیدر
 	 */
 	public static function load_widget_files() {
+		abidar_declare_elementor_widget_base();
+
 		$widget_files = array(
 			'/elementor/widgets/class-widget-header-nav.php',
 			'/elementor/widgets/class-widget-footer-builder.php',
@@ -107,6 +128,29 @@ class Abidar_Elementor_Init {
 				require_once $full_path;
 			}
 		}
+	}
+
+	/**
+	 * بارگذاری ویجت‌ها در حالت نبود المنتور.
+	 *
+	 * اگر المنتور نصب یا فعال باشد، این متد هیچ کاری نمی‌کند تا کلاس‌های ویجت
+	 * حتماً از \Elementor\Widget_Base ارث‌بری کنند (جلوگیری از خطای TypeError).
+	 */
+	public static function load_widget_files_fallback() {
+		if ( self::is_elementor_active() ) {
+			return;
+		}
+
+		self::load_widget_files();
+	}
+
+	/**
+	 * آیا المنتور نصب و در حال اجرا است؟
+	 *
+	 * @return bool
+	 */
+	public static function is_elementor_active() {
+		return defined( 'ELEMENTOR_VERSION' ) || class_exists( '\Elementor\Widget_Base' );
 	}
 
 	/**
@@ -154,9 +198,19 @@ class Abidar_Elementor_Init {
 		);
 
 		foreach ( $widget_classes as $class_name ) {
-			if ( class_exists( $class_name ) ) {
-				$widgets_manager->register( new $class_name() );
+			if ( ! class_exists( $class_name ) ) {
+				continue;
 			}
+
+			$instance = new $class_name();
+
+			// محافظ نهایی: تنها ویجت‌هایی ثبت می‌شوند که واقعاً از Widget_Base المنتور ارث‌بری کرده باشند.
+			// این بررسی از خطای Fatal نوع‌شناسی در Widgets_Manager::register() جلوگیری می‌کند.
+			if ( ! $instance instanceof \Elementor\Widget_Base ) {
+				continue;
+			}
+
+			$widgets_manager->register( $instance );
 		}
 	}
 
@@ -185,7 +239,7 @@ class Abidar_Elementor_Init {
 
 			if ( $hf_query->have_posts() ) {
 				$hf_post = $hf_query->posts[0];
-				if ( did_action( 'elementor/loaded' ) && class_exists( '\Elementor\Plugin' ) ) {
+				if ( self::is_elementor_active() && class_exists( '\Elementor\Plugin' ) ) {
 					echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $hf_post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					wp_reset_postdata();
 					return;
@@ -193,6 +247,9 @@ class Abidar_Elementor_Init {
 			}
 			wp_reset_postdata();
 		}
+
+		// بارگذاری تضمینی کلاس‌های ویجت پیش از رندر (در صورت نبود المنتور نیز کار می‌کند).
+		self::load_widget_files();
 
 		// رندر ویجت هدر اختصاصی گروه آبیدر با چیدمان انتخاب‌شده
 		if ( class_exists( 'Abidar_Widget_Header_Nav' ) ) {
@@ -204,7 +261,19 @@ class Abidar_Elementor_Init {
 					'show_cta_btn'       => 'yes',
 				)
 			);
+			return;
 		}
+
+		// جانشین نهایی: هرگز هدر خالی رها نمی‌شود.
+		?>
+		<header class="abidar-site-header abidar-site-header--fallback" role="banner">
+			<div class="abidar-container abidar-header-fallback">
+				<a class="abidar-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+					<?php echo esc_html( abidar_t( 'holding_name' ) ); ?>
+				</a>
+			</div>
+		</header>
+		<?php
 	}
 
 	/**
@@ -231,7 +300,7 @@ class Abidar_Elementor_Init {
 
 			if ( $hf_query->have_posts() ) {
 				$hf_post = $hf_query->posts[0];
-				if ( did_action( 'elementor/loaded' ) && class_exists( '\Elementor\Plugin' ) ) {
+				if ( self::is_elementor_active() && class_exists( '\Elementor\Plugin' ) ) {
 					echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $hf_post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					wp_reset_postdata();
 					return;
@@ -239,6 +308,8 @@ class Abidar_Elementor_Init {
 			}
 			wp_reset_postdata();
 		}
+
+		self::load_widget_files();
 
 		if ( class_exists( 'Abidar_Widget_Footer_Builder' ) ) {
 			Abidar_Widget_Footer_Builder::render_output(
