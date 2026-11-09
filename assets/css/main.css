@@ -6641,3 +6641,62 @@ html[dir="rtl"] .abidar-search-form {
 		gap: 4px;
 	}
 }
+
+/* ---------- Archive service card extras (v2.1.0) ---------- */
+.abidar-service-card__media {
+	position: relative;
+	display: block;
+}
+
+.abidar-service-card__play {
+	position: absolute;
+	inset-inline-end: 14px;
+	bottom: 14px;
+	display: grid;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: rgba(217, 119, 6, 0.92);
+	color: #fff;
+	font-size: 14px;
+	line-height: 1;
+	box-shadow: 0 6px 18px rgba(11, 25, 44, 0.35);
+	transition: transform var(--abidar-transition, 0.25s ease);
+}
+
+.abidar-service-card:hover .abidar-service-card__play {
+	transform: scale(1.08);
+}
+
+.abidar-service-card__metric {
+	margin-top: 14px;
+	padding: 10px 14px;
+	border-inline-start: 3px solid var(--abidar-accent, #d97706);
+	border-radius: 6px;
+	background: rgba(217, 119, 6, 0.07);
+}
+
+.abidar-service-card__metric strong {
+	display: block;
+	color: var(--abidar-primary, #0b192c);
+	font-size: 0.8125rem;
+	font-weight: 700;
+	line-height: 1.7;
+}
+
+/* Ensure card titles inherit the card link styling */
+.abidar-service-card__title a,
+.abidar-project-card__title a,
+.abidar-team-card__name a,
+.abidar-cert-card__title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.abidar-service-card__title a:hover,
+.abidar-project-card__title a:hover,
+.abidar-team-card__name a:hover,
+.abidar-cert-card__title a:hover {
+	color: var(--abidar-accent, #d97706);
+}

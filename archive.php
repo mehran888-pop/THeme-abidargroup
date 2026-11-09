@@ -91,6 +91,62 @@ abidar_page_hero(
 							</div>
 						</article>
 						<?php
+					} elseif ( 'abidar_service' === $abidar_post_type ) {
+						$abidar_metric   = get_post_meta( get_the_ID(), '_abidar_metric', true );
+						$abidar_sector   = abidar_meta( get_the_ID(), 'sector', 'mining' );
+						$abidar_features = get_post_meta( get_the_ID(), '_abidar_features', true );
+						$abidar_video    = ( '' !== (string) get_post_meta( get_the_ID(), '_abidar_video_url', true ) ) || ( (int) get_post_meta( get_the_ID(), '_abidar_video_id', true ) > 0 );
+						$abidar_labels   = array(
+							'mining' => abidar_t( 'sector_mining' ),
+							'energy' => abidar_t( 'sector_energy' ),
+							'oil'    => abidar_t( 'sector_oil' ),
+						);
+						$abidar_sector_label = isset( $abidar_labels[ $abidar_sector ] ) ? $abidar_labels[ $abidar_sector ] : '';
+						?>
+						<article id="post-<?php the_ID(); ?>" <?php post_class( 'abidar-service-card abidar-service-card--' . $abidar_sector ); ?>>
+							<?php
+							$abidar_sector_file = ( 'oil' === $abidar_sector ) ? 'oil' : ( ( 'energy' === $abidar_sector ) ? 'energy' : 'mining' );
+							$abidar_media_url   = has_post_thumbnail()
+								? get_the_post_thumbnail_url( get_the_ID(), 'abidar-project-card' )
+								: ABIDAR_URI . '/assets/images/sector-' . $abidar_sector_file . '.jpg';
+							?>
+							<a href="<?php the_permalink(); ?>" class="abidar-service-card__media"
+								style="background-image: url('<?php echo esc_url( $abidar_media_url ); ?>');">
+								<span class="abidar-service-card__badge"><?php echo esc_html( $abidar_sector_label ); ?></span>
+								<?php if ( $abidar_video ) : ?>
+									<span class="abidar-service-card__play" aria-hidden="true">▶</span>
+								<?php endif; ?>
+							</a>
+							<div class="abidar-service-card__body">
+								<h2 class="abidar-service-card__title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
+								<p class="abidar-service-card__desc"><?php echo esc_html( wp_trim_words( get_the_excerpt(), 22 ) ); ?></p>
+
+								<?php if ( ! empty( $abidar_features ) && is_array( $abidar_features ) ) : ?>
+									<ul class="abidar-service-card__features">
+										<?php foreach ( array_slice( $abidar_features, 0, 3 ) as $abidar_feature ) : ?>
+											<?php if ( empty( $abidar_feature['label'] ) ) : ?>
+												<?php continue; ?>
+											<?php endif; ?>
+											<li>✓ <?php echo esc_html( $abidar_feature['label'] ); ?></li>
+										<?php endforeach; ?>
+									</ul>
+								<?php endif; ?>
+
+								<?php if ( $abidar_metric ) : ?>
+									<div class="abidar-service-card__metric">
+										<strong><?php echo esc_html( $abidar_metric ); ?></strong>
+									</div>
+								<?php endif; ?>
+
+								<div class="abidar-service-card__footer">
+									<a href="<?php the_permalink(); ?>" class="abidar-link-gold">
+										<span><?php echo esc_html( abidar_t( 'view_details' ) ); ?></span>
+										<span class="abidar-icon-arrow">→</span>
+									</a>
+								</div>
+							</div>
+						</article>
+						<?php
 					} elseif ( 'abidar_project' === $abidar_post_type ) {
 						$abidar_progress = (int) get_post_meta( get_the_ID(), '_abidar_progress', true );
 						$abidar_client   = get_post_meta( get_the_ID(), '_abidar_client', true );
