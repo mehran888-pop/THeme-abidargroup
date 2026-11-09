@@ -25,6 +25,13 @@ class Abidar_Preloader {
 			return;
 		}
 
+		// در ویرایشگر/پیش‌نمایش المنتور هرگز پیش‌بارگذاری رندر نمی‌شود؛
+		// لایه تمام‌صفحه پیش‌بارگذاری می‌تواند بوم ویرایشگر را بپوشاند و
+		// نشانگر بارگذاری المنتور را در حالت انتظار نگه دارد.
+		if ( class_exists( 'Abidar_Elementor_Init' ) && Abidar_Elementor_Init::is_elementor_editor_context() ) {
+			return;
+		}
+
 		$style        = abidar_get_option( 'preloader_style', 'industrial_pulse' );
 		$bg_color     = abidar_get_option( 'preloader_bg_color', '#07101E' );
 		$accent_color = abidar_get_option( 'preloader_accent_color', '#D97706' );

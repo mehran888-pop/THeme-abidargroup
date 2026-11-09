@@ -6227,7 +6227,7 @@ html[dir="rtl"] .abidar-search-form {
 	padding: 12px 14px;
 	font: inherit;
 	font-size: 0.95rem;
-	color: var(--abidar-text, #0f172a);
+	color: var(--abidar-text-main, #0f172a);
 	background: #fff;
 	border: 1px solid rgba(148, 163, 184, 0.4);
 	border-radius: 10px;
@@ -6406,4 +6406,238 @@ html[dir="rtl"] .abidar-search-form {
 	width: 0 !important;
 	height: 0 !important;
 	overflow: hidden !important;
+}
+
+/* ==========================================================================
+ * SINGLE POST RICH MEDIA BLOCKS (v2.1.0)
+ * بلوک‌های رسانه‌ای صفحات جزئیات خدمات، پروژه‌ها، تیم و اسناد
+ * ========================================================================== */
+
+.abidar-single-lead {
+	margin: 0 0 26px;
+	padding-inline-start: 20px;
+	border-inline-start: 4px solid var(--abidar-accent, #d97706);
+	color: var(--abidar-primary, #0b192c);
+	font-size: clamp(1.0625rem, 0.4vw + 1rem, 1.25rem);
+	font-weight: 500;
+	line-height: 1.95;
+}
+
+/* ---------- Video ---------- */
+.abidar-video-block {
+	margin: 0 0 34px;
+}
+
+.abidar-video-block__frame {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	border-radius: 14px;
+	background: #0b192c;
+	box-shadow: 0 18px 44px rgba(11, 25, 44, 0.16);
+}
+
+.abidar-video-block__frame iframe,
+.abidar-video-block__player {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+.abidar-video-block__player {
+	position: static;
+	display: block;
+	aspect-ratio: 16 / 9;
+	border-radius: 14px;
+	background: #0b192c;
+	object-fit: cover;
+	box-shadow: 0 18px 44px rgba(11, 25, 44, 0.16);
+}
+
+/* ---------- Gallery ---------- */
+.abidar-gallery-block {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+	margin: 0 0 34px;
+}
+
+.abidar-gallery-block__item {
+	display: block;
+	overflow: hidden;
+	border-radius: 12px;
+	background: #eef1f5;
+	aspect-ratio: 4 / 3;
+}
+
+.abidar-gallery-block__item.is-wide {
+	grid-column: span 2;
+	grid-row: span 2;
+	aspect-ratio: auto;
+}
+
+.abidar-gallery-block__item img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.45s ease;
+}
+
+.abidar-gallery-block__item:hover img {
+	transform: scale(1.04);
+}
+
+/* ---------- Specs table ---------- */
+.abidar-specs-table {
+	margin: 0 0 34px;
+	overflow: hidden;
+	border: 1px solid #e2e4e7;
+	border-radius: 14px;
+}
+
+.abidar-specs-table__title {
+	margin: 0;
+	padding: 14px 20px;
+	background: linear-gradient(100deg, #0b192c, #1e3e62);
+	color: #fff;
+	font-size: 0.9375rem;
+	font-weight: 700;
+}
+
+.abidar-specs-table__list {
+	margin: 0;
+}
+
+.abidar-specs-table__row {
+	display: grid;
+	grid-template-columns: minmax(0, 38%) minmax(0, 1fr);
+	gap: 16px;
+	padding: 12px 20px;
+	border-top: 1px solid #eef0f2;
+}
+
+.abidar-specs-table__row:nth-child(even) {
+	background: #fafbfc;
+}
+
+.abidar-specs-table__row dt {
+	color: #50575e;
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.abidar-specs-table__row dd {
+	margin: 0;
+	color: var(--abidar-primary, #0b192c);
+	font-size: 0.9375rem;
+	font-weight: 700;
+}
+
+/* ---------- Repeater blocks ---------- */
+.abidar-repeater-block {
+	margin: 0 0 34px;
+}
+
+.abidar-repeater-block__title {
+	margin: 0 0 18px;
+	padding-bottom: 10px;
+	border-bottom: 2px solid rgba(217, 119, 6, 0.28);
+	color: #0b192c;
+	font-size: 1.125rem;
+	font-weight: 800;
+}
+
+.abidar-repeater-block__list {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 14px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.abidar-repeater-block__item {
+	display: flex;
+	gap: 12px;
+	padding: 16px 18px;
+	border: 1px solid #e8eaed;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 2px 10px rgba(11, 25, 44, 0.05);
+}
+
+.abidar-repeater-block__icon {
+	flex: 0 0 auto;
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	background: rgba(217, 119, 6, 0.12);
+	color: #b45309;
+	font-size: 0.875rem;
+}
+
+.abidar-repeater-block__item strong {
+	display: block;
+	color: #0b192c;
+	font-size: 0.9375rem;
+	font-weight: 700;
+	line-height: 1.7;
+}
+
+.abidar-repeater-block__item p {
+	margin: 4px 0 0;
+	color: #50575e;
+	font-size: 0.8125rem;
+	line-height: 1.85;
+}
+
+/* Steps get a numbered ribbon instead of an icon */
+.abidar-repeater-block--steps .abidar-repeater-block__list {
+	counter-reset: abidar-step;
+}
+
+.abidar-repeater-block--steps .abidar-repeater-block__item {
+	position: relative;
+	padding-inline-start: 62px;
+}
+
+.abidar-repeater-block--steps .abidar-repeater-block__icon {
+	position: absolute;
+	inset-inline-start: 16px;
+	top: 16px;
+	background: #0b192c;
+	color: #fff;
+	font-size: 0.8125rem;
+	font-weight: 800;
+}
+
+/* ---------- PDF button ---------- */
+.abidar-pdf-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+@media (max-width: 782px) {
+	.abidar-gallery-block {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.abidar-gallery-block__item.is-wide {
+		grid-column: span 2;
+		grid-row: span 1;
+		aspect-ratio: 16 / 10;
+	}
+
+	.abidar-specs-table__row {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 4px;
+	}
 }

@@ -104,8 +104,47 @@ while ( have_posts() ) :
 		</div>
 
 		<div class="abidar-section">
-			<div class="abidar-container abidar-entry-content abidar-article-body abidar-member-bio">
-				<?php the_content(); ?>
+			<div class="abidar-container">
+				<div class="abidar-single-layout">
+					<div class="abidar-single-layout__content">
+						<?php $abidar_summary = abidar_meta( get_the_ID(), 'summary' ); ?>
+						<?php if ( $abidar_summary ) : ?>
+							<p class="abidar-single-lead"><?php echo esc_html( $abidar_summary ); ?></p>
+						<?php endif; ?>
+
+						<?php abidar_render_video_block( get_the_ID() ); ?>
+
+						<div class="abidar-entry-content abidar-article-body abidar-member-bio">
+							<?php the_content(); ?>
+						</div>
+
+						<?php abidar_render_repeater_block( get_the_ID(), 'expertise', __( 'حوزه‌های تخصصی', 'abidar-group' ), '★' ); ?>
+					</div>
+
+					<aside class="abidar-single-layout__aside">
+						<div class="abidar-spec-card">
+							<h4><?php esc_html_e( 'سوابق و تحصیلات', 'abidar-group' ); ?></h4>
+							<dl class="abidar-spec-list">
+								<?php foreach ( array( 'role_fa' => 'سمت سازمانی', 'dept_fa' => 'حوزه فعالیت', 'education' => 'تحصیلات', 'experience' => 'سابقه اجرایی', 'email' => 'رایانامه' ) as $abidar_key => $abidar_label ) : ?>
+									<?php $abidar_value = abidar_meta( get_the_ID(), $abidar_key ); ?>
+									<?php if ( $abidar_value ) : ?>
+										<div><dt><?php echo esc_html( $abidar_label ); ?></dt><dd><?php echo esc_html( $abidar_value ); ?></dd></div>
+									<?php endif; ?>
+								<?php endforeach; ?>
+							</dl>
+
+							<?php abidar_render_pdf_button( get_the_ID() ); ?>
+						</div>
+
+						<div class="abidar-sidebar-cta">
+							<span class="abidar-section__eyebrow"><?php echo esc_html( abidar_t( 'holding_tagline' ) ); ?></span>
+							<h4><?php esc_html_e( 'ارتباط با این همکار', 'abidar-group' ); ?></h4>
+							<a href="<?php echo esc_url( abidar_page_url( 'contact-us' ) ); ?>" class="abidar-btn abidar-btn--outline-gold abidar-btn--sm abidar-btn--full">
+								<?php echo esc_html( abidar_t( 'nav_contact' ) ); ?>
+							</a>
+						</div>
+					</aside>
+				</div>
 			</div>
 		</div>
 

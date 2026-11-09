@@ -449,6 +449,13 @@ function abidar_enqueue_scripts() {
 	 */
 	$load_google_fonts = apply_filters( 'abidar_load_google_fonts', true );
 
+	// در بوم ویرایشگر/پیش‌نمایش المنتور، فونت آنلاین بارگذاری نمی‌شود.
+	// درخواست مسدود یا کند به fonts.googleapis.com باعث می‌شود iframe پیش‌نمایش
+	// هرگز رویداد load را اجرا نکند و نشانگر بارگذاری المنتور بی‌پایان بماند.
+	if ( class_exists( 'Abidar_Elementor_Init' ) && Abidar_Elementor_Init::is_elementor_editor_context() ) {
+		$load_google_fonts = false;
+	}
+
 	if ( $load_google_fonts ) {
 		// فونت‌های چندزبانه (وزیرمتن فارسی، اینتر انگلیسی و نوتو چینی)
 		wp_enqueue_style(
@@ -519,10 +526,36 @@ function abidar_enqueue_scripts() {
 add_action( 'wp_enqueue_scripts', 'abidar_enqueue_scripts' );
 
 /**
+ * بارگذاری غیرمسدودکننده (Non-blocking) فونت‌های آنلاین گوگل.
+ *
+ * استایل فونت با media="print" درج و پس از بارگذاری به all تبدیل می‌شود؛ بنابراین
+ * اگر دسترسی به fonts.googleapis.com کند یا مسدود باشد، رندر صفحه و بوم المنتور
+ * هرگز پشت این درخواست قفل نمی‌شود.
+ *
+ * @param string $tag    تگ HTML استایل.
+ * @param string $handle نام هندل استایل.
+ * @param string $href   آدرس فایل استایل.
+ * @return string
+ */
+function abidar_async_google_fonts( $tag, $handle, $href ) {
+	if ( 'abidar-google-fonts' !== $handle ) {
+		return $tag;
+	}
+
+	return sprintf(
+		'<link rel="stylesheet" id="%1$s-css" href="%2$s" media="print" onload="this.media=\'all\'" />' . "\n",
+		esc_attr( $handle ),
+		esc_url( $href )
+	);
+}
+add_filter( 'style_loader_tag', 'abidar_async_google_fonts', 10, 3 );
+
+/**
  * بارگذاری ماژول‌های تفکیک‌شده قالب گروه آبیدر
  */
 require_once ABIDAR_DIR . '/inc/class-abidar-i18n.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-cpt.php';
+require_once ABIDAR_DIR . '/inc/class-abidar-cpt-editor.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-security.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-dynamic-css.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-preloader.php';
@@ -825,4 +858,254 @@ function abidar_first_char( $text ) {
 	}
 
 	return substr( $text, 0, 1 );
+}
+
+/**
+ * دریافت متای پنل حرفه‌ای با مقدار پیش‌فرض.
+ *
+ * @param int    $post_id شناسه پست.
+ * @param string $key     کلید بدون پیشوند.
+ * @param mixed  $default مقدار پیش‌فرض.
+ * @return mixed
+ */
+function abidar_meta( $post_id, $key, $default = '' ) {
+	$value = get_post_meta( $post_id, '_abidar_' . $key, true );
+
+	if ( '' === $value || null === $value || false === $value ) {
+		return $default;
+	}
+
+	return $value;
+}
+
+/**
+ * تبدیل رشته شناسه‌های گالری به آرایه شناسه‌های معتبر.
+ *
+ * @param int $post_id شناسه پست.
+ * @return array
+ */
+function abidar_gallery_ids( $post_id ) {
+	$raw = get_post_meta( $post_id, '_abidar_gallery', true );
+
+	if ( empty( $raw ) ) {
+		return array();
+	}
+
+	if ( is_array( $raw ) ) {
+		return array_filter( array_map( 'absint', $raw ) );
+	}
+
+	return array_filter( array_map( 'absint', explode( ',', (string) $raw ) ) );
+}
+
+/**
+ * استخراج شناسه ویدیوی یوتیوب/ویمئو از آدرس، یا null برای فایل مستقیم.
+ *
+ * @param string $url آدرس ویدیو.
+ * @return array|null
+ */
+function abidar_parse_video_url( $url ) {
+	$url = trim( (string) $url );
+
+	if ( '' === $url ) {
+		return null;
+	}
+
+	// YouTube
+	if ( preg_match( '~(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([A-Za-z0-9_-]{6,})~i', $url, $m ) ) {
+		return array(
+			'type' => 'embed',
+			'src'  => 'https://www.youtube-nocookie.com/embed/' . $m[1] . '?rel=0',
+		);
+	}
+
+	// Vimeo
+	if ( preg_match( '~vimeo\.com/(?:video/)?(\d+)~i', $url, $m ) ) {
+		return array(
+			'type' => 'embed',
+			'src'  => 'https://player.vimeo.com/video/' . $m[1],
+		);
+	}
+
+	// Aparat (Iranian platform)
+	if ( preg_match( '~aparat\.com/v/([A-Za-z0-9]+)~i', $url, $m ) ) {
+		return array(
+			'type' => 'embed',
+			'src'  => 'https://www.aparat.com/video/video/embed/videohash/' . $m[1] . '/vt/frame',
+		);
+	}
+
+	if ( preg_match( '~\.(mp4|webm|ogg|m4v)(\?|$)~i', $url ) ) {
+		return array(
+			'type' => 'file',
+			'src'  => $url,
+		);
+	}
+
+	return array(
+		'type' => 'embed',
+		'src'  => $url,
+	);
+}
+
+/**
+ * رندر بلوک ویدیو برای نوشته‌های اختصاصی.
+ *
+ * @param int $post_id شناسه پست.
+ */
+function abidar_render_video_block( $post_id ) {
+	$video_id  = (int) get_post_meta( $post_id, '_abidar_video_id', true );
+	$video_url = (string) get_post_meta( $post_id, '_abidar_video_url', true );
+
+	if ( $video_id > 0 && '' === $video_url ) {
+		$video_url = (string) wp_get_attachment_url( $video_id );
+	}
+
+	$video = abidar_parse_video_url( $video_url );
+
+	if ( ! $video ) {
+		return;
+	}
+
+	$poster = has_post_thumbnail( $post_id ) ? get_the_post_thumbnail_url( $post_id, 'large' ) : '';
+	?>
+	<div class="abidar-video-block">
+		<?php if ( 'file' === $video['type'] ) : ?>
+			<video class="abidar-video-block__player" controls preload="metadata" playsinline
+				<?php echo $poster ? 'poster="' . esc_url( $poster ) . '"' : ''; ?>>
+				<source src="<?php echo esc_url( $video['src'] ); ?>" />
+			</video>
+		<?php else : ?>
+			<div class="abidar-video-block__frame">
+				<iframe src="<?php echo esc_url( $video['src'] ); ?>" title="<?php echo esc_attr( get_the_title( $post_id ) ); ?>"
+					loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+					allowfullscreen></iframe>
+			</div>
+		<?php endif; ?>
+	</div>
+	<?php
+}
+
+/**
+ * رندر بلوک گالری تصاویر.
+ *
+ * @param int $post_id شناسه پست.
+ */
+function abidar_render_gallery_block( $post_id ) {
+	$ids = abidar_gallery_ids( $post_id );
+
+	if ( empty( $ids ) ) {
+		return;
+	}
+	?>
+	<div class="abidar-gallery-block">
+		<?php foreach ( $ids as $index => $attachment_id ) : ?>
+			<a class="abidar-gallery-block__item<?php echo 0 === $index ? ' is-wide' : ''; ?>"
+				href="<?php echo esc_url( (string) wp_get_attachment_url( $attachment_id ) ); ?>"
+				target="_blank" rel="noopener">
+				<?php echo wp_get_attachment_image( $attachment_id, 0 === $index ? 'large' : 'medium', false, array( 'loading' => 'lazy' ) ); ?>
+			</a>
+		<?php endforeach; ?>
+	</div>
+	<?php
+}
+
+/**
+ * رندر جدول مشخصات فنی (ریپیتر specs).
+ *
+ * @param int    $post_id شناسه پست.
+ * @param string $title   عنوان بلوک.
+ */
+function abidar_render_specs_table( $post_id, $title = '' ) {
+	$specs = get_post_meta( $post_id, '_abidar_specs', true );
+
+	if ( empty( $specs ) || ! is_array( $specs ) ) {
+		return;
+	}
+
+	$title = $title ? $title : __( 'مشخصات فنی', 'abidar-group' );
+	?>
+	<div class="abidar-specs-table">
+		<h3 class="abidar-specs-table__title"><?php echo esc_html( $title ); ?></h3>
+		<dl class="abidar-specs-table__list">
+			<?php foreach ( $specs as $spec ) : ?>
+				<?php
+				if ( empty( $spec['label'] ) && empty( $spec['value'] ) ) {
+					continue;
+				}
+				?>
+				<div class="abidar-specs-table__row">
+					<dt><?php echo esc_html( $spec['label'] ); ?></dt>
+					<dd><?php echo esc_html( $spec['value'] ); ?></dd>
+				</div>
+			<?php endforeach; ?>
+		</dl>
+	</div>
+	<?php
+}
+
+/**
+ * رندر بلوک‌های عمومی ریپیتر (دستاوردها، مزیت‌ها، گام‌ها، تخصص‌ها، دامنه).
+ *
+ * @param int    $post_id شناسه پست.
+ * @param string $meta_key کلید بدون پیشوند (achievements|features|steps|expertise|scope).
+ * @param string $title    عنوان بلوک.
+ * @param string $icon     آیکون پیش‌فرض هر ردیف.
+ */
+function abidar_render_repeater_block( $post_id, $meta_key, $title, $icon = '✓' ) {
+	$rows = get_post_meta( $post_id, '_abidar_' . $meta_key, true );
+
+	if ( empty( $rows ) || ! is_array( $rows ) ) {
+		return;
+	}
+	?>
+	<section class="abidar-repeater-block abidar-repeater-block--<?php echo esc_attr( $meta_key ); ?>">
+		<h3 class="abidar-repeater-block__title"><?php echo esc_html( $title ); ?></h3>
+		<ul class="abidar-repeater-block__list">
+			<?php foreach ( $rows as $row ) : ?>
+				<?php
+				if ( empty( $row['label'] ) && empty( $row['value'] ) ) {
+					continue;
+				}
+				?>
+				<li class="abidar-repeater-block__item">
+					<span class="abidar-repeater-block__icon" aria-hidden="true"><?php echo esc_html( $icon ); ?></span>
+					<div>
+						<?php if ( ! empty( $row['label'] ) ) : ?>
+							<strong><?php echo esc_html( $row['label'] ); ?></strong>
+						<?php endif; ?>
+						<?php if ( ! empty( $row['value'] ) ) : ?>
+							<p><?php echo esc_html( $row['value'] ); ?></p>
+						<?php endif; ?>
+					</div>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	</section>
+	<?php
+}
+
+/**
+ * رندر دکمه دانلود PDF بروشور.
+ *
+ * @param int $post_id شناسه پست.
+ */
+function abidar_render_pdf_button( $post_id ) {
+	$pdf_id  = (int) get_post_meta( $post_id, '_abidar_pdf_id', true );
+	$pdf_url = (string) get_post_meta( $post_id, '_abidar_pdf_url', true );
+
+	if ( $pdf_id > 0 && '' === $pdf_url ) {
+		$pdf_url = (string) wp_get_attachment_url( $pdf_id );
+	}
+
+	if ( '' === $pdf_url ) {
+		return;
+	}
+	?>
+	<a class="abidar-btn abidar-btn--outline-gold abidar-btn--sm abidar-btn--full abidar-pdf-btn"
+		href="<?php echo esc_url( $pdf_url ); ?>" target="_blank" rel="noopener noreferrer">
+		<span aria-hidden="true">📄</span>
+		<?php echo esc_html( abidar_t( 'cta_download_catalog', 'دریافت کاتالوگ / بروشور PDF' ) ); ?>
+	</a>
+	<?php
 }

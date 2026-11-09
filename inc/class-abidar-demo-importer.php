@@ -128,7 +128,11 @@ class Abidar_Demo_Importer {
 
 	/**
 	 * ساخت ساختار استاندارد JSON المنتور (_elementor_data) برای هر برگه
-	 * تا کاربر بتواند هر صفحه را مستقیماً در ویرایشگر المنتور رایگان باز و ویرایش کند.
+	 *
+	 * خروجی دقیقاً منطبق با اسکیمای رسمی Elementor است تا ویرایشگر بدون خطا باز شود:
+	 * - هر بخش (section) دارای column با کلید isInner
+	 * - هر ویجت با widgetType معتبر و settings قابل‌فهم برای همان ویجت
+	 * - شناسه‌ها ۷ کاراکتری هگز و یکتا هستند
 	 *
 	 * @param string $page_key کلید برگه.
 	 * @param array  $widgets  لیست ویجت‌های اختصاصی صفحه.
@@ -139,41 +143,36 @@ class Abidar_Demo_Importer {
 		$index    = 1;
 
 		foreach ( $widgets as $widget_name ) {
-			$settings = array(
-				'layout_style' => 'layout_1',
-				'sector_filter'=> 'all',
-				'posts_count'  => 6,
-				'show_filter'  => 'yes',
-			);
-
-			if ( 'services' === $page_key && 'abidar_services' === $widget_name ) {
-				$settings['layout_style'] = 'layout_2';
-			}
-			if ( 'projects' === $page_key && 'abidar_projects' === $widget_name ) {
-				$settings['layout_style'] = 'layout_1';
-			}
+			$settings = self::get_elementor_widget_defaults( $page_key, $widget_name );
 
 			$elements[] = array(
-				'id'       => substr( md5( $page_key . '_sec_' . $index ), 0, 7 ),
+				'id'       => substr( md5( $page_key . '_sec_' . $index . wp_rand( 1000, 9999 ) ), 0, 7 ),
 				'elType'   => 'section',
 				'settings' => array(
-					'layout'        => 'full_width',
+					'layout'          => 'full_width',
+					'content_width'   => array( 'unit' => 'px', 'size' => 1520 ),
+					'gap'             => 'no',
 					'stretch_section' => 'section-stretched',
+					'background_background' => 'classic',
 				),
 				'elements' => array(
 					array(
-						'id'       => substr( md5( $page_key . '_col_' . $index ), 0, 7 ),
+						'id'       => substr( md5( $page_key . '_col_' . $index . wp_rand( 1000, 9999 ) ), 0, 7 ),
 						'elType'   => 'column',
-						'settings' => array( '_column_size' => 100 ),
+						'settings' => array(
+							'_column_size' => 100,
+							'_inline_size' => null,
+						),
 						'elements' => array(
 							array(
-								'id'         => substr( md5( $page_key . '_wid_' . $index ), 0, 7 ),
+								'id'         => substr( md5( $page_key . '_wid_' . $index . wp_rand( 1000, 9999 ) ), 0, 7 ),
 								'elType'     => 'widget',
 								'widgetType' => $widget_name,
 								'settings'   => $settings,
 								'elements'   => array(),
 							),
 						),
+						'isInner'  => false,
 					),
 				),
 			);
@@ -181,6 +180,94 @@ class Abidar_Demo_Importer {
 		}
 
 		return wp_json_encode( $elements );
+	}
+
+	/**
+	 * مقادیر پیش‌فرض معتبر برای هر ویجت اختصاصی.
+	 *
+	 * فقط کلیدهایی که واقعاً در register_controls() همان ویجت تعریف شده‌اند
+	 * استفاده می‌شوند تا ویرایشگر المنتور بدون هشدار باز شود.
+	 *
+	 * @param string $page_key    کلید برگه.
+	 * @param string $widget_name نام ویجت.
+	 * @return array
+	 */
+	public static function get_elementor_widget_defaults( $page_key, $widget_name ) {
+		$layouts = self::get_widget_layout_map();
+
+		$settings = array(
+			'layout_style' => isset( $layouts[ $widget_name ][0] ) ? $layouts[ $widget_name ][0] : 'layout_1',
+		);
+
+		switch ( $widget_name ) {
+			case 'abidar_header_nav':
+				$settings = array_merge(
+					$settings,
+					array(
+						'show_topbar'        => 'yes',
+						'show_lang_switcher' => 'yes',
+						'show_cta_btn'       => 'yes',
+					)
+				);
+				break;
+
+			case 'abidar_services':
+				$settings = array_merge(
+					$settings,
+					array(
+						'layout_style'         => 'layout_2',
+						'sector_filter'        => 'all',
+						'show_layout_switcher' => 'no',
+					)
+				);
+				break;
+
+			case 'abidar_team':
+				$settings = array_merge(
+					$settings,
+					array( 'layout_style' => 'layout_1' )
+				);
+				break;
+
+			case 'abidar_contact_hub':
+				$settings = array_merge(
+					$settings,
+					array(
+						'show_form'    => 'yes',
+						'show_offices' => 'yes',
+					)
+				);
+				break;
+
+			case 'abidar_projects':
+				$settings = array_merge(
+					$settings,
+					array( 'show_progress_bar' => 'yes' )
+				);
+				break;
+		}
+
+		return $settings;
+	}
+
+	/**
+	 * نقشه چیدمان‌های پشتیبانی‌شده هر ویجت (اولین مورد = پیش‌فرض).
+	 *
+	 * @return array
+	 */
+	public static function get_widget_layout_map() {
+		return array(
+			'abidar_header_nav'     => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
+			'abidar_footer_builder' => array( 'layout_1', 'layout_2', 'layout_3' ),
+			'abidar_lang_switcher'  => array( 'pills_flag', 'compact_iso', 'dropdown' ),
+			'abidar_hero_slider'    => array( 'layout_1', 'layout_2', 'layout_3' ),
+			'abidar_about_timeline' => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
+			'abidar_services'       => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
+			'abidar_projects'       => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
+			'abidar_team'           => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
+			'abidar_certificates'   => array( 'layout_1', 'layout_2', 'layout_3' ),
+			'abidar_contact_hub'    => array( 'layout_1', 'layout_2', 'layout_3' ),
+		);
 	}
 
 	/**
@@ -257,6 +344,18 @@ class Abidar_Demo_Importer {
 					update_post_meta( $post_id, '_abidar_title_zh', $srv['title_zh'] );
 					update_post_meta( $post_id, '_abidar_desc_en', $srv['desc_en'] );
 					update_post_meta( $post_id, '_abidar_desc_zh', $srv['desc_zh'] );
+
+					// فیلدهای پنل حرفه‌ای: خلاصه، نکات کلیدی، ویژگی‌ها و مشخصات.
+					update_post_meta( $post_id, '_abidar_summary', $srv['desc_fa'] );
+					update_post_meta(
+						$post_id,
+						'_abidar_highlights',
+						implode( "\n", isset( $srv['features'] ) ? (array) $srv['features'] : array() )
+					);
+					update_post_meta( $post_id, '_abidar_features', self::features_to_rows( $srv, 'features' ) );
+					update_post_meta( $post_id, '_abidar_specs', self::features_to_rows( $srv, 'features', 'مشخصه' ) );
+					update_post_meta( $post_id, '_abidar_show_on_home', '1' );
+					update_post_meta( $post_id, '_abidar_gallery', self::sector_gallery( $post_id, $srv ) );
 				}
 			}
 		}
@@ -283,6 +382,30 @@ class Abidar_Demo_Importer {
 					update_post_meta( $post_id, '_abidar_year', $prj['year'] );
 					update_post_meta( $post_id, '_abidar_title_en', $prj['title_en'] );
 					update_post_meta( $post_id, '_abidar_title_zh', $prj['title_zh'] );
+
+					// فیلدهای پنل حرفه‌ای: خلاصه، دستاوردها، مشخصات فنی و گالری.
+					update_post_meta( $post_id, '_abidar_summary', $prj['desc_fa'] );
+					update_post_meta( $post_id, '_abidar_badge_text', 'پروژه شاخص هلدینگ' );
+					update_post_meta(
+						$post_id,
+						'_abidar_specs',
+						array(
+							array( 'label' => 'کارفرما', 'value' => $prj['client_fa'] ),
+							array( 'label' => 'موقعیت', 'value' => $prj['location_fa'] ),
+							array( 'label' => 'ظرفیت', 'value' => $prj['capacity'] ),
+							array( 'label' => 'بازه اجرا', 'value' => (string) $prj['year'] ),
+						)
+					);
+					update_post_meta(
+						$post_id,
+						'_abidar_achievements',
+						array(
+							array( 'label' => 'پیشرفت فیزیکی', 'value' => $prj['progress'] . '٪ تا پایان دوره گزارش' ),
+							array( 'label' => 'ایمنی کارگاه', 'value' => 'بدون حادثه منجر به توقف کار' ),
+							array( 'label' => 'کیفیت اجرا', 'value' => 'مطابق استانداردهای ISO 9001 / 45001' ),
+						)
+					);
+					update_post_meta( $post_id, '_abidar_gallery', self::sector_gallery( $post_id, $prj ) );
 				}
 			}
 		}
@@ -313,6 +436,20 @@ class Abidar_Demo_Importer {
 					update_post_meta( $post_id, '_abidar_linkedin', $member['linkedin'] );
 					update_post_meta( $post_id, '_abidar_title_en', $member['name_en'] );
 					update_post_meta( $post_id, '_abidar_title_zh', $member['name_zh'] );
+
+					// فیلدهای پنل حرفه‌ای: خلاصه، حوزه‌های تخصصی و نشان سمت.
+					update_post_meta( $post_id, '_abidar_summary', $member['bio_fa'] );
+					update_post_meta( $post_id, '_abidar_badge', $member['role_fa'] );
+					update_post_meta(
+						$post_id,
+						'_abidar_expertise',
+						array(
+							array( 'label' => 'حوزه تخصصی', 'value' => $member['dept_fa'] ),
+							array( 'label' => 'تحصیلات', 'value' => $member['education'] ),
+							array( 'label' => 'سابقه اجرایی', 'value' => $member['experience'] ),
+						)
+					);
+					self::sector_gallery( $post_id, array( 'sector' => 'energy' ) );
 				}
 			}
 		}
@@ -335,6 +472,20 @@ class Abidar_Demo_Importer {
 					update_post_meta( $post_id, '_abidar_cert_year', $cert['year'] );
 					update_post_meta( $post_id, '_abidar_title_en', $cert['title_en'] );
 					update_post_meta( $post_id, '_abidar_title_zh', $cert['title_zh'] );
+
+					// فیلدهای پنل حرفه‌ای: خلاصه، نشان و دامنه اعتبار.
+					update_post_meta( $post_id, '_abidar_summary', sprintf( '%s — صادرشده توسط %s', $cert['title_fa'], $cert['issuer_fa'] ) );
+					update_post_meta( $post_id, '_abidar_badge', $cert['code'] );
+					update_post_meta(
+						$post_id,
+						'_abidar_scope',
+						array(
+							array( 'label' => 'مرجع صدور', 'value' => $cert['issuer_fa'] ),
+							array( 'label' => 'بازه اعتبار', 'value' => (string) $cert['year'] ),
+							array( 'label' => 'کد استعلام', 'value' => $cert['code'] ),
+						)
+					);
+					update_post_meta( $post_id, '_abidar_gallery', self::sector_gallery( $post_id, array( 'sector' => 'mining' ) ) );
 				}
 			}
 		}
@@ -358,6 +509,146 @@ class Abidar_Demo_Importer {
 		update_option( 'abidar_demo_installed_v2', current_time( 'mysql' ) );
 
 		return $created_pages;
+	}
+
+	/**
+	 * تبدیل فهرست رشته‌ای داده دمو به ردیف‌های ریپیتر (label/value).
+	 *
+	 * @param array  $item       یک ردیف از مجموعه داده دمو.
+	 * @param string $key        کلید فهرست در مجموعه داده.
+	 * @param string $label_base پیشوند برچسب (برای ریپیتر مشخصات).
+	 * @return array
+	 */
+	private static function features_to_rows( $item, $key = 'features', $label_base = '' ) {
+		if ( empty( $item[ $key ] ) || ! is_array( $item[ $key ] ) ) {
+			return array();
+		}
+
+		$rows  = array();
+		$index = 1;
+
+		foreach ( $item[ $key ] as $feature ) {
+			$feature = trim( (string) $feature );
+
+			if ( '' === $feature ) {
+				continue;
+			}
+
+			if ( '' === $label_base ) {
+				$rows[] = array(
+					'label' => $feature,
+					'value' => '',
+				);
+			} else {
+				/* translators: 1: label prefix, 2: row number */
+				$label = sprintf( '%1$s %2$s', $label_base, number_format_i18n( $index ) );
+
+				$rows[] = array(
+					'label' => $label,
+					'value' => $feature,
+				);
+			}
+
+			$index++;
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * وارد کردن تصویر قالب به کتابخانه رسانه و بازگرداندن شناسه پیوست.
+	 *
+	 * تصاویر دمو داخل پوشه assets/images قالب قرار دارند؛ این متد آن‌ها را یک بار
+	 * به کتابخانه رسانه وردپرس منتقل می‌کند تا گالری‌ها و تصاویر شاخص واقعی باشند.
+	 *
+	 * @param string $relative_path مسیر نسبی تصویر، مثل /assets/images/sector-mining.jpg
+	 * @param string $title         عنوان پیوست.
+	 * @return int شناسه پیوست یا صفر.
+	 */
+	private static function import_theme_image( $relative_path, $title = '' ) {
+		if ( empty( $relative_path ) ) {
+			return 0;
+		}
+
+		$cache = get_option( 'abidar_demo_attachments', array() );
+		$cache = is_array( $cache ) ? $cache : array();
+
+		if ( ! empty( $cache[ $relative_path ] ) && get_post( (int) $cache[ $relative_path ] ) ) {
+			return (int) $cache[ $relative_path ];
+		}
+
+		$source = ABIDAR_DIR . $relative_path;
+
+		if ( ! file_exists( $source ) ) {
+			return 0;
+		}
+
+		$upload = wp_upload_bits( basename( $relative_path ), null, file_get_contents( $source ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		if ( ! empty( $upload['error'] ) ) {
+			return 0;
+		}
+
+		$attachment_id = wp_insert_attachment(
+			array(
+				'post_mime_type' => 'image/jpeg',
+				'post_title'     => $title ? $title : preg_replace( '/\.[a-z]+$/i', '', basename( $relative_path ) ),
+				'post_content'   => '',
+				'post_status'    => 'inherit',
+			),
+			$upload['file']
+		);
+
+		if ( is_wp_error( $attachment_id ) || ! $attachment_id ) {
+			return 0;
+		}
+
+		// توابع پردازش تصویر فقط در محیط مدیریتی وردپرس در دسترس هستند.
+		if ( file_exists( ABSPATH . 'wp-admin/includes/image.php' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+		}
+
+		wp_update_attachment_metadata(
+			$attachment_id,
+			wp_generate_attachment_metadata( $attachment_id, $upload['file'] )
+		);
+
+		$cache[ $relative_path ] = (int) $attachment_id;
+		update_option( 'abidar_demo_attachments', $cache );
+
+		return (int) $attachment_id;
+	}
+
+	/**
+	 * ساخت گالری و تصویر شاخص یک محتوای دمو بر اساس حوزه فعالیت.
+	 *
+	 * @param int   $post_id شناسه پست.
+	 * @param array $item    ردیف مجموعه داده دمو.
+	 * @return string شناسه‌های پیوست جداشده با کاما.
+	 */
+	private static function sector_gallery( $post_id, $item ) {
+		$sector = isset( $item['sector'] ) ? $item['sector'] : 'mining';
+		$map    = array(
+			'mining' => array( '/assets/images/sector-mining.jpg', '/assets/images/sector-energy.jpg', '/assets/images/sector-oil.jpg' ),
+			'energy' => array( '/assets/images/sector-energy.jpg', '/assets/images/sector-mining.jpg', '/assets/images/sector-oil.jpg' ),
+			'oil'    => array( '/assets/images/sector-oil.jpg', '/assets/images/sector-energy.jpg', '/assets/images/sector-mining.jpg' ),
+		);
+		$files  = isset( $map[ $sector ] ) ? $map[ $sector ] : $map['mining'];
+		$ids    = array();
+
+		foreach ( $files as $file ) {
+			$attachment_id = self::import_theme_image( $file, get_the_title( $post_id ) );
+
+			if ( $attachment_id ) {
+				$ids[] = $attachment_id;
+			}
+		}
+
+		if ( $ids && ! has_post_thumbnail( $post_id ) ) {
+			set_post_thumbnail( $post_id, $ids[0] );
+		}
+
+		return implode( ',', $ids );
 	}
 
 	/**

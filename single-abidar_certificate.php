@@ -70,7 +70,8 @@ while ( have_posts() ) :
 							<?php endif; ?>
 						</dl>
 
-						<a href="<?php echo esc_url( abidar_page_url( 'contact-us' ) ); ?>" class="abidar-btn abidar-btn--gold">
+						<?php $abidar_verify = abidar_meta( get_the_ID(), 'cert_verify_url' ); ?>
+						<a href="<?php echo esc_url( $abidar_verify ? $abidar_verify : abidar_page_url( 'contact-us' ) ); ?>" class="abidar-btn abidar-btn--gold"<?php echo $abidar_verify ? ' target="_blank" rel="noopener noreferrer"' : ''; ?>>
 							<?php echo esc_html( abidar_t( 'cert_verify' ) ); ?>
 						</a>
 					</div>
@@ -79,8 +80,36 @@ while ( have_posts() ) :
 		</div>
 
 		<div class="abidar-section">
-			<div class="abidar-container abidar-entry-content abidar-article-body">
-				<?php the_content(); ?>
+			<div class="abidar-container">
+				<div class="abidar-single-layout">
+					<div class="abidar-single-layout__content">
+						<?php $abidar_summary = abidar_meta( get_the_ID(), 'summary' ); ?>
+						<?php if ( $abidar_summary ) : ?>
+							<p class="abidar-single-lead"><?php echo esc_html( $abidar_summary ); ?></p>
+						<?php endif; ?>
+
+						<?php abidar_render_video_block( get_the_ID() ); ?>
+
+						<div class="abidar-entry-content abidar-article-body">
+							<?php the_content(); ?>
+						</div>
+
+						<?php abidar_render_repeater_block( get_the_ID(), 'scope', __( 'دامنه اعتبار و کاربرد', 'abidar-group' ), '◆' ); ?>
+
+						<?php abidar_render_gallery_block( get_the_ID() ); ?>
+					</div>
+
+					<aside class="abidar-single-layout__aside">
+						<div class="abidar-spec-card">
+							<h4><?php esc_html_e( 'استعلام اصالت مدرک', 'abidar-group' ); ?></h4>
+							<p><?php esc_html_e( 'برای صحت‌سنجی گواهی‌نامه، کد اختصاصی را به واحد تضمین کیفیت گروه هلدینگ آبیدر اعلام کنید.', 'abidar-group' ); ?></p>
+							<?php abidar_render_pdf_button( get_the_ID() ); ?>
+							<a href="<?php echo esc_url( abidar_page_url( 'contact-us' ) ); ?>" class="abidar-btn abidar-btn--gold abidar-btn--sm abidar-btn--full">
+								<?php echo esc_html( abidar_t( 'nav_contact' ) ); ?>
+							</a>
+						</div>
+					</aside>
+				</div>
 			</div>
 		</div>
 	</article>

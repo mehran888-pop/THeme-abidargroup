@@ -61,9 +61,22 @@ while ( have_posts() ) :
 			<div class="abidar-container">
 				<div class="abidar-single-layout">
 					<div class="abidar-single-layout__content">
+						<?php $abidar_summary = abidar_meta( get_the_ID(), 'summary' ); ?>
+						<?php if ( $abidar_summary ) : ?>
+							<p class="abidar-single-lead"><?php echo esc_html( $abidar_summary ); ?></p>
+						<?php endif; ?>
+
+						<?php abidar_render_video_block( get_the_ID() ); ?>
+
 						<div class="abidar-entry-content abidar-article-body">
 							<?php the_content(); ?>
 						</div>
+
+						<?php abidar_render_repeater_block( get_the_ID(), 'achievements', __( 'دستاوردها و نتایج پروژه', 'abidar-group' ), '🏆' ); ?>
+
+						<?php abidar_render_specs_table( get_the_ID(), __( 'مشخصات فنی تکمیلی', 'abidar-group' ) ); ?>
+
+						<?php abidar_render_gallery_block( get_the_ID() ); ?>
 
 						<?php
 						$abidar_related = new WP_Query(
@@ -136,6 +149,7 @@ while ( have_posts() ) :
 									<div><dt><?php echo esc_html( abidar_t( 'project_year' ) ); ?></dt><dd><?php echo esc_html( $abidar_year ); ?></dd></div>
 								<?php endif; ?>
 							</dl>
+							<?php abidar_render_pdf_button( get_the_ID() ); ?>
 							<a href="<?php echo esc_url( abidar_page_url( 'contact-us' ) ); ?>" class="abidar-btn abidar-btn--gold abidar-btn--sm abidar-btn--full">
 								<?php esc_html_e( 'درخواست اطلاعات فنی بیشتر', 'abidar-group' ); ?>
 							</a>

@@ -206,45 +206,14 @@ class Abidar_CPT {
 	}
 
 	/**
-	 * ثبت متاباکس‌های اختصاصی و چندزبانه برای تمام پست‌تایپ‌ها
+	 * ثبت متاباکس‌ها.
+	 *
+	 * پست‌تایپ‌های خدمات، پروژه‌ها، تیم و مدارک متاباکس متنی ندارند؛
+	 * ویرایش این چهار نوع محتوا کاملاً توسط پنل حرفه‌ای Abidar_CPT_Editor
+	 * (تب‌بندی، رسانه، ریپیتر و پیش‌نمایش زنده) انجام می‌شود.
+	 * بنابراین در این متد فقط متاباکس قالب‌های هدر/فوتر ثبت می‌شود.
 	 */
 	public static function register_meta_boxes() {
-		add_meta_box(
-			'abidar_service_meta',
-			esc_html__( 'مشخصات تخصصی خدمت و ترجمه چندزبانه (گروه آبیدر)', 'abidar-group' ),
-			array( __CLASS__, 'render_service_meta_box' ),
-			'abidar_service',
-			'normal',
-			'high'
-		);
-
-		add_meta_box(
-			'abidar_project_meta',
-			esc_html__( 'شناسنامه فنی پروژه و ترجمه چندزبانه (گروه آبیدر)', 'abidar-group' ),
-			array( __CLASS__, 'render_project_meta_box' ),
-			'abidar_project',
-			'normal',
-			'high'
-		);
-
-		add_meta_box(
-			'abidar_team_meta',
-			esc_html__( 'اطلاعات سازمانی مدیر / متخصص و شبکه‌های اجتماعی', 'abidar-group' ),
-			array( __CLASS__, 'render_team_meta_box' ),
-			'abidar_team',
-			'normal',
-			'high'
-		);
-
-		add_meta_box(
-			'abidar_certificate_meta',
-			esc_html__( 'جزئیات گواهینامه، استاندارد ISO و لینک استعلام اصالت', 'abidar-group' ),
-			array( __CLASS__, 'render_certificate_meta_box' ),
-			'abidar_certificate',
-			'normal',
-			'high'
-		);
-
 		add_meta_box(
 			'abidar_hf_meta',
 			esc_html__( 'تنظیمات جایگاه قالب هدر / فوتر المنتور رایگان', 'abidar-group' ),
@@ -255,235 +224,9 @@ class Abidar_CPT {
 		);
 	}
 
-	/**
-	 * رندر متاباکس خدمات
-	 *
-	 * @param WP_Post $post شیء پست.
-	 */
-	public static function render_service_meta_box( $post ) {
-		wp_nonce_field( 'abidar_save_cpt_meta', 'abidar_cpt_meta_nonce' );
-		$sector    = get_post_meta( $post->ID, '_abidar_sector', true );
-		$icon      = get_post_meta( $post->ID, '_abidar_icon', true );
-		$metric    = get_post_meta( $post->ID, '_abidar_metric', true );
-		$title_en  = get_post_meta( $post->ID, '_abidar_title_en', true );
-		$title_zh  = get_post_meta( $post->ID, '_abidar_title_zh', true );
-		$desc_en   = get_post_meta( $post->ID, '_abidar_desc_en', true );
-		$desc_zh   = get_post_meta( $post->ID, '_abidar_desc_zh', true );
-		$pdf_url   = get_post_meta( $post->ID, '_abidar_pdf_url', true );
-		?>
-		<div class="abidar-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 0;">
-			<p>
-				<label><strong><?php esc_html_e( 'حوزه صنعتی (معادن / انرژی / نفت):', 'abidar-group' ); ?></strong></label><br>
-				<select name="_abidar_sector" style="width:100%;">
-					<option value="mining" <?php selected( $sector, 'mining' ); ?>><?php esc_html_e( 'معادن و صنایع معدنی (Mining)', 'abidar-group' ); ?></option>
-					<option value="energy" <?php selected( $sector, 'energy' ); ?>><?php esc_html_e( 'انرژی و نیروگاه‌ها (Energy)', 'abidar-group' ); ?></option>
-					<option value="oil" <?php selected( $sector, 'oil' ); ?>><?php esc_html_e( 'نفت، گاز و پتروشیمی (Oil & Gas)', 'abidar-group' ); ?></option>
-				</select>
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'شاخص کلیدی عملکرد (مثلاً +۱۲.۵ میلیون تن ظرفیت):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_metric" value="<?php echo esc_attr( $metric ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'کد آیکون صنعتی (pickaxe / bolt / flame / shield / globe):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_icon" value="<?php echo esc_attr( $icon ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'لینک کاتالوگ فنی (PDF):', 'abidar-group' ); ?></strong></label><br>
-				<input type="url" name="_abidar_pdf_url" value="<?php echo esc_url( $pdf_url ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'عنوان انگلیسی (English Title):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_en" value="<?php echo esc_attr( $title_en ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'عنوان چینی (Chinese Title - 中文):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_zh" value="<?php echo esc_attr( $title_zh ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'خلاصه انگلیسی (English Summary):', 'abidar-group' ); ?></strong></label><br>
-				<textarea name="_abidar_desc_en" rows="3" style="width:100%;direction:ltr;"><?php echo esc_textarea( $desc_en ); ?></textarea>
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'خلاصه چینی (Chinese Summary - 中文):', 'abidar-group' ); ?></strong></label><br>
-				<textarea name="_abidar_desc_zh" rows="3" style="width:100%;direction:ltr;"><?php echo esc_textarea( $desc_zh ); ?></textarea>
-			</p>
-		</div>
-		<?php
-	}
 
-	/**
-	 * رندر متاباکس پروژه‌ها
-	 *
-	 * @param WP_Post $post شیء پست.
-	 */
-	public static function render_project_meta_box( $post ) {
-		wp_nonce_field( 'abidar_save_cpt_meta', 'abidar_cpt_meta_nonce' );
-		$sector   = get_post_meta( $post->ID, '_abidar_sector', true );
-		$client   = get_post_meta( $post->ID, '_abidar_client', true );
-		$location = get_post_meta( $post->ID, '_abidar_location', true );
-		$capacity = get_post_meta( $post->ID, '_abidar_capacity', true );
-		$progress = get_post_meta( $post->ID, '_abidar_progress', true );
-		$year     = get_post_meta( $post->ID, '_abidar_year', true );
-		$title_en = get_post_meta( $post->ID, '_abidar_title_en', true );
-		$title_zh = get_post_meta( $post->ID, '_abidar_title_zh', true );
-		?>
-		<div class="abidar-meta-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:12px 0;">
-			<p>
-				<label><strong><?php esc_html_e( 'حوزه پروژه:', 'abidar-group' ); ?></strong></label><br>
-				<select name="_abidar_sector" style="width:100%;">
-					<option value="mining" <?php selected( $sector, 'mining' ); ?>><?php esc_html_e( 'معادن (Mining)', 'abidar-group' ); ?></option>
-					<option value="energy" <?php selected( $sector, 'energy' ); ?>><?php esc_html_e( 'انرژی (Energy)', 'abidar-group' ); ?></option>
-					<option value="oil" <?php selected( $sector, 'oil' ); ?>><?php esc_html_e( 'نفت و گاز (Oil & Gas)', 'abidar-group' ); ?></option>
-				</select>
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'کارفرما / سرمایه‌گذار:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_client" value="<?php echo esc_attr( $client ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'موقعیت جغرافیایی:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_location" value="<?php echo esc_attr( $location ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'ظرفیت تولید / مقیاس:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_capacity" value="<?php echo esc_attr( $capacity ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'درصد پیشرفت فیزیکی (0 تا 100):', 'abidar-group' ); ?></strong></label><br>
-				<input type="number" min="0" max="100" name="_abidar_progress" value="<?php echo esc_attr( $progress ? $progress : 100 ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'سال بهره‌برداری:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_year" value="<?php echo esc_attr( $year ); ?>" style="width:100%;" />
-			</p>
-			<p style="grid-column: span 1;">
-				<label><strong><?php esc_html_e( 'عنوان انگلیسی (English Title):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_en" value="<?php echo esc_attr( $title_en ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p style="grid-column: span 2;">
-				<label><strong><?php esc_html_e( 'عنوان چینی (Chinese Title):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_zh" value="<?php echo esc_attr( $title_zh ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-		</div>
-		<?php
-	}
 
-	/**
-	 * رندر متاباکس اعضای تیم و هیئت مدیره
-	 *
-	 * @param WP_Post $post شیء پست.
-	 */
-	public static function render_team_meta_box( $post ) {
-		wp_nonce_field( 'abidar_save_cpt_meta', 'abidar_cpt_meta_nonce' );
-		$role_fa    = get_post_meta( $post->ID, '_abidar_role_fa', true );
-		$dept_fa    = get_post_meta( $post->ID, '_abidar_dept_fa', true );
-		$dept_en    = get_post_meta( $post->ID, '_abidar_dept_en', true );
-		$dept_zh    = get_post_meta( $post->ID, '_abidar_dept_zh', true );
-		$role_en    = get_post_meta( $post->ID, '_abidar_role_en', true );
-		$role_zh    = get_post_meta( $post->ID, '_abidar_role_zh', true );
-		$education  = get_post_meta( $post->ID, '_abidar_education', true );
-		$experience = get_post_meta( $post->ID, '_abidar_experience', true );
-		$email      = get_post_meta( $post->ID, '_abidar_email', true );
-		$linkedin   = get_post_meta( $post->ID, '_abidar_linkedin', true );
-		$name_en    = get_post_meta( $post->ID, '_abidar_title_en', true );
-		$name_zh    = get_post_meta( $post->ID, '_abidar_title_zh', true );
-		?>
-		<div class="abidar-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 0;">
-			<p>
-				<label><strong><?php esc_html_e( 'سمت سازمانی (فارسی):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_role_fa" value="<?php echo esc_attr( $role_fa ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'سمت سازمانی (English Role):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_role_en" value="<?php echo esc_attr( $role_en ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'سمت سازمانی (Chinese Role - 职位):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_role_zh" value="<?php echo esc_attr( $role_zh ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'معاونت / دپارتمان (فارسی):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_dept_fa" value="<?php echo esc_attr( $dept_fa ); ?>" style="width:100%;" placeholder="<?php esc_attr_e( 'مثلاً معاونت معادن و صنایع معدنی', 'abidar-group' ); ?>" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'دپارتمان (English Division):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_dept_en" value="<?php echo esc_attr( $dept_en ); ?>" style="width:100%;direction:ltr;" placeholder="Mining Division" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'دپارتمان (Chinese Division - 事业部):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_dept_zh" value="<?php echo esc_attr( $dept_zh ); ?>" style="width:100%;direction:ltr;" placeholder="矿业事业部" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'مدرک تحصیلی و تخصص:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_education" value="<?php echo esc_attr( $education ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'سابقه اجرایی (سال):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_experience" value="<?php echo esc_attr( $experience ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'ایمیل سازمانی:', 'abidar-group' ); ?></strong></label><br>
-				<input type="email" name="_abidar_email" value="<?php echo esc_attr( $email ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'نام به انگلیسی (English Name):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_en" value="<?php echo esc_attr( $name_en ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'نام به چینی (Chinese Name):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_zh" value="<?php echo esc_attr( $name_zh ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p style="grid-column: span 2;">
-				<label><strong><?php esc_html_e( 'لینک پروفایل لینکدین (LinkedIn URL):', 'abidar-group' ); ?></strong></label><br>
-				<input type="url" name="_abidar_linkedin" value="<?php echo esc_url( $linkedin ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-		</div>
-		<?php
-	}
 
-	/**
-	 * رندر متاباکس مدارک، استانداردهای ISO و لوح‌ها
-	 *
-	 * @param WP_Post $post شیء پست.
-	 */
-	public static function render_certificate_meta_box( $post ) {
-		wp_nonce_field( 'abidar_save_cpt_meta', 'abidar_cpt_meta_nonce' );
-		$issuer     = get_post_meta( $post->ID, '_abidar_cert_issuer', true );
-		$cert_code  = get_post_meta( $post->ID, '_abidar_cert_code', true );
-		$issue_year = get_post_meta( $post->ID, '_abidar_cert_year', true );
-		$verify_url = get_post_meta( $post->ID, '_abidar_cert_verify_url', true );
-		$title_en   = get_post_meta( $post->ID, '_abidar_title_en', true );
-		$title_zh   = get_post_meta( $post->ID, '_abidar_title_zh', true );
-		?>
-		<div class="abidar-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 0;">
-			<p>
-				<label><strong><?php esc_html_e( 'مرجع صادرکننده (مثلاً TÜV NORD / ISO / وزارت صمت):', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_cert_issuer" value="<?php echo esc_attr( $issuer ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'شماره سریال / کد استاندارد گواهینامه:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_cert_code" value="<?php echo esc_attr( $cert_code ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'سال صدور / اعتبار:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_cert_year" value="<?php echo esc_attr( $issue_year ); ?>" style="width:100%;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'لینک استعلام اصالت مدرک:', 'abidar-group' ); ?></strong></label><br>
-				<input type="url" name="_abidar_cert_verify_url" value="<?php echo esc_url( $verify_url ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'عنوان انگلیسی مدرک:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_en" value="<?php echo esc_attr( $title_en ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-			<p>
-				<label><strong><?php esc_html_e( 'عنوان چینی مدرک:', 'abidar-group' ); ?></strong></label><br>
-				<input type="text" name="_abidar_title_zh" value="<?php echo esc_attr( $title_zh ); ?>" style="width:100%;direction:ltr;" />
-			</p>
-		</div>
-		<?php
-	}
 
 	/**
 	 * رندر متاباکس هدر و فوتر ساز المنتور رایگان
@@ -531,56 +274,18 @@ class Abidar_CPT {
 			return;
 		}
 
-		$text_fields = array(
-			'_abidar_sector',
-			'_abidar_icon',
-			'_abidar_metric',
-			'_abidar_title_en',
-			'_abidar_title_zh',
-			'_abidar_client',
-			'_abidar_location',
-			'_abidar_capacity',
-			'_abidar_progress',
-			'_abidar_year',
-			'_abidar_role_fa',
-			'_abidar_role_en',
-			'_abidar_role_zh',
-			'_abidar_dept_fa',
-			'_abidar_dept_en',
-			'_abidar_dept_zh',
-			'_abidar_education',
-			'_abidar_experience',
-			'_abidar_email',
-			'_abidar_cert_issuer',
-			'_abidar_cert_code',
-			'_abidar_cert_year',
-			'_abidar_hf_type',
-		);
-
-		foreach ( $text_fields as $field ) {
-			if ( isset( $_POST[ $field ] ) ) {
-				update_post_meta( $post_id, $field, sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) );
-			}
+		// این متد تنها متای قالب‌های هدر/فوتر (abidar_hf) را ذخیره می‌کند.
+		// خدمات، پروژه‌ها، تیم و مدارک توسط Abidar_CPT_Editor::save() ذخیره می‌شوند.
+		if ( 'abidar_hf' !== $post->post_type ) {
+			return;
 		}
 
-		$textarea_fields = array( '_abidar_desc_en', '_abidar_desc_zh' );
-		foreach ( $textarea_fields as $field ) {
-			if ( isset( $_POST[ $field ] ) ) {
-				update_post_meta( $post_id, $field, sanitize_textarea_field( wp_unslash( $_POST[ $field ] ) ) );
-			}
+		if ( isset( $_POST['_abidar_hf_type'] ) ) {
+			update_post_meta( $post_id, '_abidar_hf_type', sanitize_key( wp_unslash( $_POST['_abidar_hf_type'] ) ) );
 		}
 
-		$url_fields = array( '_abidar_pdf_url', '_abidar_linkedin', '_abidar_cert_verify_url' );
-		foreach ( $url_fields as $field ) {
-			if ( isset( $_POST[ $field ] ) ) {
-				update_post_meta( $post_id, $field, esc_url_raw( wp_unslash( $_POST[ $field ] ) ) );
-			}
-		}
-
-		if ( 'abidar_hf' === $post->post_type ) {
-			$active = isset( $_POST['_abidar_hf_active'] ) ? '1' : '0';
-			update_post_meta( $post_id, '_abidar_hf_active', $active );
-		}
+		$active = isset( $_POST['_abidar_hf_active'] ) ? '1' : '0';
+		update_post_meta( $post_id, '_abidar_hf_active', $active );
 	}
 
 	/**

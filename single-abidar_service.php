@@ -52,9 +52,24 @@ while ( have_posts() ) :
 			<div class="abidar-container">
 				<div class="abidar-single-layout">
 					<div class="abidar-single-layout__content">
+						<?php $abidar_summary = abidar_meta( get_the_ID(), 'summary' ); ?>
+						<?php if ( $abidar_summary ) : ?>
+							<p class="abidar-single-lead"><?php echo esc_html( $abidar_summary ); ?></p>
+						<?php endif; ?>
+
+						<?php abidar_render_video_block( get_the_ID() ); ?>
+
 						<div class="abidar-entry-content abidar-article-body">
 							<?php the_content(); ?>
 						</div>
+
+						<?php abidar_render_repeater_block( get_the_ID(), 'features', __( 'مزیت‌های کلیدی این خدمت', 'abidar-group' ), '✔' ); ?>
+
+						<?php abidar_render_repeater_block( get_the_ID(), 'steps', __( 'فرآیند اجرا و تحویل', 'abidar-group' ), '◆' ); ?>
+
+						<?php abidar_render_specs_table( get_the_ID(), __( 'مشخصات و ظرفیت‌ها', 'abidar-group' ) ); ?>
+
+						<?php abidar_render_gallery_block( get_the_ID() ); ?>
 
 						<?php if ( ! empty( $abidar_pdf ) ) : ?>
 							<div class="abidar-download-box">

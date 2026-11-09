@@ -65,6 +65,56 @@ function abidar_declare_elementor_widget_base() {
 class Abidar_Elementor_Init {
 
 	/**
+	 * محافظ بازگشت مجدد (Re-entrancy) برای رندر هدر و فوتر المنتور.
+	 *
+	 * اگر هدر/فوتر ساخته‌شده با المنتور خودش شامل ویجت هدر/فوتر باشد یا در حالت
+	 * پیش‌نمایش ویرایشگر رندر شود، فراخوانی تودرتو می‌تواند حلقه بی‌پایان بسازد و
+	 * ویرایشگر المنتور را در حالت «در حال بارگذاری» نگه دارد.
+	 *
+	 * @var bool
+	 */
+	private static $rendering_header = false;
+
+	/**
+	 * محافظ بازگشت مجدد برای فوتر.
+	 *
+	 * @var bool
+	 */
+	private static $rendering_footer = false;
+
+	/**
+	 * آیا در بافت ویرایشگر/پیش‌نمایش المنتور هستیم؟
+	 *
+	 * @return bool
+	 */
+	public static function is_elementor_editor_context() {
+		if ( isset( $_GET['elementor-preview'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return true;
+		}
+		if ( isset( $_GET['action'] ) && 'elementor' === $_GET['action'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return true;
+		}
+		if ( ! class_exists( '\Elementor\Plugin' ) ) {
+			return false;
+		}
+		try {
+			$plugin = \Elementor\Plugin::instance();
+
+			$edit_mode = ( isset( $plugin->editor ) && is_object( $plugin->editor ) && method_exists( $plugin->editor, 'is_edit_mode' ) )
+				? (bool) $plugin->editor->is_edit_mode()
+				: false;
+
+			$preview = ( isset( $plugin->preview ) && is_object( $plugin->preview ) && method_exists( $plugin->preview, 'is_preview_mode' ) )
+				? (bool) $plugin->preview->is_preview_mode()
+				: false;
+
+			return $edit_mode || $preview;
+		} catch ( \Throwable $e ) {
+			return false;
+		}
+	}
+
+	/**
 	 * راه‌اندازی قلاب‌های المنتور
 	 */
 	public static function init() {
@@ -124,8 +174,16 @@ class Abidar_Elementor_Init {
 
 		foreach ( $widget_files as $file ) {
 			$full_path = ABIDAR_DIR . $file;
-			if ( file_exists( $full_path ) ) {
+			if ( ! file_exists( $full_path ) ) {
+				continue;
+			}
+
+			// اگر یک فایل ویجت خطای مهلک بدهد، بقیه ویجت‌ها و کل صفحه باید سالم بمانند.
+			try {
 				require_once $full_path;
+			} catch ( \Throwable $e ) {
+				unset( $e );
+				continue;
 			}
 		}
 	}
@@ -159,21 +217,29 @@ class Abidar_Elementor_Init {
 	 * @param \Elementor\Elements_Manager $elements_manager مدیر المان‌های المنتور.
 	 */
 	public static function register_widget_categories( $elements_manager ) {
-		$elements_manager->add_category(
-			'abidar-header-footer',
-			array(
+		if ( ! is_object( $elements_manager ) || ! method_exists( $elements_manager, 'add_category' ) ) {
+			return;
+		}
+
+		$categories = array(
+			'abidar-header-footer' => array(
 				'title' => esc_html__( 'هدر و فوتر ساز گروه آبیدر (Elementor Free)', 'abidar-group' ),
 				'icon'  => 'eicon-header',
-			)
-		);
-
-		$elements_manager->add_category(
-			'abidar-elements',
-			array(
+			),
+			'abidar-elements'      => array(
 				'title' => esc_html__( 'المان‌های اختصاصی هلدینگ آبیدر (معادن، انرژی، نفت)', 'abidar-group' ),
 				'icon'  => 'eicon-apps',
-			)
+			),
 		);
+
+		foreach ( $categories as $slug => $args ) {
+			// هر خطا در ثبت دسته‌بندی نباید کل ویرایشگر المنتور را از کار بیندازد.
+			try {
+				$elements_manager->add_category( $slug, $args );
+			} catch ( \Throwable $e ) {
+				unset( $e );
+			}
+		}
 	}
 
 	/**
@@ -202,15 +268,26 @@ class Abidar_Elementor_Init {
 				continue;
 			}
 
-			$instance = new $class_name();
+			// محافظ ۱: ساخت نمونه در try/catch تا یک ویجت معیوب کل ویرایشگر را متوقف نکند.
+			try {
+				$instance = new $class_name();
+			} catch ( \Throwable $e ) {
+				continue;
+			}
 
-			// محافظ نهایی: تنها ویجت‌هایی ثبت می‌شوند که واقعاً از Widget_Base المنتور ارث‌بری کرده باشند.
+			// محافظ ۲: تنها ویجت‌هایی ثبت می‌شوند که واقعاً از Widget_Base المنتور ارث‌بری کرده باشند.
 			// این بررسی از خطای Fatal نوع‌شناسی در Widgets_Manager::register() جلوگیری می‌کند.
 			if ( ! $instance instanceof \Elementor\Widget_Base ) {
 				continue;
 			}
 
-			$widgets_manager->register( $instance );
+			// محافظ ۳: ثبت هر ویجت جداگانه محافظت می‌شود؛ خطای یک ویجت
+			// نباید پاسخ ویرایشگر را ۵۰۰ کند و نشانگر بارگذاری را بی‌پایان نگه دارد.
+			try {
+				$widgets_manager->register( $instance );
+			} catch ( \Throwable $e ) {
+				continue;
+			}
 		}
 	}
 
@@ -218,6 +295,11 @@ class Abidar_Elementor_Init {
 	 * بررسی و رندر هدر طراحی‌شده با المنتور رایگان (در صورت وجود) یا رندر ویجت هدر اختصاصی
 	 */
 	public static function render_site_header() {
+		// محافظ بازگشت مجدد: جلوگیری از حلقه بی‌پایان هنگام رندر هدر داخل خودش.
+		if ( self::$rendering_header ) {
+			return;
+		}
+
 		$header_layout    = abidar_get_option( 'header_layout', 'layout_1' );
 		$custom_header_id = (int) abidar_get_option( 'custom_header_id', 0 );
 
@@ -240,9 +322,21 @@ class Abidar_Elementor_Init {
 			if ( $hf_query->have_posts() ) {
 				$hf_post = $hf_query->posts[0];
 				if ( self::is_elementor_active() && class_exists( '\Elementor\Plugin' ) ) {
-					echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $hf_post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					wp_reset_postdata();
-					return;
+					self::$rendering_header = true;
+
+					try {
+						$builder_content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $hf_post->ID, true );
+					} catch ( \Throwable $e ) {
+						$builder_content = '';
+					}
+
+					self::$rendering_header = false;
+
+					if ( '' !== trim( (string) $builder_content ) ) {
+						echo $builder_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						wp_reset_postdata();
+						return;
+					}
 				}
 			}
 			wp_reset_postdata();
@@ -280,6 +374,11 @@ class Abidar_Elementor_Init {
 	 * بررسی و رندر فوتر طراحی‌شده با المنتور رایگان (در صورت وجود) یا رندر ویجت فوتر اختصاصی
 	 */
 	public static function render_site_footer() {
+		// محافظ بازگشت مجدد: جلوگیری از حلقه بی‌پایان هنگام رندر فوتر داخل خودش.
+		if ( self::$rendering_footer ) {
+			return;
+		}
+
 		$footer_layout    = abidar_get_option( 'footer_layout', 'layout_1' );
 		$custom_footer_id = (int) abidar_get_option( 'custom_footer_id', 0 );
 
@@ -301,9 +400,21 @@ class Abidar_Elementor_Init {
 			if ( $hf_query->have_posts() ) {
 				$hf_post = $hf_query->posts[0];
 				if ( self::is_elementor_active() && class_exists( '\Elementor\Plugin' ) ) {
-					echo \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $hf_post->ID ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-					wp_reset_postdata();
-					return;
+					self::$rendering_footer = true;
+
+					try {
+						$builder_content = \Elementor\Plugin::instance()->frontend->get_builder_content_for_display( $hf_post->ID, true );
+					} catch ( \Throwable $e ) {
+						$builder_content = '';
+					}
+
+					self::$rendering_footer = false;
+
+					if ( '' !== trim( (string) $builder_content ) ) {
+						echo $builder_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						wp_reset_postdata();
+						return;
+					}
 				}
 			}
 			wp_reset_postdata();
