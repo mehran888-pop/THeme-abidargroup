@@ -851,6 +851,12 @@ class Abidar_Admin_Settings {
 							<label><?php esc_html_e( 'سایز تیترهای H1 (px):', 'abidar-group' ); ?>
 								<input type="number" name="abidar[h1_font_size]" value="<?php echo esc_attr( $options['h1_font_size'] ); ?>" min="28" max="72" />
 							</label>
+							<label><?php esc_html_e( 'سایز تیترهای H2 (px):', 'abidar-group' ); ?>
+								<input type="number" name="abidar[h2_font_size]" value="<?php echo esc_attr( $options['h2_font_size'] ); ?>" min="22" max="56" />
+							</label>
+							<label><?php esc_html_e( 'سایز تیترهای H3 (px):', 'abidar-group' ); ?>
+								<input type="number" name="abidar[h3_font_size]" value="<?php echo esc_attr( $options['h3_font_size'] ); ?>" min="18" max="40" />
+							</label>
 							<h4 class="abidar-field-group-title"><?php esc_html_e( 'خانواده فونت هر زبان', 'abidar-group' ); ?></h4>
 							<p class="description">
 								<?php esc_html_e( 'هر زبان فونت خودش را می‌گیرد. اگر فونت اختصاصی آپلود کنید و نامش را پایین‌تر وارد کنید، همه زبان‌ها از آن استفاده می‌کنند.', 'abidar-group' ); ?>

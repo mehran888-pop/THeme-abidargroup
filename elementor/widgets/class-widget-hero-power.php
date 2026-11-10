@@ -861,9 +861,13 @@ class Abidar_Widget_Hero_Power extends Abidar_Elementor_Widget_Base {
 			case 'slider':
 				echo '<div class="abidar-hp__slider" data-hp-slider>';
 				for ( $s = 1; $s <= 3; $s++ ) {
-					$slide_settings             = $settings;
-					$slide_settings['custom_title']    = ! empty( $settings[ 'slide' . $s . '_title' ] ) ? $settings[ 'slide' . $s . '_title' ] : $settings['custom_title'];
-					$slide_settings['custom_subtitle'] = ! empty( $settings[ 'slide' . $s . '_subtitle' ] ) ? $settings[ 'slide' . $s . '_subtitle' ] : $settings['custom_subtitle'];
+					$slide_settings = $settings;
+					// کلیدها ممکن است وجود نداشته باشند (رندر از قالب با تنظیمات ناقص).
+					$base_title    = isset( $settings['custom_title'] ) ? $settings['custom_title'] : '';
+					$base_subtitle = isset( $settings['custom_subtitle'] ) ? $settings['custom_subtitle'] : '';
+
+					$slide_settings['custom_title']    = ! empty( $settings[ 'slide' . $s . '_title' ] ) ? $settings[ 'slide' . $s . '_title' ] : $base_title;
+					$slide_settings['custom_subtitle'] = ! empty( $settings[ 'slide' . $s . '_subtitle' ] ) ? $settings[ 'slide' . $s . '_subtitle' ] : $base_subtitle;
 
 					$slide_img = ! empty( $settings[ 'slide' . $s . '_image' ]['url'] ) ? $settings[ 'slide' . $s . '_image' ]['url'] : '';
 

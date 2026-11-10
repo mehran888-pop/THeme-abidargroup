@@ -666,7 +666,12 @@
 			( entries ) => {
 				entries.forEach( ( entry ) => {
 					if ( entry.isIntersecting ) {
-						animate( entry.target );
+						// در ویرایشگر المنتور ویجت دوباره رندر می‌شود؛
+						// جلوگیری از انیمیشن دوباره روی همان عنصر.
+						if ( '1' !== entry.target.getAttribute( 'data-count-done' ) ) {
+							entry.target.setAttribute( 'data-count-done', '1' );
+							animate( entry.target );
+						}
 						observer.unobserve( entry.target );
 					}
 				} );
@@ -753,7 +758,7 @@
 					return;
 				}
 
-				group.querySelectorAll( '[data-hp-pillar]' ).forEach( ( sibling ) => {
+				$$( '[data-hp-pillar]', group ).forEach( ( sibling ) => {
 					sibling.classList.toggle( 'is-open', sibling === card );
 				} );
 			} );
@@ -771,8 +776,8 @@
 
 		// ۲. اسلایدر هیرو.
 		$$( '[data-hp-slider]' ).forEach( ( slider ) => {
-			const slides = slider.querySelectorAll( '[data-hp-slide]' );
-			const dots = slider.querySelectorAll( '[data-hp-slide-to]' );
+			const slides = $$( '[data-hp-slide]', slider );
+			const dots = $$( '[data-hp-slide-to]', slider );
 
 			if ( slides.length < 2 ) {
 				return;
@@ -795,13 +800,11 @@
 				} );
 			};
 
-			dots.forEach( ( dot, i ) => {
-				dot.addEventListener( 'click', () => {
-					show( i );
-					restart();
-				} );
-			} );
-
+			/*
+			 * restart باید پیش از استفاده تعریف شود: با const، فراخوانی
+			 * پیش از اعلان خطای Temporal Dead Zone می‌دهد و کلیک روی نقطه‌ها
+			 * بی‌صدا شکست می‌خورد.
+			 */
 			const restart = () => {
 				if ( timer ) {
 					clearInterval( timer );
@@ -809,60 +812,19 @@
 				timer = window.setInterval( () => show( active + 1 ), 6500 );
 			};
 
+			dots.forEach( ( dot, i ) => {
+				dot.addEventListener( 'click', () => {
+					show( i );
+					restart();
+				} );
+			} );
+
 			// اگر کاربر روی اسلایدر نگه دارد، چرخش متوقف شود.
 			slider.addEventListener( 'mouseenter', () => timer && clearInterval( timer ) );
 			slider.addEventListener( 'mouseleave', restart );
 
 			restart();
 		} );
-
-		// ۳. شمارنده آمار — فقط وقتی وارد دید شد.
-		const counters = $$( '[data-count]' );
-
-		if ( ! counters.length || ! ( 'IntersectionObserver' in window ) ) {
-			return;
-		}
-
-		const animate = ( el ) => {
-			const target = parseFloat( el.getAttribute( 'data-count' ) ) || 0;
-			const prefix = el.getAttribute( 'data-count-prefix' ) || '';
-			const suffix = el.getAttribute( 'data-count-suffix' ) || '';
-			const decimals = parseInt( el.getAttribute( 'data-count-decimals' ) || '0', 10 );
-			const duration = 1500;
-			const start = performance.now();
-
-			const step = ( now ) => {
-				const progress = Math.min( ( now - start ) / duration, 1 );
-				// easeOutCubic
-				const eased = 1 - Math.pow( 1 - progress, 3 );
-				const value = target * eased;
-
-				el.textContent = prefix + value.toLocaleString( 'en-US', {
-					minimumFractionDigits: decimals,
-					maximumFractionDigits: decimals,
-				} ) + suffix;
-
-				if ( progress < 1 ) {
-					requestAnimationFrame( step );
-				}
-			};
-
-			requestAnimationFrame( step );
-		};
-
-		const observer = new IntersectionObserver(
-			( entries ) => {
-				entries.forEach( ( entry ) => {
-					if ( entry.isIntersecting ) {
-						animate( entry.target );
-						observer.unobserve( entry.target );
-					}
-				} );
-			},
-			{ threshold: 0.4 }
-		);
-
-		counters.forEach( ( el ) => observer.observe( el ) );
 	};
 
 	/* ======================================================================
@@ -903,9 +865,10 @@
 			if ( window.elementorFrontend && window.elementorFrontend.hooks ) {
 				window.elementorFrontend.hooks.addAction( 'frontend/element_ready/global', () => {
 					initLayoutSwitchers();
-		initLangDropdowns();
+					initLangDropdowns();
 					initSectorFilters();
 					initHeroPillars();
+					initPowerHero();
 					initCertificateLightbox();
 					initContactForm();
 					initShareButtons();

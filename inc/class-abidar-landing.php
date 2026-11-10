@@ -75,13 +75,31 @@ class Abidar_Landing {
 	 * @return bool
 	 */
 	public static function is_landing( $post_id = null ) {
-		$post_id = $post_id ? absint( $post_id ) : absint( get_the_ID() );
+		$post_id = $post_id ? absint( $post_id ) : self::queried_id();
 
 		if ( ! $post_id ) {
 			return false;
 		}
 
 		return 'template-landing.php' === get_page_template_slug( $post_id );
+	}
+
+	/**
+	 * شناسه برگه‌ای که واقعاً درخواست شده است.
+	 *
+	 * get_the_ID() شناسه نوشتهٔ جاری در حلقه است؛ پیش از اجرای حلقه
+	 * (مثلاً در wp_enqueue_scripts) false برمی‌گرداند و در آرشیوها
+	 * به اولین نوشته اشاره می‌کند. get_queried_object_id() همان چیزی
+	 * است که کاربر آدرسش را باز کرده.
+	 *
+	 * @return int
+	 */
+	public static function queried_id() {
+		if ( is_singular() ) {
+			return absint( get_queried_object_id() );
+		}
+
+		return 0;
 	}
 
 	/**
@@ -226,7 +244,7 @@ class Abidar_Landing {
 	 * @return void
 	 */
 	public static function enqueue() {
-		$post_id = absint( get_the_ID() );
+		$post_id = self::queried_id();
 
 		if ( ! $post_id || ! self::is_landing( $post_id ) ) {
 			return;

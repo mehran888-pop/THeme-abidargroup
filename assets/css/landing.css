@@ -131,6 +131,15 @@
 		transform: none;
 	}
 
+	/*
+	 * در RTL بخش بعدی سمت چپ است، پس پیکان‌ها باید آینه شوند؛ وگرنه
+	 * دکمه «بعدی» به سمت مخالفِ جهت حرکت اشاره می‌کند.
+	 */
+	html[dir="rtl"] .abidar-landing__nav-arrow {
+		display: inline-block;
+		transform: scaleX(-1);
+	}
+
 	.abidar-landing__progress {
 		position: relative;
 		width: 140px;

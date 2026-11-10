@@ -6680,8 +6680,20 @@ input[type="number"] {
 	transition: transform 0.3s ease;
 }
 
+/*
+ * جهت پیکان در RTL برعکس می‌شود: پیکان «جلو» در فارسی باید به چپ
+ * اشاره کند، نه راست. هم خودِ گلیف و هم حرکت هاور آینه می‌شوند.
+ */
+html[dir="rtl"] .abidar-hp__btn-arrow {
+	transform: scaleX(-1);
+}
+
 .abidar-hp__btn--primary:hover .abidar-hp__btn-arrow {
 	transform: translateX(-4px);
+}
+
+html[dir="rtl"] .abidar-hp__btn--primary:hover .abidar-hp__btn-arrow {
+	transform: scaleX(-1) translateX(-4px);
 }
 
 .abidar-hp__btn--ghost {
@@ -7230,9 +7242,24 @@ input[type="number"] {
 		display: none;
 	}
 
-	/* ویدیو در موبایل سبک‌تر بارگذاری شود. */
+	/*
+	 * در موبایل ویدیوی متحرک پخش نمی‌شود، ولی poster همان قاب را نگه
+	 * می‌دارد. اگر روی خودِ video هم display:none بگذاشتیم، poster هم
+	 * حذف می‌شد و هیرو بی‌پس‌زمینه می‌ماند. پس فقط لایه نمایشی را
+	 * می‌فرستیم زیر پرده رنگی.
+	 */
 	.abidar-hp__bg--video video {
-		display: none;
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		min-width: 0;
+		min-height: 0;
+		transform: none;
+		top: 0;
+		left: 0;
+		object-fit: cover;
+		opacity: 0.9;
 	}
 }
 

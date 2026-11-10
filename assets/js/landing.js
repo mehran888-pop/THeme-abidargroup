@@ -1,12 +1,24 @@
 /**
  * ============================================================================
- * ABIDAR LANDING PAGE — اسکرول افقی (v3.0.0)
+ * ABIDAR LANDING PAGE — اسکرول افقی (v3.0.1)
  * ----------------------------------------------------------------------------
  * فقط در حالت افقی بارگذاری می‌شود.
  * - چرخ ماوس عمودی ← اسکرول افقی
  * - کلیدهای ← → ↑ ↓ و PageUp/PageDown/Home/End
  * - دکمه‌های قبلی/بعدی و نوار پیشرفت
  * - زیر ۱۰۲۴ پیکسل خودکار غیرفعال می‌شود
+ *
+ * نکته حیاتی RTL
+ * --------------
+ * در حالت راست‌به‌چپ، مرورگرها در علامت scrollLeft توافق ندارند:
+ *   - کروم و فایرفاکس: از ۰ شروع می‌شود و به منفی می‌رود.
+ *   - سافاری: از ۰ شروع می‌شود و به مثبت می‌رود.
+ * هر کدی که «scrollLeft = موقعیت» فرض کند در فارسی یا سافاری خراب می‌شود:
+ * شاخص بخش غلط، نوار پیشرفت برعکس و دکمه‌ها بی‌اثر.
+ *
+ * راه‌حل: یک‌بار روی همان عنصر تست می‌کنیم که حرکت به سمت منفی مجاز است
+ * یا نه؛ نتیجه در `rtlSign` کش می‌شود (+۱ یا -۱). مقدار مطلقِ scrollLeft
+ * هم صرف‌نظر از علامت، فاصله از ابتدا را می‌دهد.
  * ============================================================================
  */
 ( function () {
@@ -28,8 +40,27 @@
 	var prevBtn = main.querySelector( '[data-landing-prev]' );
 	var nextBtn = main.querySelector( '[data-landing-next]' );
 	var bar = main.querySelector( '[data-landing-progress-bar]' );
-	var cfg = window.abidarLanding || {};
 	var mq = window.matchMedia( '(min-width: 1025px)' );
+	var rtlSign = null;
+
+	/**
+	 * جهت صفحه راست‌به‌چپ است؟
+	 */
+	function isRtl() {
+		var dir = ( document.documentElement.getAttribute( 'dir' ) || '' ).toLowerCase();
+
+		if ( dir ) {
+			return 'rtl' === dir;
+		}
+
+		try {
+			return 'rtl' === window.getComputedStyle( document.documentElement ).direction;
+		} catch ( e ) {
+			return false;
+		}
+	}
+
+	var RTL = isRtl();
 
 	/**
 	 * آیا حالت افقی فعال است؟ (فقط دسکتاپ)
@@ -39,15 +70,65 @@
 	}
 
 	/**
-	 * صفحه فعلی بر اساس موقعیت اسکرول.
+	 * عرض یک بخش = گام اسکرول.
+	 */
+	function step() {
+		return rail.clientWidth || window.innerWidth || 1;
+	}
+
+	/**
+	 * بیشترین اسکرول ممکن.
+	 */
+	function maxScroll() {
+		return Math.max( 0, rail.scrollWidth - rail.clientWidth );
+	}
+
+	/**
+	 * کشف علامت اسکرول در RTL.
+	 *
+	 * اگر بشود scrollLeft را یک پیکسل منفی کرد، مرورگر از قرارداد
+	 * «منفی» استفاده می‌کند (-۱)، وگرنه «مثبت» (+۱).
+	 *
+	 * @return {number} ۱ یا -۱
+	 */
+	function detectRtlSign() {
+		if ( ! RTL ) {
+			return 1;
+		}
+
+		if ( null !== rtlSign ) {
+			return rtlSign;
+		}
+
+		var before = rail.scrollLeft;
+		rail.scrollLeft = before - 1;
+		var after = rail.scrollLeft;
+		rail.scrollLeft = before;
+
+		// اگر مقدار منفی «چسبید»، قرارداد منفی است.
+		rtlSign = after !== before ? -1 : 1;
+
+		return rtlSign;
+	}
+
+	/**
+	 * فاصله از ابتدای مسیر (همیشه مثبت). مستقل از علامت مرورگر.
+	 */
+	function position() {
+		return Math.max( 0, Math.min( Math.abs( rail.scrollLeft || 0 ), maxScroll() ) );
+	}
+
+	/**
+	 * بخش فعلی.
 	 */
 	function currentIndex() {
-		var w = rail.clientWidth || window.innerWidth;
-		return Math.round( rail.scrollLeft / w );
+		return Math.round( position() / step() );
 	}
 
 	/**
 	 * رفتن به بخش مشخص.
+	 *
+	 * @param {number} index شاخص بخش.
 	 */
 	function goTo( index ) {
 		if ( ! isHorizontal() || ! panels.length ) {
@@ -55,12 +136,22 @@
 		}
 
 		var clamped = Math.max( 0, Math.min( index, panels.length - 1 ) );
-		var offset = clamped * ( rail.clientWidth || window.innerWidth );
+		var offset = clamped * step() * detectRtlSign();
 
-		rail.scrollTo( {
-			left: offset,
-			behavior: cfg.snap === false ? 'smooth' : 'auto'
-		} );
+		try {
+			rail.scrollTo( { left: offset, behavior: 'smooth' } );
+		} catch ( e ) {
+			rail.scrollLeft = offset;
+		}
+
+		/*
+		 * به syncUi تکیه نکنیم: رویداد scroll در پرش‌های برنامه‌ای (و در
+		 * مرورگرهایی که scrollTo با behavior را نادیده می‌گیرند) ممکن است
+		 * دیر یا اصلاً اجرا نشود؛ نتیجه‌اش نوار پیشرفت و دکمه‌های بی‌حالت
+		 * است. یک بار مستقیم و یک بار پس از پایان انیمیشن به‌روزرسانی می‌کنیم.
+		 */
+		syncUi();
+		window.setTimeout( syncUi, 420 );
 	}
 
 	/**
@@ -71,8 +162,8 @@
 			return;
 		}
 
-		var max = rail.scrollWidth - rail.clientWidth;
-		var pct = max > 0 ? ( rail.scrollLeft / max ) * 100 : 0;
+		var max = maxScroll();
+		var pct = max > 0 ? ( position() / max ) * 100 : 0;
 		var idx = currentIndex();
 
 		if ( bar ) {
@@ -90,18 +181,16 @@
 
 	/**
 	 * چرخ ماوس: عمودی ← افقی.
-	 * اگر ریل به انتها رسیده باشد، رویداد را آزاد می‌گذاریم تا صفحه
-	 * به‌صورت طبیعی ادامه دهد و کاربر گیر نکند.
 	 */
 	function onWheel( event ) {
 		if ( ! isHorizontal() ) {
 			return;
 		}
 
-		// اگر روی المان اسکرول‌دار داخلی هستیم، دخالت نکن.
 		var scrollable = event.target.closest(
 			'.abidar-landing__panel [data-no-hscroll], textarea, .abidar-scroll-inner'
 		);
+
 		if ( scrollable ) {
 			return;
 		}
@@ -112,15 +201,17 @@
 			return;
 		}
 
-		var atStart = rail.scrollLeft <= 1;
-		var atEnd = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 1;
+		var pos = position();
+		var max = maxScroll();
 
-		if ( ( delta < 0 && atStart ) || ( delta > 0 && atEnd ) ) {
+		// در دو انتها رویداد را آزاد بگذار تا کاربر گیر نکند.
+		if ( ( delta < 0 && pos <= 1 ) || ( delta > 0 && pos >= max - 1 ) ) {
 			return;
 		}
 
 		event.preventDefault();
-		rail.scrollLeft += delta;
+
+		rail.scrollLeft = ( rail.scrollLeft || 0 ) + delta * detectRtlSign();
 	}
 
 	/**
@@ -131,31 +222,28 @@
 			return;
 		}
 
-		// اگر کاربر در فرم یا ورودی است، دخالت نکن.
 		var tag = ( event.target.tagName || '' ).toLowerCase();
+
 		if ( 'input' === tag || 'textarea' === tag || 'select' === tag || event.target.isContentEditable ) {
 			return;
 		}
 
-		var keys = {
-			ArrowLeft: -1,
-			ArrowUp: -1,
-			ArrowRight: 1,
-			ArrowDown: 1,
-			PageUp: -1,
-			PageDown: 1
-		};
+		var dir = 0;
 
-		// در RTL جهت‌ها برعکس می‌شوند.
-		var rtl = 'rtl' === ( document.documentElement.getAttribute( 'dir' ) || '' ).toLowerCase();
-		var dir = keys[ event.key ];
+		if ( 'ArrowRight' === event.key || 'ArrowDown' === event.key || 'PageDown' === event.key ) {
+			dir = 1;
+		} else if ( 'ArrowLeft' === event.key || 'ArrowUp' === event.key || 'PageUp' === event.key ) {
+			dir = -1;
+		}
 
 		if ( dir ) {
 			event.preventDefault();
-			if ( rtl ) {
-				dir = -dir;
-			}
-			goTo( currentIndex() + dir );
+
+			/*
+			 * در RTL محتوای بعدی سمت چپ است، پس فلش چپ باید «جلو» ببرد.
+			 * یعنی جهت کلید را برای RTL وارونه می‌کنیم.
+			 */
+			goTo( currentIndex() + ( RTL ? -dir : dir ) );
 			return;
 		}
 
@@ -184,8 +272,9 @@
 	main.addEventListener( 'wheel', onWheel, { passive: false } );
 	document.addEventListener( 'keydown', onKey );
 
-	// وقتی از حالت دسکتاپ خارج شدیم، متن‌ها را از حالت افقی دربیاور.
 	function onBreakpoint() {
+		rtlSign = null;
+
 		if ( isHorizontal() ) {
 			syncUi();
 		} else {

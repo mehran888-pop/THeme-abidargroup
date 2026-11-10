@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /* phpcs:disable WordPress.NamingConventions.PrefixAllGlobals */
-$abidar_landing_id    = get_the_ID();
+$abidar_landing_id    = Abidar_Landing::queried_id();
 $abidar_landing_meta  = Abidar_Landing::get_meta( $abidar_landing_id );
 $abidar_scroll_mode   = $abidar_landing_meta['scroll'];
 $abidar_snap          = $abidar_landing_meta['snap'];
@@ -93,7 +93,7 @@ get_header();
 
 		<div class="abidar-landing__nav">
 			<button type="button" class="abidar-landing__nav-btn" data-landing-prev aria-label="<?php esc_attr_e( 'بخش قبلی', 'abidar-group' ); ?>">
-				<span aria-hidden="true">&#8249;</span>
+				<span class="abidar-landing__nav-arrow" aria-hidden="true">&#8249;</span>
 			</button>
 
 			<div class="abidar-landing__progress">
@@ -101,7 +101,7 @@ get_header();
 			</div>
 
 			<button type="button" class="abidar-landing__nav-btn" data-landing-next aria-label="<?php esc_attr_e( 'بخش بعدی', 'abidar-group' ); ?>">
-				<span aria-hidden="true">&#8250;</span>
+				<span class="abidar-landing__nav-arrow" aria-hidden="true">&#8250;</span>
 			</button>
 		</div>
 
