@@ -24,19 +24,41 @@
 			return;
 		}
 
-		$( '.abidar-color-picker' ).wpColorPicker( {
-			change( event, ui ) {
-				const input = $( event.target );
-				const color = ui.color.toString();
+		/**
+		 * راه‌اندازی انتخاب‌گر رنگ روی هر فیلدی که هنوز راه‌اندازی نشده است.
+		 *
+		 * ردیف‌های تازه‌ساخته‌شده (افزودن بخش یا دکمه جدید) بعد از بارگذاری
+		 * صفحه ساخته می‌شوند؛ بدون این تابع، انتخاب‌گر رنگشان کار نمی‌کرد و
+		 * کاربر فقط یک کد رنگ خام می‌دید.
+		 *
+		 * @param {jQuery} scope محدوده جست‌وجو.
+		 */
+		const bindColorPickers = ( scope ) => {
+			( scope || $( document ) )
+				.find( '.abidar-color-picker' )
+				.not( '.abidar-color-bound' )
+				.each( function () {
+					const input = $( this );
+					input.addClass( 'abidar-color-bound' );
 
-				// به‌روزرسانی زنده پیش‌نمایش رنگ در پنل.
-				if ( input.closest( '.abidar-admin-card' ).length ) {
-					input.attr( 'value', color ).trigger( 'change' );
-				}
-			},
-			clear() {
-				$( this ).trigger( 'change' );
-			},
+					input.wpColorPicker( {
+						change( event, ui ) {
+							const field = $( event.target );
+							const color = ui.color.toString();
+							field.attr( 'value', color ).trigger( 'change' );
+						},
+						clear() {
+							$( this ).trigger( 'change' );
+						},
+					} );
+				} );
+		};
+
+		bindColorPickers( $( document ) );
+
+		// هر ردیف تازه که به فرم اضافه شود، انتخاب‌گر رنگش هم فعال می‌شود.
+		$( document ).on( 'abidar:repeater-added', ( event, container ) => {
+			bindColorPickers( container ? $( container ) : $( document ) );
 		} );
 	};
 
@@ -47,6 +69,7 @@
 		const tabs = $( '.abidar-admin-tab' );
 		const panels = $( '.abidar-admin-panel' );
 		const hiddenInput = $( '#abidar-active-tab-input' );
+		const panelInput = $( '[data-abidar-panel-mirror]' );
 
 		if ( ! tabs.length || ! panels.length ) {
 			return;
@@ -67,6 +90,10 @@
 
 				if ( hiddenInput.length ) {
 					hiddenInput.val( target );
+				}
+
+				if ( panelInput.length ) {
+					panelInput.val( target );
 				}
 
 				// به‌روزرسانی آدرس صفحه برای قابلیت بوکمارک بدون بارگذاری مجدد.
@@ -125,36 +152,170 @@
 	};
 
 	/* ======================================================================
-	 * 04. REPEATER HELPERS
-	 * ==================================================================== */
+	 * 04. REPEATER HELPERS (افزودن / حذف ردیف)
+	 * ====================================================================
+	 * یک پیاده‌سازی مشترک برای همه بخش‌هایی که لیست قابل رشد دارند:
+	 * بخش‌های دکمه شناور، دکمه‌های منوی موبایل و زبان‌های سفارشی.
+	 *
+	 * نکته مهم: اگر لیست خالی باشد هیچ «ردیف الگو» وجود ندارد، بنابراین
+	 * نمی‌توان با کلون کردن ردیف اول ردیف تازه ساخت. برای همین ابتدا یک
+	 * الگوی خالی آماده می‌سازیم و از همان کلون می‌گیریم.
+	 */
+	const REPEATER_TEMPLATES = {
+		'#abidar-departments-list': [
+			{ name: 'id', type: 'hidden' },
+			{ name: 'name_fa', placeholder: 'نام بخش (فارسی)' },
+			{ name: 'name_en', placeholder: 'Department Name (EN)', dir: 'ltr' },
+			{ name: 'name_zh', placeholder: '部门名称 (ZH)', dir: 'ltr' },
+			{ name: 'role_fa', placeholder: 'شرح وظایف بخش (فارسی)' },
+			{ name: 'role_en', placeholder: 'Department Role (EN)', dir: 'ltr' },
+			{ name: 'role_zh', placeholder: '部门职责 (ZH)', dir: 'ltr' },
+			{ name: 'phone', placeholder: 'شماره تلفن', dir: 'ltr' },
+			{ name: 'ext', placeholder: 'داخلی', dir: 'ltr' },
+			{ name: 'whatsapp', type: 'url', placeholder: 'لینک واتساپ', dir: 'ltr' },
+			{ name: 'email', type: 'email', placeholder: 'ایمیل بخش', dir: 'ltr' },
+			{ name: 'hours_fa', placeholder: 'ساعات پاسخگویی (فارسی)' },
+			{ name: 'hours_en', placeholder: 'Working Hours (EN)', dir: 'ltr' },
+			{ name: 'hours_zh', placeholder: '工作时间 (ZH)', dir: 'ltr' },
+			{ name: 'icon', type: 'select', options: [ 'pickaxe', 'bolt', 'droplet', 'flask', 'globe', 'phone', 'mail', 'building' ] },
+			{ name: 'badge_color', type: 'color' }
+		],
+		'#abidar-mobile-nav-list': [
+			{ name: 'title_fa', placeholder: 'عنوان فارسی' },
+			{ name: 'title_en', placeholder: 'English Title', dir: 'ltr' },
+			{ name: 'title_zh', placeholder: '中文标题', dir: 'ltr' },
+			{ name: 'url', placeholder: 'URL', dir: 'ltr' },
+			{ name: 'icon', placeholder: 'home/layers/briefcase/award/phone', dir: 'ltr' },
+			{ name: 'badge', placeholder: 'نشان (Badge)' }
+		],
+		'#abidar-custom-languages-list': [
+			{ name: 'code', placeholder: 'کد زبان (مثلاً ar یا ru)', dir: 'ltr' },
+			{ name: 'name', placeholder: 'نام انگلیسی (Arabic / Russian)', dir: 'ltr' },
+			{ name: 'native_name', placeholder: 'نام بومی (العربية / Русский)' },
+			{ name: 'flag', placeholder: 'پرچم (🇸🇦 / 🇷🇺)' },
+			{ name: 'dir', type: 'select', options: [ 'rtl', 'ltr' ], selected: 'ltr' },
+			{ name: 'enabled', type: 'checkbox', label: 'فعال' }
+		]
+	};
+
+	/**
+	 * ساختن یک ردیف خالی برای لیست، وقتی هنوز هیچ ردیفی وجود ندارد.
+	 */
+	const buildBlankRepeaterItem = ( containerId, baseName ) => {
+		const fields = REPEATER_TEMPLATES[ containerId ];
+		if ( ! fields ) {
+			return null;
+		}
+
+		const item = $( '<div class="abidar-repeater-item" />' );
+		const head = $( '<div class="abidar-repeater-item__head" />' );
+		const row = $( '<div class="abidar-repeater-row" />' );
+
+		head.append( $( '<strong />' ).text( 'ردیف جدید' ) );
+		head.append(
+			$( '<button type="button" class="button abidar-repeater-remove" />' )
+				.text( 'حذف' )
+				.attr( 'aria-label', 'حذف این ردیف' )
+		);
+
+		fields.forEach( ( field ) => {
+			const nameAttr = baseName + '[0][' + field.name + ']';
+			let control;
+
+			if ( 'select' === field.type ) {
+				control = $( '<select />' ).attr( 'name', nameAttr );
+				field.options.forEach( ( optionValue ) => {
+					const opt = $( '<option />' ).attr( 'value', optionValue ).text( optionValue );
+					if ( field.selected === optionValue ) {
+						opt.attr( 'selected', 'selected' );
+					}
+					control.append( opt );
+				} );
+			} else if ( 'checkbox' === field.type ) {
+				const label = $( '<label />' );
+				const checkbox = $( '<input type="checkbox" />' )
+					.attr( 'name', nameAttr )
+					.attr( 'value', '1' )
+					.prop( 'checked', true );
+				label.append( checkbox ).append( document.createTextNode( ' ' + ( field.label || '' ) ) );
+				row.append( label );
+				return;
+			} else {
+				control = $( '<input />' )
+					.attr( 'type', field.type || 'text' )
+					.attr( 'name', nameAttr );
+				if ( field.placeholder ) {
+					control.attr( 'placeholder', field.placeholder );
+				}
+				if ( field.dir ) {
+					control.attr( 'dir', field.dir );
+				}
+				if ( 'color' === field.type ) {
+					control.attr( 'type', 'text' ).addClass( 'abidar-color-picker' ).val( '#D97706' );
+				}
+			}
+
+			row.append( control );
+		} );
+
+		item.append( head ).append( row );
+		return item;
+	};
+
 	const initRepeaters = () => {
 		$( document ).on( 'click', '.abidar-repeater-remove', function ( event ) {
 			event.preventDefault();
 			const item = $( this ).closest( '.abidar-repeater-item' );
 			const container = item.parent();
 
-			// حداقل یک آیتم باید باقی بماند.
-			if ( container.find( '.abidar-repeater-item' ).length <= 1 ) {
+			// ردیف‌های لیست‌های دکمه شناور و منوی موبایل می‌توانند کاملاً خالی شوند،
+			// چون سرور برایشان مقدار پیش‌فرض می‌گذارد. زبان سفارشی هم همین‌طور.
+			const removableToZero = container.is( '.abidar-repeater-list' );
+
+			if ( ! removableToZero && container.find( '.abidar-repeater-item' ).length <= 1 ) {
 				window.alert( 'حداقل یک آیتم باید در این لیست باقی بماند.' );
 				return;
 			}
 
-			if ( window.confirm( 'آیا از حذف این آیتم مطمئن هستید؟ پس از ذخیره تنظیمات، حذف نهایی می‌شود.' ) ) {
-				item.slideUp( 200, () => item.remove() );
+			if ( window.confirm( 'آیا از حذف این ردیف مطمئن هستید؟ پس از ذخیره تنظیمات، حذف نهایی می‌شود.' ) ) {
+				item.slideUp( 200, function () {
+					$( this ).remove();
+					refreshRepeaterHeadings( container );
+				} );
 			}
 		} );
 
 		$( document ).on( 'click', '.abidar-repeater-add', function ( event ) {
 			event.preventDefault();
-			const container = $( $( this ).data( 'target' ) );
-			const template = container.find( '.abidar-repeater-item' ).first();
 
-			if ( ! template.length ) {
+			const targetSelector = $( this ).data( 'target' );
+			if ( ! targetSelector ) {
 				return;
 			}
 
+			const container = $( targetSelector );
+			if ( ! container.length ) {
+				return;
+			}
+
+			const baseName = container.find( 'input, select' ).first().attr( 'name' )
+				? container.find( 'input, select' ).first().attr( 'name' ).replace( /\[\d+\]\[[^\]]+\]$/, '' )
+				: '';
+
+			let source = container.find( '.abidar-repeater-item' ).first();
+
+			// لیست خالی: ردیف را از صفر می‌سازیم تا دکمه هرگز بی‌اثر نباشد.
+			if ( ! source.length ) {
+				const blank = buildBlankRepeaterItem( targetSelector, baseName );
+				if ( ! blank ) {
+					return;
+				}
+				container.append( blank );
+				source = blank;
+			}
+
 			const nextIndex = container.find( '.abidar-repeater-item' ).length;
-			const clone = template.clone( true );
+			const clone = source.clone( true );
 
 			clone.find( 'input, select, textarea' ).each( function () {
 				const field = $( this );
@@ -164,50 +325,48 @@
 					field.attr( 'name', name.replace( /\[\d+\]/, '[' + nextIndex + ']' ) );
 				}
 
-				field.val( '' );
-			} );
-
-			clone.hide().appendTo( container ).slideDown( 200 );
-			container.find( '.abidar-repeater-item' ).last().find( 'input' ).first().trigger( 'focus' );
-		} );
-	};
-
-	/**
-	 * افزودن ردیف زبان سفارشی جدید (فقط سمت کلاینت؛ پس از ذخیره در دیتابیس ثبت می‌شود).
-	 */
-	const initAddLanguage = () => {
-		$( '#abidar-add-language-btn' ).on( 'click', function ( event ) {
-			event.preventDefault();
-
-			const list = $( '#abidar-custom-languages-list' );
-			const last = list.find( '.abidar-repeater-item' ).last();
-
-			if ( ! last.length ) {
-				return;
-			}
-
-			const index = list.find( '.abidar-repeater-item' ).length;
-			const clone = last.clone( true );
-
-			clone.find( 'input, select' ).each( function () {
-				const field = $( this );
-				const name = field.attr( 'name' );
-
-				if ( name ) {
-					field.attr( 'name', name.replace( /\[\d+\]/, '[' + index + ']' ) );
-				}
-
 				if ( 'checkbox' === field.attr( 'type' ) ) {
 					field.prop( 'checked', true );
 				} else if ( 'select' === field.prop( 'tagName' ).toLowerCase() ) {
-					field.val( 'ltr' );
-				} else {
+					// مقدار پیش‌فرض منوی انتخاب، همان انتخاب فعلی ردیف الگو است.
+					if ( 'abidar-color-picker' === field.attr( 'class' ) ) {
+						field.val( '#D97706' );
+					}
+				} else if ( field.hasClass( 'abidar-color-picker' ) ) {
+					field.val( '#D97706' );
+				} else if ( 'hidden' !== field.attr( 'type' ) ) {
 					field.val( '' );
 				}
 			} );
 
-			clone.hide().appendTo( list ).slideDown( 200 );
+			clone.hide().appendTo( container ).slideDown( 200 );
+			refreshRepeaterHeadings( container );
+
+			// به بقیه ماژول‌ها (مثل انتخاب‌گر رنگ) خبر بده که ردیف تازه اضافه شد.
+			$( document ).trigger( 'abidar:repeater-added', [ container ] );
+
 			clone.find( 'input' ).first().trigger( 'focus' );
+		} );
+	};
+
+	/**
+	 * شماره‌گذاری مجدد عنوان ردیف‌ها تا پس از حذف/افزودن، ترتیب درست بماند.
+	 */
+	const refreshRepeaterHeadings = ( container ) => {
+		container.find( '.abidar-repeater-item' ).each( function ( index ) {
+			const title = $( this ).find( '.abidar-repeater-item__head strong' );
+			if ( title.length ) {
+				title.text( title.text().replace( /(شماره|ردیف)\s*\d+/, 'شماره ' + ( index + 1 ) ) );
+			}
+
+			// نام فیلدها هم دوباره شماره‌گذاری شوند تا اندیس‌ها پشت‌سرهم بمانند.
+			$( this ).find( 'input, select, textarea' ).each( function () {
+				const field = $( this );
+				const name = field.attr( 'name' );
+				if ( name ) {
+					field.attr( 'name', name.replace( /\[\d+\]/, '[' + index + ']' ) );
+				}
+			} );
 		} );
 	};
 
@@ -286,7 +445,6 @@
 		initTabs();
 		initMediaUploader();
 		initRepeaters();
-		initAddLanguage();
 		initDemoImporter();
 		initLiveHints();
 	} );

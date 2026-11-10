@@ -102,8 +102,51 @@ class Abidar_Security {
 	 */
 	public static function is_ip_whitelisted( $ip ) {
 		$whitelist_raw = (string) abidar_get_option( 'security_ip_whitelist', '127.0.0.1' );
-		$whitelist     = array_map( 'trim', explode( ',', $whitelist_raw ) );
-		return in_array( $ip, $whitelist, true );
+
+		// ورودی می‌تواند با کاما، فاصله یا خط جدید جدا شده باشد.
+		$entries = preg_split( '/[\s,]+/', $whitelist_raw );
+		$entries = is_array( $entries ) ? array_filter( array_map( 'trim', $entries ) ) : array();
+
+		foreach ( $entries as $entry ) {
+			if ( $entry === $ip ) {
+				return true;
+			}
+
+			// پشتیبانی از محدوده CIDR: 198.51.100.0/24
+			if ( false !== strpos( $entry, '/' ) && self::ip_in_cidr( $ip, $entry ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * آیا یک IPv4 داخل محدوده CIDR مشخص هست؟
+	 *
+	 * @param string $ip   آدرس بازدیدکننده.
+	 * @param string $cidr محدوده به شکل 198.51.100.0/24.
+	 * @return bool
+	 */
+	private static function ip_in_cidr( $ip, $cidr ) {
+		$parts = explode( '/', $cidr );
+		if ( 2 !== count( $parts ) ) {
+			return false;
+		}
+
+		$subnet   = $parts[0];
+		$mask_len = (int) $parts[1];
+
+		// فقط IPv4 با این روش قابل مقایسه بیتی است.
+		if ( ! filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 )
+			|| ! filter_var( $subnet, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 )
+			|| $mask_len < 0 || $mask_len > 32 ) {
+			return false;
+		}
+
+		$mask = -1 << ( 32 - $mask_len );
+
+		return ( ip2long( $ip ) & $mask ) === ( ip2long( $subnet ) & $mask );
 	}
 
 	/**

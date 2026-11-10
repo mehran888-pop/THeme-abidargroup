@@ -123,6 +123,10 @@ class Abidar_Admin_Settings {
 		$options = abidar_get_all_options();
 		$posted  = isset( $_POST['abidar'] ) && is_array( $_POST['abidar'] ) ? wp_unslash( $_POST['abidar'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
+		// کدام تب ذخیره شده است؟ برای تشخیص «حذف همه ردیف‌ها» لازم است، چون در
+		// آن حالت مرورگر هیچ فیلدی از آن لیست ارسال نمی‌کند.
+		$submitted_panel = isset( $_POST['abidar_panel'] ) ? sanitize_key( wp_unslash( $_POST['abidar_panel'] ) ) : '';
+
 		// ۱. پاک‌سازی فیلدهای عددی
 		$int_fields = array(
 			'container_width',
@@ -196,7 +200,6 @@ class Abidar_Admin_Settings {
 			'preloader_text_en',
 			'preloader_text_zh',
 			'security_custom_login_slug',
-			'security_ip_whitelist',
 			'default_language',
 			'lang_switcher_style',
 		);
@@ -204,6 +207,31 @@ class Abidar_Admin_Settings {
 			if ( isset( $posted[ $field ] ) ) {
 				$options[ $field ] = sanitize_text_field( $posted[ $field ] );
 			}
+		}
+
+		// لیست سفید IP: هر مقدار با کاما، فاصله یا خط جدید جدا می‌شود و اعتبارسنجی می‌گردد.
+		if ( isset( $posted['security_ip_whitelist'] ) ) {
+			$raw_ips   = preg_split( '/[\s,]+/', (string) $posted['security_ip_whitelist'] );
+			$valid_ips = array();
+
+			foreach ( (array) $raw_ips as $candidate ) {
+				$candidate = trim( $candidate );
+				if ( '' === $candidate ) {
+					continue;
+				}
+
+				// IPv4/IPv6 ساده، یا محدوده CIDR معتبر.
+				if ( filter_var( $candidate, FILTER_VALIDATE_IP ) ) {
+					$valid_ips[] = $candidate;
+					continue;
+				}
+
+				if ( preg_match( '#^([0-9a-fA-F:.]+)/(\d{1,3})$#', $candidate, $m ) && filter_var( $m[1], FILTER_VALIDATE_IP ) ) {
+					$valid_ips[] = $candidate;
+				}
+			}
+
+			$options['security_ip_whitelist'] = implode( "\n", array_unique( $valid_ips ) );
 		}
 
 		// مقدار طرح زبان باید یکی از ۶ طرح مجاز باشد.
@@ -263,14 +291,21 @@ class Abidar_Admin_Settings {
 		}
 
 		// ۷. پاک‌سازی بخش‌های چندگانه دکمه شناور تماس (Multi-Department Contact Hub)
-		if ( isset( $posted['floating_departments'] ) && is_array( $posted['floating_departments'] ) ) {
+		// اگر کل ردیف‌ها حذف شده باشند، فیلد اصلاً ارسال نمی‌شود؛ در آن حالت
+		// باید لیست خالی ذخیره شود تا «حذف همه» واقعاً کار کند.
+		if ( array_key_exists( 'floating_departments', $posted ) ) {
+			$rows        = is_array( $posted['floating_departments'] ) ? $posted['floating_departments'] : array();
 			$clean_depts = array();
-			foreach ( $posted['floating_departments'] as $dept ) {
+			foreach ( $rows as $dept ) {
+				if ( ! is_array( $dept ) ) {
+					continue;
+				}
 				if ( empty( $dept['name_fa'] ) && empty( $dept['name_en'] ) ) {
 					continue;
 				}
 				$clean_depts[] = array(
-					'id'          => ! empty( $dept['id'] ) ? sanitize_key( $dept['id'] ) : 'dept_' . wp_rand( 100, 999 ),
+					// شناسه یکتا؛ wp_rand دو عدد کوچک را تکرار می‌کند و باعث تداخل می‌شد.
+					'id'          => ! empty( $dept['id'] ) ? sanitize_key( $dept['id'] ) : 'dept_' . strtolower( wp_generate_password( 8, false, false ) ),
 					'name_fa'     => sanitize_text_field( isset( $dept['name_fa'] ) ? $dept['name_fa'] : '' ),
 					'name_en'     => sanitize_text_field( isset( $dept['name_en'] ) ? $dept['name_en'] : '' ),
 					'name_zh'     => sanitize_text_field( isset( $dept['name_zh'] ) ? $dept['name_zh'] : '' ),
@@ -289,12 +324,19 @@ class Abidar_Admin_Settings {
 				);
 			}
 			$options['floating_departments'] = $clean_depts;
+		} elseif ( 'floating-contact' === $submitted_panel ) {
+			// مدیر همه بخش‌ها را حذف کرده است.
+			$options['floating_departments'] = array();
 		}
 
 		// ۸. پاک‌سازی آیتم‌های ناوبری موبایل
-		if ( isset( $posted['mobile_nav_items'] ) && is_array( $posted['mobile_nav_items'] ) ) {
+		if ( array_key_exists( 'mobile_nav_items', $posted ) || 'mobile-nav' === $submitted_panel ) {
+			$rows      = ( isset( $posted['mobile_nav_items'] ) && is_array( $posted['mobile_nav_items'] ) ) ? $posted['mobile_nav_items'] : array();
 			$clean_mob = array();
-			foreach ( $posted['mobile_nav_items'] as $m_item ) {
+			foreach ( $rows as $m_item ) {
+				if ( ! is_array( $m_item ) ) {
+					continue;
+				}
 				if ( empty( $m_item['title_fa'] ) && empty( $m_item['title_en'] ) ) {
 					continue;
 				}
@@ -311,9 +353,13 @@ class Abidar_Admin_Settings {
 		}
 
 		// ۹. پاک‌سازی زبان‌های سفارشی اضافه‌شده علاوه بر ۳ زبان پیش‌فرض
-		if ( isset( $posted['custom_languages'] ) && is_array( $posted['custom_languages'] ) ) {
+		if ( array_key_exists( 'custom_languages', $posted ) || 'languages' === $submitted_panel ) {
+			$row_list    = ( isset( $posted['custom_languages'] ) && is_array( $posted['custom_languages'] ) ) ? $posted['custom_languages'] : array();
 			$clean_langs = array();
-			foreach ( $posted['custom_languages'] as $lang_row ) {
+			foreach ( $row_list as $lang_row ) {
+				if ( ! is_array( $lang_row ) ) {
+					continue;
+				}
 				if ( empty( $lang_row['code'] ) ) {
 					continue;
 				}
@@ -633,6 +679,14 @@ class Abidar_Admin_Settings {
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="abidar-admin-form">
 				<input type="hidden" name="action" value="abidar_save_settings" />
 				<input type="hidden" name="active_tab" id="abidar-active-tab-input" value="<?php echo esc_attr( $active_tab ); ?>" />
+				<?php
+				/*
+				 * همان مقدار تب، با نام دیگری. سرور از این فیلد می‌فهمد کدام
+				 * بخش ذخیره شده تا تشخیص دهد مدیر همه ردیف‌های یک لیست را
+				 * پاک کرده است (مرورگر در آن حالت هیچ فیلدی نمی‌فرستد).
+				 */
+				?>
+				<input type="hidden" name="abidar_panel" value="<?php echo esc_attr( $active_tab ); ?>" data-abidar-panel-mirror />
 				<?php wp_nonce_field( 'abidar_save_settings_action', 'abidar_settings_nonce' ); ?>
 
 				<!-- ================================================================
@@ -762,9 +816,16 @@ class Abidar_Admin_Settings {
 
 						<div class="abidar-admin-card">
 							<h3><?php esc_html_e( 'تعریف دکمه‌ها و لینک‌های نوار ناوبری موبایل', 'abidar-group' ); ?></h3>
+							<p class="description">
+								<?php esc_html_e( 'هر ردیف یک دکمه در منوی موبایل است. با دکمه «افزودن دکمه» ردیف تازه بسازید و با «حذف» ردیف اضافی را بردارید. حذف پس از ذخیره تنظیمات قطعی می‌شود.', 'abidar-group' ); ?>
+							</p>
+							<div id="abidar-mobile-nav-list" class="abidar-repeater-list">
 							<?php foreach ( $options['mobile_nav_items'] as $idx => $item ) : ?>
 								<div class="abidar-repeater-item">
-									<strong><?php echo esc_html( sprintf( 'دکمه شماره %d', $idx + 1 ) ); ?></strong>
+									<div class="abidar-repeater-item__head">
+										<strong><?php echo esc_html( sprintf( 'دکمه شماره %d', $idx + 1 ) ); ?></strong>
+										<button type="button" class="button abidar-repeater-remove" aria-label="<?php esc_attr_e( 'حذف این دکمه', 'abidar-group' ); ?>"><?php esc_html_e( 'حذف', 'abidar-group' ); ?></button>
+									</div>
 									<div class="abidar-repeater-row">
 										<input type="text" name="abidar[mobile_nav_items][<?php echo (int) $idx; ?>][title_fa]" value="<?php echo esc_attr( $item['title_fa'] ); ?>" placeholder="عنوان فارسی" />
 										<input type="text" name="abidar[mobile_nav_items][<?php echo (int) $idx; ?>][title_en]" value="<?php echo esc_attr( $item['title_en'] ); ?>" placeholder="English Title" dir="ltr" />
@@ -775,6 +836,10 @@ class Abidar_Admin_Settings {
 									</div>
 								</div>
 							<?php endforeach; ?>
+							</div>
+							<button type="button" class="button button-primary abidar-repeater-add" data-target="#abidar-mobile-nav-list">
+								+ <?php esc_html_e( 'افزودن دکمه جدید به منوی موبایل', 'abidar-group' ); ?>
+							</button>
 						</div>
 					</div>
 				</section>
@@ -817,23 +882,62 @@ class Abidar_Admin_Settings {
 						<div class="abidar-admin-card">
 							<h3><?php esc_html_e( 'مدیریت بخش‌های مختلف در دکمه شناور تماس (معادن، انرژی، نفت، بین‌الملل و...)', 'abidar-group' ); ?></h3>
 							<p class="description"><?php esc_html_e( 'کاربر با کلیک روی دکمه شناور، لیست این بخش‌ها را مشاهده کرده و مستقیماً با همان بخش تماس می‌گیرد.', 'abidar-group' ); ?></p>
+							<div id="abidar-departments-list" class="abidar-repeater-list">
 							<?php foreach ( $options['floating_departments'] as $d_idx => $dept ) : ?>
 								<div class="abidar-repeater-item">
-									<strong><?php echo esc_html( $dept['name_fa'] ); ?></strong>
+									<div class="abidar-repeater-item__head">
+										<strong><?php echo esc_html( ! empty( $dept['name_fa'] ) ? $dept['name_fa'] : sprintf( 'بخش شماره %d', $d_idx + 1 ) ); ?></strong>
+										<button type="button" class="button abidar-repeater-remove" aria-label="<?php esc_attr_e( 'حذف این بخش', 'abidar-group' ); ?>"><?php esc_html_e( 'حذف', 'abidar-group' ); ?></button>
+									</div>
 									<div class="abidar-repeater-row">
 										<input type="hidden" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][id]" value="<?php echo esc_attr( $dept['id'] ); ?>" />
 										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][name_fa]" value="<?php echo esc_attr( $dept['name_fa'] ); ?>" placeholder="نام بخش (فارسی)" />
 										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][name_en]" value="<?php echo esc_attr( $dept['name_en'] ); ?>" placeholder="Department Name (EN)" dir="ltr" />
 										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][name_zh]" value="<?php echo esc_attr( $dept['name_zh'] ); ?>" placeholder="部门名称 (ZH)" dir="ltr" />
-										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][role_fa]" value="<?php echo esc_attr( $dept['role_fa'] ); ?>" placeholder="شرح وظایف بخش" />
+										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][role_fa]" value="<?php echo esc_attr( $dept['role_fa'] ); ?>" placeholder="شرح وظایف بخش (فارسی)" />
+										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][role_en]" value="<?php echo esc_attr( isset( $dept['role_en'] ) ? $dept['role_en'] : '' ); ?>" placeholder="Department Role (EN)" dir="ltr" />
+										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][role_zh]" value="<?php echo esc_attr( isset( $dept['role_zh'] ) ? $dept['role_zh'] : '' ); ?>" placeholder="部门职责 (ZH)" dir="ltr" />
 										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][phone]" value="<?php echo esc_attr( $dept['phone'] ); ?>" placeholder="شماره تلفن" dir="ltr" />
 										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][ext]" value="<?php echo esc_attr( $dept['ext'] ); ?>" placeholder="داخلی" dir="ltr" />
 										<input type="url" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][whatsapp]" value="<?php echo esc_url( $dept['whatsapp'] ); ?>" placeholder="لینک واتساپ" dir="ltr" />
 										<input type="email" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][email]" value="<?php echo esc_attr( $dept['email'] ); ?>" placeholder="ایمیل بخش" dir="ltr" />
+										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][hours_fa]" value="<?php echo esc_attr( isset( $dept['hours_fa'] ) ? $dept['hours_fa'] : '' ); ?>" placeholder="ساعات پاسخگویی (فارسی)" />
+										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][hours_en]" value="<?php echo esc_attr( isset( $dept['hours_en'] ) ? $dept['hours_en'] : '' ); ?>" placeholder="Working Hours (EN)" dir="ltr" />
+										<input type="text" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][hours_zh]" value="<?php echo esc_attr( isset( $dept['hours_zh'] ) ? $dept['hours_zh'] : '' ); ?>" placeholder="工作时间 (ZH)" dir="ltr" />
+										<select name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][icon]">
+											<?php
+											$dept_icon = isset( $dept['icon'] ) ? $dept['icon'] : 'pickaxe';
+											$icon_choices = array(
+												'pickaxe'   => 'معادن (Pickaxe)',
+												'bolt'      => 'انرژی (Bolt)',
+												'droplet'   => 'نفت و گاز (Droplet)',
+												'flask'     => 'پتروشیمی (Flask)',
+												'globe'     => 'بین‌الملل (Globe)',
+												'phone'     => 'تلفن (Phone)',
+												'mail'      => 'ایمیل (Mail)',
+												'building'  => 'دفتر مرکزی (Building)',
+											);
+											foreach ( $icon_choices as $icon_key => $icon_label ) :
+												?>
+												<option value="<?php echo esc_attr( $icon_key ); ?>" <?php selected( $dept_icon, $icon_key ); ?>>
+													<?php echo esc_html( $icon_label ); ?>
+												</option>
+											<?php endforeach; ?>
+										</select>
+										<label class="abidar-color-field">
+											<span><?php esc_html_e( 'رنگ نشان بخش', 'abidar-group' ); ?></span>
+											<input type="text" class="abidar-color-picker" name="abidar[floating_departments][<?php echo (int) $d_idx; ?>][badge_color]" value="<?php echo esc_attr( isset( $dept['badge_color'] ) ? $dept['badge_color'] : '#D97706' ); ?>" />
+										</label>
 									</div>
 								</div>
 							<?php endforeach; ?>
-						</div>
+							</div>
+							<button type="button" class="button button-primary abidar-repeater-add" data-target="#abidar-departments-list">
+								+ <?php esc_html_e( 'افزودن بخش جدید به دکمه شناور', 'abidar-group' ); ?>
+							</button>
+							<p class="description">
+								<?php esc_html_e( 'اگر هیچ بخشی تعریف نشود، سایت از بخش‌های پیش‌فرض (معادن، انرژی، نفت و گاز، بین‌الملل) استفاده می‌کند.', 'abidar-group' ); ?>
+							</p>
 					</div>
 				</section>
 
@@ -947,9 +1051,12 @@ class Abidar_Admin_Settings {
 							<label><?php esc_html_e( 'مدت زمان مسدودسازی مهاجم (دقیقه):', 'abidar-group' ); ?>
 								<input type="number" name="abidar[security_lockout_duration]" value="<?php echo esc_attr( $options['security_lockout_duration'] ); ?>" min="5" max="1440" />
 							</label>
-							<label><?php esc_html_e( 'لیست سفید IPهای مجاز (جداشده با کاما):', 'abidar-group' ); ?>
-								<input type="text" name="abidar[security_ip_whitelist]" value="<?php echo esc_attr( $options['security_ip_whitelist'] ); ?>" dir="ltr" />
+							<label><?php esc_html_e( 'لیست سفید IPهای مجاز:', 'abidar-group' ); ?>
+								<textarea name="abidar[security_ip_whitelist]" rows="4" dir="ltr" placeholder="203.0.113.10&#10;198.51.100.0/24"><?php echo esc_textarea( $options['security_ip_whitelist'] ); ?></textarea>
 							</label>
+							<p class="description">
+								<?php esc_html_e( 'هر IP در یک خط، یا جداشده با کاما. محدوده CIDR هم پذیرفته می‌شود (مثل 198.51.100.0/24).', 'abidar-group' ); ?>
+							</p>
 						</div>
 
 						<div class="abidar-admin-card">
@@ -1051,9 +1158,16 @@ class Abidar_Admin_Settings {
 
 						<div class="abidar-admin-card">
 							<h3><?php esc_html_e( 'افزودن زبان‌های اضافی (جدا از سه زبان پیش‌فرض)', 'abidar-group' ); ?></h3>
-							<div id="abidar-custom-languages-list">
+							<p class="description">
+								<?php esc_html_e( 'سه زبان فارسی، انگلیسی و چینی همیشه فعال‌اند. هر زبان دیگری که لازم دارید اینجا اضافه کنید؛ کد زبان باید استاندارد باشد (مثلاً ar برای عربی، ru برای روسی، tr برای ترکی).', 'abidar-group' ); ?>
+							</p>
+							<div id="abidar-custom-languages-list" class="abidar-repeater-list">
 								<?php foreach ( $options['custom_languages'] as $l_idx => $custom_lang ) : ?>
 									<div class="abidar-repeater-item">
+										<div class="abidar-repeater-item__head">
+											<strong><?php echo esc_html( ! empty( $custom_lang['native_name'] ) ? $custom_lang['native_name'] : sprintf( 'زبان شماره %d', $l_idx + 1 ) ); ?></strong>
+											<button type="button" class="button abidar-repeater-remove" aria-label="<?php esc_attr_e( 'حذف این زبان', 'abidar-group' ); ?>"><?php esc_html_e( 'حذف', 'abidar-group' ); ?></button>
+										</div>
 										<div class="abidar-repeater-row">
 											<input type="text" name="abidar[custom_languages][<?php echo (int) $l_idx; ?>][code]" value="<?php echo esc_attr( $custom_lang['code'] ); ?>" placeholder="کد زبان (مثلاً ar یا ru)" dir="ltr" />
 											<input type="text" name="abidar[custom_languages][<?php echo (int) $l_idx; ?>][name]" value="<?php echo esc_attr( $custom_lang['name'] ); ?>" placeholder="نام انگلیسی (Arabic / Russian)" dir="ltr" />
@@ -1071,9 +1185,12 @@ class Abidar_Admin_Settings {
 									</div>
 								<?php endforeach; ?>
 							</div>
-							<button type="button" class="button button-secondary" id="abidar-add-language-btn">
+							<button type="button" class="button button-primary abidar-repeater-add" id="abidar-add-language-btn" data-target="#abidar-custom-languages-list">
 								+ <?php esc_html_e( 'افزودن زبان جدید به سایت', 'abidar-group' ); ?>
 							</button>
+							<p class="description">
+								<?php esc_html_e( 'پس از افزودن، زبان جدید بلافاصله در سوییچر زبان هدر و المان المنتور نمایش داده می‌شود.', 'abidar-group' ); ?>
+							</p>
 						</div>
 					</div>
 				</section>

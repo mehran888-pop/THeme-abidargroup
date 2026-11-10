@@ -399,10 +399,86 @@
 	opacity: 0.7;
 }
 
+/* هد ردیف: عنوان + دکمه حذف */
+.abidar-repeater-item__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	margin-bottom: 10px;
+	padding-bottom: 8px;
+	border-bottom: 1px dashed #e2e8f0;
+}
+
+.abidar-repeater-item__head strong {
+	font-size: 0.82rem;
+	color: #0b192c;
+	overflow-wrap: anywhere;
+}
+
+.abidar-repeater-item__head .abidar-repeater-remove {
+	flex: 0 0 auto;
+	color: #b91c1c !important;
+	border-color: #fecaca !important;
+	background: #fff !important;
+	font-size: 0.74rem !important;
+	line-height: 1.6 !important;
+	padding: 2px 10px !important;
+	height: auto !important;
+	min-height: 0 !important;
+}
+
+.abidar-repeater-item__head .abidar-repeater-remove:hover {
+	background: #fef2f2 !important;
+	border-color: #fca5a5 !important;
+	color: #991b1b !important;
+}
+
+/* لیست قابل رشد: دکمه افزودن تمام‌عرض و واضح */
+.abidar-repeater-list {
+	margin-bottom: 10px;
+}
+
+.abidar-repeater-add {
+	width: 100%;
+	justify-content: center;
+	text-align: center;
+	margin-top: 4px;
+}
+
+.abidar-color-field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.abidar-color-field > span {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: #475569;
+}
+
+/*
+ * ردیف repeater: ستون‌های کم‌عرض برای فیلدهای کوتاه و ستون عریض برای متن‌های
+ * بلند. با ۱۶ فیلد (بخش‌های دکمه شناور) چیدمان auto-fit همه را هم‌اندازه
+ * می‌کرد و فیلدهای متنی خیلی باریک می‌شدند.
+ */
 .abidar-repeater-row {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 	gap: 8px;
+	align-items: end;
+}
+
+/* فیلدهایی که متن طولانی دارند یا در همه ردیف‌ها تکرار می‌شوند، تمام‌عرض شوند. */
+.abidar-repeater-row > input[type="url"],
+.abidar-repeater-row > input[type="email"],
+.abidar-repeater-row > label.abidar-color-field {
+	grid-column: 1 / -1;
+}
+
+.abidar-repeater-row > label.abidar-color-field {
+	max-width: 240px;
 }
 
 .abidar-repeater-row input,

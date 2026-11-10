@@ -63,6 +63,17 @@ class Abidar_Floating_Contact {
 		$title       = abidar_multilang_val( $all_options, 'floating_title', abidar_t( 'cta_contact_us' ) );
 		$subtitle    = abidar_multilang_val( $all_options, 'floating_subtitle', '' );
 		$departments = abidar_get_option( 'floating_departments', array() );
+
+		/*
+		 * اگر مدیر همه بخش‌ها را حذف کرده باشد، پنل کاملاً خالی می‌شود و
+		 * دکمه شناور بی‌محتوا می‌ماند. در آن حالت بخش‌های پیش‌فرض قالب
+		 * نمایش داده می‌شوند تا کاربر هرگز با پنجره‌ای خالی روبه‌رو نشود.
+		 * برای خاموش کردن کامل، فقط «نمایش دکمه شناور» را غیرفعال کنید.
+		 */
+		if ( empty( $departments ) || ! is_array( $departments ) ) {
+			$defaults    = abidar_get_default_options();
+			$departments = isset( $defaults['floating_departments'] ) ? $defaults['floating_departments'] : array();
+		}
 		$socials     = abidar_get_option( 'floating_socials', array() );
 		?>
 		<div id="abidar-floating-hub" class="abidar-floating-hub abidar-floating-hub--<?php echo esc_attr( $position ); ?>">
