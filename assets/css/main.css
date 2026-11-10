@@ -937,6 +937,16 @@ html[dir="ltr"] button:hover .abidar-icon-arrow {
 	color: #fff;
 }
 
+/*
+ * انتخاب‌گر «طرح» یک ابزار ویرایش است و هرگز نباید روی سایت عادی دیده شود.
+ * لایه اول در PHP (abidar_show_layout_switcher) اعمال می‌شود؛ این قاعده لایه
+ * دفاعی دوم است تا حتی اگر ویجت در حالت غیر ویرایشگر رندر شود، دکمه‌ها پنهان
+ * بمانند.
+ */
+body:not(.elementor-editor-active) .abidar-layout-switcher {
+	display: none;
+}
+
 .abidar-layout-switcher {
 	display: inline-flex;
 	flex-wrap: wrap;

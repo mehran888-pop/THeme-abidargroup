@@ -85,12 +85,14 @@ class Abidar_Widget_Team extends Abidar_Elementor_Widget_Base {
 						<h2 class="abidar-section__title"><?php echo esc_html( abidar_t( 'section_team_title' ) ); ?></h2>
 					</div>
 
-					<div class="abidar-layout-switcher">
+					<?php if ( abidar_show_layout_switcher() ) : ?>
+						<div class="abidar-layout-switcher">
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_1' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_1">طرح ۱: کارت مدیران</button>
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_2' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_2">طرح ۲: چارت رهبری</button>
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_3' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_3">طرح ۳: پرتره مدرن</button>
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_4' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_4">طرح ۴: رزومه افقی</button>
 					</div>
+					<?php endif; ?>
 				</div>
 
 				<div class="abidar-team-grid abidar-widget-grid abidar-widget-grid--<?php echo esc_attr( $layout ); ?>">

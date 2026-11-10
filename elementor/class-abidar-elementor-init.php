@@ -27,6 +27,36 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return bool آیا کلاس پایه سازگار با Elementor\Widget_Base در دسترس است؟
  */
 /**
+ * آیا انتخاب‌گر «طرح» باید رندر شود؟
+ *
+ * انتخاب‌گر طرح یک ابزار ویرایش است، نه بخشی از محتوای سایت. بنابراین:
+ * - برای بازدیدکننده عادی هرگز نمایش داده نمی‌شود.
+ * - فقط کاربری که واقعاً در حال ویرایش با المنتور است آن را می‌بیند و
+ *   می‌تواند با آن طرح ویجت را پیش‌نمایش و انتخاب کند.
+ *
+ * @return bool
+ */
+function abidar_show_layout_switcher() {
+	// فقط در بوم/پیش‌نمایش ویرایشگر المنتور.
+	if ( ! class_exists( 'Abidar_Elementor_Init' ) || ! Abidar_Elementor_Init::is_elementor_editor_context() ) {
+		return false;
+	}
+
+	// فقط کاربری که اجازه ویرایش دارد؛ نه بازدیدکننده‌ای که تصادفی پارامتر
+	// elementor-preview را در آدرس دارد.
+	if ( ! is_user_logged_in() || ! current_user_can( 'edit_posts' ) ) {
+		return false;
+	}
+
+	/**
+	 * امکان خاموش کردن انتخاب‌گر طرح برای مدیران.
+	 *
+	 * @param bool $show آیا نمایش داده شود.
+	 */
+	return (bool) apply_filters( 'abidar_show_layout_switcher', true );
+}
+
+/**
  * آیا کلاس پایه ویجت‌ها واقعاً از Widget_Base المنتور ارث می‌برد؟
  *
  * اگر پاسخ منفی باشد، `class X extends Abidar_Elementor_Widget_Base` یک خطای

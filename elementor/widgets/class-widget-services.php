@@ -140,7 +140,10 @@ class Abidar_Widget_Services extends Abidar_Elementor_Widget_Base {
 	public static function render_output( $settings = array() ) {
 		$layout        = isset( $settings['layout_style'] ) ? $settings['layout_style'] : 'layout_1';
 		$sector_filter = isset( $settings['sector_filter'] ) ? $settings['sector_filter'] : 'all';
-		$show_switcher = ! isset( $settings['show_layout_switcher'] ) || 'yes' === $settings['show_layout_switcher'];
+		// انتخاب‌گر طرح فقط ابزار ویرایش است: هرگز برای بازدیدکننده عادی رندر نمی‌شود
+		// و تنها برای مدیر در بوم ویرایشگر المنتور قابل مشاهده و انتخاب است.
+		$show_switcher = abidar_show_layout_switcher()
+			&& ( ! isset( $settings['show_layout_switcher'] ) || 'yes' === $settings['show_layout_switcher'] );
 		$services      = function_exists( 'abidar_get_content_dataset' ) ? abidar_get_content_dataset( 'abidar_service' ) : array();
 
 		// اگر هنوز هیچ خدمتی در پیشخوان ثبت نشده باشد، نمایش مجموعه دمو برای پیش‌نمایش.

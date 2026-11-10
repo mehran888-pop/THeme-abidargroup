@@ -201,6 +201,33 @@
 
 					section.setAttribute( 'data-active-layout', layout );
 
+					/**
+					 * ذخیره طرح انتخاب‌شده در ویجت المنتور.
+					 *
+					 * انتخاب‌گر طرح فقط در بوم ویرایشگر رندر می‌شود (سمت PHP
+					 * با abidar_show_layout_switcher کنترل می‌شود). پس اگر
+					 * اینجا هستیم، کاربر مدیر در حال ویرایش است و باید
+					 * انتخابش در مدل ویجت ذخیره شود تا پس از ذخیره صفحه
+					 * همان طرح روی سایت بماند.
+					 */
+					if ( window.parent && window.parent.$e && window.parent.$e.run ) {
+						// المنتور هر ویجت را در .elementor-element[data-id] می‌پیچد.
+						const widgetEl = section.closest( '.elementor-element[data-id]' );
+						const widgetId = widgetEl ? widgetEl.getAttribute( 'data-id' ) : '';
+
+						if ( widgetId ) {
+							try {
+								window.parent.$e.run( 'document/elements/settings', {
+									container: window.parent.$e.getContainer( widgetId ),
+									settings: { layout_style: layout },
+									options: { external: true },
+								} );
+							} catch ( err ) {
+								// اگر مدل ویجت در دسترس نبود، پیش‌نمایش بصری کافی است.
+							}
+						}
+					}
+
 					if ( grid ) {
 						grid.classList.forEach( ( cls ) => {
 							if ( cls.indexOf( 'abidar-widget-grid--' ) === 0 ) {

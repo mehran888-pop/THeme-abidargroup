@@ -131,11 +131,13 @@ class Abidar_Widget_Contact_Hub extends Abidar_Elementor_Widget_Base {
 						<h2 class="abidar-section__title"><?php echo esc_html( abidar_t( 'contact_heading' ) ); ?></h2>
 					</div>
 
-					<div class="abidar-layout-switcher">
+					<?php if ( abidar_show_layout_switcher() ) : ?>
+						<div class="abidar-layout-switcher">
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_1' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_1">طرح ۱: دایرکتوری + فرم</button>
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_2' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_2">طرح ۲: پنل صنعتی</button>
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_3' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_3">طرح ۳: مینیمال</button>
 					</div>
+					<?php endif; ?>
 				</div>
 
 				<!-- دایرکتوری معاونت‌های تخصصی هلدینگ -->

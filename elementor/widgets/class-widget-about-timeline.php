@@ -255,12 +255,14 @@ class Abidar_Widget_About_Timeline extends Abidar_Elementor_Widget_Base {
 				<div class="abidar-timeline" data-timeline>
 					<div class="abidar-timeline__head">
 						<h3 class="abidar-timeline__title"><?php echo esc_html( abidar_t( 'timeline_title' ) ); ?></h3>
-						<div class="abidar-layout-switcher">
+						<?php if ( abidar_show_layout_switcher() ) : ?>
+							<div class="abidar-layout-switcher">
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_1' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_1">طرح ۱: عمودی</button>
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_2' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_2">طرح ۲: افقی</button>
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_3' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_3">طرح ۳: دو ستونه</button>
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_4' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_4">طرح ۴: مدیریتی</button>
 						</div>
+						<?php endif; ?>
 					</div>
 
 					<div class="abidar-timeline__track">

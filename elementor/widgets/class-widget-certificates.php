@@ -84,11 +84,13 @@ class Abidar_Widget_Certificates extends Abidar_Elementor_Widget_Base {
 						<h2 class="abidar-section__title"><?php echo esc_html( abidar_t( 'section_certs_title' ) ); ?></h2>
 					</div>
 
-					<div class="abidar-layout-switcher">
+					<?php if ( abidar_show_layout_switcher() ) : ?>
+						<div class="abidar-layout-switcher">
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_1' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_1">طرح ۱: قاب طلایی</button>
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_2' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_2">طرح ۲: جدول استعلام</button>
 						<button type="button" class="abidar-layout-btn <?php echo ( 'layout_3' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_3">طرح ۳: لوح سه‌بعدی</button>
 					</div>
+					<?php endif; ?>
 				</div>
 
 				<div class="abidar-certs-grid abidar-widget-grid abidar-widget-grid--<?php echo esc_attr( $layout ); ?>">

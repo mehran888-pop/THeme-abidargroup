@@ -126,12 +126,14 @@ class Abidar_Widget_Projects extends Abidar_Elementor_Widget_Base {
 							<button type="button" class="abidar-filter-pill" data-filter="oil"><?php echo esc_html( abidar_t( 'sector_oil' ) ); ?></button>
 						</div>
 
-						<div class="abidar-layout-switcher abidar-layout-switcher--dark">
+						<?php if ( abidar_show_layout_switcher() ) : ?>
+							<div class="abidar-layout-switcher abidar-layout-switcher--dark">
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_1' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_1">طرح ۱: گرید فنی</button>
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_2' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_2">طرح ۲: اسپات‌لایت</button>
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_3' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_3">طرح ۳: افقی</button>
 							<button type="button" class="abidar-layout-btn <?php echo ( 'layout_4' === $layout ) ? 'is-active' : ''; ?>" data-switch-layout="layout_4">طرح ۴: گالری</button>
 						</div>
+						<?php endif; ?>
 					</div>
 				</div>
 
