@@ -6,7 +6,7 @@
  * طراحی‌شده بر اساس آخرین استانداردهای کدنویسی وردپرس (WPCS) و المنتور
  *
  * @package Abidar_Group
- * @version 2.0.0
+ * @version 2.2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ثوابت اصلی قالب (شروع از نسخه 2.0.0 طبق درخواست کارفرما)
  */
-define( 'ABIDAR_VERSION', '2.1.0' );
+define( 'ABIDAR_VERSION', '2.2.0' );
 define( 'ABIDAR_DIR', get_template_directory() );
 define( 'ABIDAR_URI', get_template_directory_uri() );
 define( 'ABIDAR_OPTION_KEY', 'abidar_theme_options_v2' );
