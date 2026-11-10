@@ -508,6 +508,45 @@
 				applyFilters();
 			}
 		} );
+
+		/*
+		 * پاک‌کردن گزارش: یک فرم واقعی داخل فرم تنظیمات جای نمی‌گیرد، پس با
+		 * fetch به admin-post.php می‌فرستیم. هدر X-WP-Nonce و فیلد action
+		 * هر دو لازم‌اند چون check_admin_referer روی پارامتر _wpnonce کار می‌کند.
+		 */
+		toolbar.on( 'click', '[data-log-clear]', ( event ) => {
+			event.preventDefault();
+
+			const button = event.currentTarget;
+			const message = button.getAttribute( 'data-confirm' ) || '';
+
+			if ( message && ! window.confirm( message ) ) {
+				return;
+			}
+
+			const body = new window.FormData();
+			body.append( 'action', 'abidar_clear_security_logs' );
+			body.append( '_wpnonce', button.getAttribute( 'data-nonce' ) || '' );
+
+			button.disabled = true;
+
+			/*
+			 * هندلر با قلاب admin_post_abidar_clear_security_logs ثبت شده و
+			 * آن قلاب فقط روی admin-post.php اجرا می‌شود — نه admin-ajax.php.
+			 * ارسال به آدرس اشتباه، بی‌صدا هیچ کاری نمی‌کرد.
+			 */
+			window.fetch( config.adminPost, {
+				method: 'POST',
+				credentials: 'same-origin',
+				body,
+			} )
+				.then( () => {
+					window.location.reload();
+				} )
+				.catch( () => {
+					button.disabled = false;
+				} );
+		} );
 	};
 
 	/* ======================================================================

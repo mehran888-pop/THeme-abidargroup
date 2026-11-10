@@ -104,8 +104,10 @@ class Abidar_Admin_Settings {
 			'abidar-admin-js',
 			'AbidarAdmin',
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'abidar_admin_nonce' ),
+				'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
+				// admin_post_* فقط روی admin-post.php اجرا می‌شود، نه admin-ajax.php.
+				'adminPost' => admin_url( 'admin-post.php' ),
+				'nonce'    => wp_create_nonce( 'abidar_admin_nonce' ),
 			)
 		);
 	}
@@ -1367,6 +1369,24 @@ class Abidar_Admin_Settings {
 									<a href="<?php echo esc_url( $log_base_url ); ?>" class="button">
 										<?php esc_html_e( 'پاک کردن فیلترها', 'abidar-group' ); ?>
 									</a>
+								<?php endif; ?>
+
+								<?php if ( $log_data['all'] > 0 ) : ?>
+									<?php
+									/*
+									 * پاک‌کردن گزارش باید یک درخواست POST جدا باشد، نه لینک؛
+									 * وگرنه با یک prefetch یا بازکردن آدرس در تب، گزارش بی‌بازگشت
+									 * حذف می‌شود. فرم داخل فرم هم نامعتبر است، پس به‌جای فرم
+									 * از تابع JS و fetch به admin-post.php استفاده می‌کنیم.
+									 */
+									?>
+									<button type="button"
+										class="button abidar-log-clear"
+										data-log-clear
+										data-nonce="<?php echo esc_attr( wp_create_nonce( 'abidar_clear_logs' ) ); ?>"
+										data-confirm="<?php esc_attr_e( 'همه رویدادهای امنیتی پاک شوند؟ این کار قابل بازگشت نیست.', 'abidar-group' ); ?>">
+										<?php esc_html_e( 'پاک کردن کل گزارش', 'abidar-group' ); ?>
+									</button>
 								<?php endif; ?>
 							</div>
 

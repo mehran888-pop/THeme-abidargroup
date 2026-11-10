@@ -179,10 +179,16 @@ class Abidar_Widget_Lang_Switcher extends Abidar_Elementor_Widget_Base {
 			: '';
 
 		if ( $is_dropdown ) {
-			$current_html = 'dropdown_flags' === $style
-				? '<span class="abidar-lang-widget__flag">' . esc_html( $current['flag'] ) . '</span>'
-				: '<span class="abidar-lang-widget__flag">' . esc_html( $current['flag'] ) . '</span>'
-					. '<span class="abidar-lang-widget__name">' . esc_html( $current['native_name'] ) . '</span>';
+			/*
+			 * حالت dropdown_flags عمداً فقط پرچم را نشان می‌دهد؛ حالت dropdown
+			 * پرچم + نام زبان. پیش‌تر هر دو شاخه یک خروجی می‌دادند و حالت
+			 * «فقط پرچم» عملاً وجود نداشت.
+			 */
+			$current_html = '<span class="abidar-lang-widget__flag">' . esc_html( $current['flag'] ) . '</span>';
+
+			if ( 'dropdown_flags' !== $style ) {
+				$current_html .= '<span class="abidar-lang-widget__name">' . esc_html( $current['native_name'] ) . '</span>';
+			}
 			?>
 			<div class="abidar-lang-widget abidar-lang-widget--<?php echo esc_attr( $style ); ?> abidar-lang-widget--align-<?php echo esc_attr( $align ); ?>" data-lang-dropdown>
 				<?php echo $label_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

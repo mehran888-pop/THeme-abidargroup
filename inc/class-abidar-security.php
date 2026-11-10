@@ -30,6 +30,9 @@ class Abidar_Security {
 	 * راه‌اندازی تمامی دیوارهای آتش و قلاب‌های امنیتی
 	 */
 	public static function init() {
+		// ۰. پاک‌کردن گزارش امنیتی از پنل (POST با nonce)
+		add_action( 'admin_post_abidar_clear_security_logs', array( __CLASS__, 'handle_clear_logs' ) );
+
 		// ۱. هدرهای امنیتی HTTP
 		if ( abidar_get_option( 'security_http_headers', true ) ) {
 			add_action( 'send_headers', array( __CLASS__, 'send_security_headers' ) );
@@ -689,6 +692,34 @@ class Abidar_Security {
 			'pages'    => $pages,
 			'types'    => $types,
 		);
+	}
+
+	/**
+	 * پردازش درخواست پاک‌کردن گزارش از پنل تنظیمات.
+	 *
+	 * @return void
+	 */
+	public static function handle_clear_logs() {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'دسترسی مجاز نیست.', 'abidar-group' ), 403 );
+		}
+
+		check_admin_referer( 'abidar_clear_logs' );
+
+		self::clear_security_logs();
+		self::log_security_event( 'logs_cleared', __( 'گزارش امنیتی توسط مدیر پاک شد.', 'abidar-group' ) );
+
+		$redirect = add_query_arg(
+			array(
+				'page'    => 'abidar-settings',
+				'tab'     => 'security',
+				'cleared' => '1',
+			),
+			admin_url( 'admin.php' )
+		);
+
+		wp_safe_redirect( $redirect . '#security-log' );
+		exit;
 	}
 
 	/**
