@@ -32,8 +32,13 @@ function abidar_declare_elementor_widget_base() {
 		// ویجت‌ها هرگز از Widget_Base واقعی ارث نمی‌برند و ثبت آن‌ها در
 		// Widgets_Manager::register() خطای مهلک می‌دهد. در این حالت اصلاً
 		// ویجت‌ها را بارگذاری نمی‌کنیم تا ویرایشگر سالم بماند.
-		return class_exists( '\Elementor\Widget_Base' )
-			&& is_subclass_of( 'Abidar_Elementor_Widget_Base', 'Elementor\\Widget_Base' );
+		// نام کامل کلاس به‌صورت متغیر ساخته می‌شود تا خطای فرار (escape) کاراکتر
+		// بک‌اسلش دوباره رخ ندهد؛ یک بک‌اسلش اضافه باعث می‌شود is_subclass_of()
+		// همیشه false برگرداند و در نتیجه هیچ ویجتی در پنل المنتور دیده نشود.
+		$elementor_widget_base = 'Elementor' . chr( 92 ) . 'Widget_Base';
+
+		return class_exists( $elementor_widget_base )
+			&& is_subclass_of( 'Abidar_Elementor_Widget_Base', $elementor_widget_base );
 	}
 
 	if ( class_exists( '\Elementor\Widget_Base' ) ) {
@@ -172,11 +177,10 @@ class Abidar_Elementor_Init {
 	 * بارگذاری فایل‌های ویجت‌های اختصاصی گروه آبیدر
 	 */
 	public static function load_widget_files() {
-		// کلاس پایه را اعلان کن؛ اگر المنتور تازه در دسترس قرار گرفته باشد و کلاس پایه
-		// قبلاً در مسیر جانشین ساخته شده باشد، بارگذاری ویجت‌ها بی‌خطر لغو می‌شود.
-		if ( ! abidar_declare_elementor_widget_base() ) {
-			return;
-		}
+		// کلاس پایه را اعلان کن. اگر مسیر «بدون المنتور» از قبل قفل شده باشد،
+		// ویجت‌ها همچنان بارگذاری می‌شوند تا هدر/فوتر قالب روی فرانت‌اند از بین نرود؛
+		// فقط ثبت آن‌ها در پنل المنتور انجام نمی‌شود (در register_widgets کنترل می‌شود).
+		abidar_declare_elementor_widget_base();
 
 		$widget_files = array(
 			'/elementor/widgets/class-widget-header-nav.php',
@@ -272,6 +276,14 @@ class Abidar_Elementor_Init {
 	 */
 	public static function register_widgets( $widgets_manager ) {
 		self::load_widget_files();
+
+		// اگر کلاس پایه از Widget_Base واقعی المنتور ارث نمی‌برد، ثبت ویجت‌ها
+		// در Widgets_Manager::register() خطای مهلک TypeError می‌دهد؛ پس فقط در
+		// این حالت صرف‌نظر می‌کنیم. در همه حالت‌های دیگر ویجت‌ها باید کامل در پنل
+		// دیده شوند.
+		if ( ! abidar_declare_elementor_widget_base() ) {
+			return;
+		}
 
 		$widget_classes = array(
 			'Abidar_Widget_Header_Nav',
