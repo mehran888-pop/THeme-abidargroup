@@ -572,19 +572,32 @@ class Abidar_Admin_Settings {
 	public static function render_settings_page() {
 		$options    = abidar_get_all_options();
 		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'layout'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		/*
+		 * نام تب‌ها با تابع ترجمه وردپرس خوانده می‌شوند تا اگر مدیر پیشخوان
+		 * انگلیسی یا چینی باشد، برچسب‌ها هم به همان زبان دربیایند. متن فارسی
+		 * خودِ msgid است؛ پس بدون فایل ترجمه هم چیزی تغییر نمی‌کند.
+		 */
 		$tabs       = array(
-			'layout'           => '۱. طرح و چیدمان و فونت',
-			'mobile-nav'       => '۲. ناوبری موبایل',
-			'floating-contact' => '۳. دکمه شناور تماس چندبخشی',
-			'blog'             => '۴. قالب مقاله و پست‌ها',
-			'preloader'        => '۵. پیش‌بارگذاری سایت',
-			'security'         => '۶. امنیت پیشرفته',
-			'languages'        => '۷. زبان‌های سایت (FA/EN/ZH+)',
-			'demo'             => '۸. ساخت دمو و برگه‌های المنتور',
-			'diagnostics'      => '۹. عیب‌یابی ویرایشگر المنتور',
+			'layout'           => __( '۱. طرح و چیدمان و فونت', 'abidar-group' ),
+			'mobile-nav'       => __( '۲. ناوبری موبایل', 'abidar-group' ),
+			'floating-contact' => __( '۳. دکمه شناور تماس چندبخشی', 'abidar-group' ),
+			'blog'             => __( '۴. قالب مقاله و پست‌ها', 'abidar-group' ),
+			'preloader'        => __( '۵. پیش‌بارگذاری سایت', 'abidar-group' ),
+			'security'         => __( '۶. امنیت پیشرفته', 'abidar-group' ),
+			'languages'        => __( '۷. زبان‌های سایت (FA/EN/ZH+)', 'abidar-group' ),
+			'demo'             => __( '۸. ساخت دمو و برگه‌های المنتور', 'abidar-group' ),
+			'diagnostics'      => __( '۹. عیب‌یابی ویرایشگر المنتور', 'abidar-group' ),
 		);
 		?>
-		<div class="wrap abidar-admin-wrap" dir="rtl">
+		<?php
+		/*
+		 * جهت پنل از زبان واقعی پیشخوان گرفته می‌شود، نه از زبان سایت.
+		 * مدیرِ پیشخوان انگلیسی باید همان چیدمان LTR را ببیند که بقیه وردپرس
+		 * به او نشان می‌دهد؛ وگرنه پنل تنها بخش راست‌به‌چپِ صفحه می‌شود.
+		 */
+		$abidar_admin_dir = is_rtl() ? 'rtl' : 'ltr';
+		?>
+		<div class="wrap abidar-admin-wrap" dir="<?php echo esc_attr( $abidar_admin_dir ); ?>">
 			<div class="abidar-admin-header">
 				<div class="abidar-admin-header__brand">
 					<span class="abidar-admin-header__badge">ABIDAR v<?php echo esc_html( ABIDAR_VERSION ); ?></span>

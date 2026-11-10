@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ثوابت اصلی قالب (شروع از نسخه 2.0.0 طبق درخواست کارفرما)
  */
-define( 'ABIDAR_VERSION', '2.2.4' );
+define( 'ABIDAR_VERSION', '2.2.5' );
 define( 'ABIDAR_DIR', get_template_directory() );
 define( 'ABIDAR_URI', get_template_directory_uri() );
 define( 'ABIDAR_OPTION_KEY', 'abidar_theme_options_v2' );
@@ -572,6 +572,11 @@ require_once ABIDAR_DIR . '/elementor/class-abidar-elementor-init.php';
  * @return array
  */
 function abidar_body_classes( $classes ) {
+	// کلاس‌های قالب فقط روی فرانت‌اند معنا دارند.
+	if ( is_admin() ) {
+		return $classes;
+	}
+
 	$lang         = Abidar_I18n::get_current_lang();
 	$is_rtl       = Abidar_I18n::is_rtl();
 	$layout_mode  = abidar_get_option( 'layout_mode', 'wide' );
@@ -594,13 +599,26 @@ add_filter( 'body_class', 'abidar_body_classes' );
 /**
  * تنظیم ویژگی‌های lang و dir روی تگ html بر اساس زبان انتخاب‌شده کاربر
  *
+ * نکته مهم: قلاب `language_attributes` فقط مخصوص فرانت‌اند نیست. هسته وردپرس
+ * همان تابع را در `wp-admin/admin-header.php` هم صدا می‌زند. اگر این فیلتر در
+ * پیشخوان هم اجرا شود، انتخاب زبان سایت توسط بازدیدکننده (مثلاً انگلیسی) تگ
+ * `<html>` کل پنل مدیریت را به `dir="ltr"` تغییر می‌دهد و کل پیشخوان — که
+ * راست‌به‌چپ طراحی شده — به هم می‌ریزد. پس در پیشخوان دست نمی‌زنیم و اجازه
+ * می‌دهیم وردپرس از زبان واقعی کاربر (`is_rtl()`) استفاده کند.
+ *
  * @param string $output ویژگی‌های پیش‌فرض وردپرس.
  * @return string
  */
 function abidar_language_attributes( $output ) {
+	// پیشخوان، صفحه ورود و درخواست‌های AJAX: رفتار پیش‌فرض وردپرس حفظ می‌شود.
+	if ( is_admin() || wp_doing_ajax() ) {
+		return $output;
+	}
+
 	$lang   = Abidar_I18n::get_current_lang();
 	$is_rtl = Abidar_I18n::is_rtl();
 	$dir    = $is_rtl ? 'rtl' : 'ltr';
+
 	return sprintf( 'lang="%s" dir="%s"', esc_attr( $lang ), esc_attr( $dir ) );
 }
 add_filter( 'language_attributes', 'abidar_language_attributes', 20 );

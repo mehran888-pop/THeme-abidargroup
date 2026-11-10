@@ -628,3 +628,58 @@ html[dir="rtl"] .abidar-switch input:checked + .abidar-switch__track::after {
 		grid-template-columns: minmax(0, 1fr);
 	}
 }
+
+/* ==========================================================================
+ * DIRECTION & RESPONSIVE — پنل ویرایش باید در هر دو جهت و هر اندازه‌ای سالم باشد
+ * ==========================================================================
+ * این پنل از جهت خودِ پیشخوان پیروی می‌کند (dir روی <html> را وردپرس می‌گذارد).
+ * هیچ استایل چپ/راستِ ثابتی اینجا نیست؛ همه با شروع/پایان نوشته شده‌اند.
+ */
+
+.abidar-editor,
+.abidar-editor-toolbar {
+	text-align: start;
+}
+
+/* فیلدهای لاتین در هر جهتی LTR می‌مانند: URL، ایمیل، کد مدرک، تلفن. */
+.abidar-editor input[type="url"],
+.abidar-editor input[type="email"],
+.abidar-editor input[type="tel"],
+.abidar-editor input[dir="ltr"],
+.abidar-editor .abidar-lang-block input {
+	direction: ltr;
+	text-align: left;
+}
+
+/* پیش‌نمایش‌ها و تصاویر هرگز از کادر بیرون نزنند. */
+.abidar-editor img,
+.abidar-editor video,
+.abidar-editor iframe {
+	max-width: 100%;
+	height: auto;
+}
+
+.abidar-editor,
+.abidar-editor-toolbar {
+	max-width: 100%;
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+
+@media (max-width: 480px) {
+	.abidar-editor-toolbar {
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 10px 12px;
+		border-radius: 10px 10px 0 0;
+	}
+
+	.abidar-editor__tabs {
+		scrollbar-width: thin;
+	}
+
+	.abidar-media-grid {
+		grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+	}
+}
+

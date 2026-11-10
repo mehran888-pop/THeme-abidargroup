@@ -14,8 +14,41 @@
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, "Vazirmatn", sans-serif;
 }
 
-.abidar-admin-wrap * {
+.abidar-admin-wrap *,
+.abidar-admin-wrap *::before,
+.abidar-admin-wrap *::after {
 	box-sizing: border-box;
+}
+
+/*
+ * جهت پنل از خود وردپرس می‌آید. هر دو حالت پشتیبانی می‌شوند تا مدیرِ
+ * پیشخوان انگلیسی همان چیدمان LTR را ببیند و پنل تنها بخش راست‌به‌چپِ صفحه نشود.
+ */
+.abidar-admin-wrap[dir="ltr"] {
+	text-align: left;
+}
+
+.abidar-admin-wrap[dir="rtl"] {
+	text-align: right;
+}
+
+/* اعداد، آدرس‌ها و کدها در هر دو جهت یکسان دیده می‌شوند. */
+.abidar-admin-wrap input[type="url"],
+.abidar-admin-wrap input[type="email"],
+.abidar-admin-wrap input[type="password"],
+.abidar-admin-wrap input[dir="ltr"],
+.abidar-admin-wrap code,
+.abidar-admin-wrap pre {
+	direction: ltr;
+	text-align: left;
+}
+
+/* فاصله‌های افقی به‌جای چپ/راست، با شروع/پایان نوشته می‌شوند. */
+.abidar-admin-card label,
+.abidar-admin-card .description,
+.abidar-admin-panel h2,
+.abidar-admin-panel h3 {
+	text-align: start;
 }
 
 /* --- Header --- */
@@ -459,26 +492,140 @@
 }
 
 /* --- Responsive --- */
-@media (max-width: 782px) {
-	.abidar-admin-wrap {
-		margin: 12px 10px 30px 0;
+/*
+ * پنل باید در همه اندازه‌های صفحه سالم بماند و هیچ‌جا اسکرول افقی نسازد.
+ * از بزرگ به کوچک نوشته شده تا هر اندازه فقط همان چیزی را بگیرد که لازم دارد.
+ */
+@media (max-width: 1200px) {
+	.abidar-admin-grid {
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	}
+}
+
+@media (max-width: 960px) {
+	.abidar-admin-grid {
+		grid-template-columns: 1fr;
 	}
 
 	.abidar-admin-header {
-		padding: 18px;
+		padding: 20px;
+	}
+}
+
+@media (max-width: 782px) {
+	.abidar-admin-wrap {
+		margin-block: 12px 30px;
+		margin-inline: 10px 0;
+	}
+
+	.abidar-admin-header {
+		padding: 16px;
+		border-radius: 12px;
+		gap: 14px;
+	}
+
+	.abidar-admin-header h1 {
+		font-size: 1.06rem;
+	}
+
+	.abidar-admin-header p {
+		font-size: 0.78rem;
+	}
+
+	.abidar-admin-header__brand {
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.abidar-admin-header__actions {
+		width: 100%;
+	}
+
+	.abidar-admin-header__actions .button {
+		width: 100%;
+		justify-content: center;
+		text-align: center;
 	}
 
 	.abidar-admin-grid {
 		grid-template-columns: 1fr;
 	}
 
+	/* تب‌ها فقط داخل خودشان اسکرول شوند، نه کل صفحه. */
 	.abidar-admin-tabs {
 		overflow-x: auto;
 		flex-wrap: nowrap;
 		-webkit-overflow-scrolling: touch;
+		scrollbar-width: thin;
+	}
+
+	.abidar-admin-tab {
+		flex: 0 0 auto;
+	}
+
+	.abidar-admin-card {
+		padding: 16px;
 	}
 
 	.abidar-repeater-row {
 		grid-template-columns: 1fr;
 	}
+
+	/* فیلدهای تک‌ستونه دیگر با پدینگ اضافی از کادر بیرون نمی‌زنند. */
+	.abidar-admin-card input[type="text"],
+	.abidar-admin-card input[type="url"],
+	.abidar-admin-card input[type="email"],
+	.abidar-admin-card input[type="number"],
+	.abidar-admin-card input[type="password"],
+	.abidar-admin-card select,
+	.abidar-admin-card textarea {
+		font-size: 16px !important; /* جلوگیری از زوم خودکار iOS */
+	}
+}
+
+@media (max-width: 480px) {
+	.abidar-admin-wrap {
+		margin-inline: 6px 0;
+	}
+
+	.abidar-admin-header {
+		padding: 14px;
+	}
+
+	.abidar-admin-header__badge {
+		font-size: 0.66rem;
+		padding: 6px 10px;
+	}
+
+	.abidar-admin-card {
+		padding: 13px;
+		border-radius: 10px;
+	}
+
+	.abidar-repeater-row {
+		gap: 6px;
+	}
+}
+
+/*
+ * هیچ عنصری در پنل از عرض کادر بیرون نزند: جدول‌ها، پیش‌نمایش‌ها و آدرس‌های
+ * طولانی. این قاعده آخر می‌آید تا بر تنظیمات بالا اولویت داشته باشد.
+ */
+.abidar-admin-wrap {
+	max-width: 100%;
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+
+.abidar-admin-wrap img,
+.abidar-admin-wrap video,
+.abidar-admin-wrap iframe,
+.abidar-admin-wrap canvas,
+.abidar-admin-wrap svg {
+	max-width: 100%;
+	height: auto;
+}
+
+.abidar-admin-wrap table {
+	max-width: 100%;
 }

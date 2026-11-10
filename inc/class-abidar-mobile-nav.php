@@ -86,12 +86,35 @@ class Abidar_Mobile_Nav {
 
 				<!-- تغییر زبان سریع در موبایل -->
 				<div class="abidar-mobile-drawer__langs">
-					<?php foreach ( $languages as $code => $lang_info ) : ?>
-						<a href="<?php echo esc_url( Abidar_I18n::get_language_url( $code ) ); ?>" class="abidar-lang-pill <?php echo ( $curr_lang === $code ) ? 'is-active' : ''; ?>">
-							<span><?php echo esc_html( $lang_info['flag'] ); ?></span>
-							<span><?php echo esc_html( $lang_info['native_name'] ); ?></span>
-						</a>
-					<?php endforeach; ?>
+					<?php
+					/*
+					 * همان طرحی استفاده می‌شود که مدیر در تنظیمات قالب انتخاب کرده
+					 * است تا ظاهر زبان در دسکتاپ و موبایل یکی باشد. در منوی موبایل
+					 * حالت کشویی معنا ندارد (داخل کشو می‌شود منوی تودرتو)، پس همان
+					 * زبان‌ها به شکل کپسولی نمایش داده می‌شوند.
+					 */
+					if ( class_exists( 'Abidar_Widget_Lang_Switcher' ) ) {
+						$mobile_style = abidar_get_option( 'lang_switcher_style', 'pills_flag' );
+						if ( in_array( $mobile_style, array( 'dropdown', 'dropdown_flags' ), true ) ) {
+							$mobile_style = 'pills_flag';
+						}
+						Abidar_Widget_Lang_Switcher::render_output(
+							array(
+								'layout_style' => $mobile_style,
+								'show_label'   => 'yes',
+							)
+						);
+					} else {
+						foreach ( $languages as $code => $lang_info ) :
+							?>
+							<a href="<?php echo esc_url( Abidar_I18n::get_language_url( $code ) ); ?>" class="abidar-lang-pill <?php echo ( $curr_lang === $code ) ? 'is-active' : ''; ?>">
+								<span><?php echo esc_html( $lang_info['flag'] ); ?></span>
+								<span><?php echo esc_html( $lang_info['native_name'] ); ?></span>
+							</a>
+							<?php
+						endforeach;
+					}
+					?>
 				</div>
 
 				<!-- لینک‌های اصلی صفحات دمو -->

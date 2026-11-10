@@ -4532,6 +4532,38 @@ html[dir="rtl"] .abidar-mobile-drawer__panel {
 	border-bottom: 1px solid rgba(148, 163, 184, 0.16);
 }
 
+/*
+ * سوییچر مشترک داخل کشوی موبایل: زمینه کشو تیره است، پس رنگ‌های روشن
+ * ویجت اینجا بازنویسی می‌شوند تا خوانا بمانند.
+ */
+.abidar-mobile-drawer__langs .abidar-lang-widget {
+	width: 100%;
+	gap: 6px;
+}
+
+.abidar-mobile-drawer__langs .abidar-lang-widget__label {
+	color: rgba(148, 163, 184, 0.9);
+	width: 100%;
+	margin-bottom: 2px;
+}
+
+.abidar-mobile-drawer__langs .abidar-lang-widget__item {
+	background: rgba(255, 255, 255, 0.06);
+	border-color: rgba(148, 163, 184, 0.2);
+	color: rgba(226, 232, 240, 0.8);
+}
+
+.abidar-mobile-drawer__langs .abidar-lang-widget__item:hover {
+	border-color: var(--abidar-primary);
+	color: #fff;
+}
+
+.abidar-mobile-drawer__langs .abidar-lang-widget__item.is-active {
+	background: var(--abidar-primary);
+	border-color: var(--abidar-primary);
+	color: #fff;
+}
+
 .abidar-lang-pill {
 	display: inline-flex;
 	align-items: center;
@@ -6271,6 +6303,138 @@ html[dir="rtl"] .abidar-search-form {
 		height: auto;
 	}
 }
+
+
+/*
+ * ============================================================================
+ * TYPOGRAPHY & DIRECTION IN EVERY LANGUAGE
+ * ============================================================================
+ * قالب باید در فارسی، انگلیسی و چینی یک‌اندازه حرفه‌ای دیده شود. هر زبان
+ * فونت مناسب خودش را می‌گیرد و جهت نوشته از `dir` روی تگ html می‌آید، نه از
+ * هارد‌کد. کلاس‌های `abidar-lang-*` و `abidar-dir-*` را functions.php روی
+ * body می‌گذارد.
+ */
+
+/* فونت‌های مخصوص هر زبان: خط چینی هرگز با فونت لاتین رندر نشود. */
+body.abidar-lang-zh,
+body.abidar-lang-zh .abidar-btn,
+body.abidar-lang-zh input,
+body.abidar-lang-zh select,
+body.abidar-lang-zh textarea {
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+}
+
+body.abidar-lang-en,
+body.abidar-lang-en .abidar-btn,
+body.abidar-lang-en input,
+body.abidar-lang-en select,
+body.abidar-lang-en textarea {
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body.abidar-lang-fa,
+body.abidar-lang-fa .abidar-btn,
+body.abidar-lang-fa input,
+body.abidar-lang-fa select,
+body.abidar-lang-fa textarea {
+	font-family: 'Vazirmatn', 'IRANSans', Tahoma, sans-serif;
+}
+
+/*
+ * چینی و انگلیسی فاصله اضافه بین حروف می‌خواهند؛ فارسی هرگز، چون حروف را
+ * از هم جدا می‌کند و خوانایی را نابود می‌کند.
+ */
+body.abidar-dir-ltr .abidar-section__eyebrow,
+body.abidar-dir-ltr .abidar-hero__eyebrow {
+	letter-spacing: 0.12em;
+}
+
+body.abidar-dir-rtl .abidar-section__eyebrow,
+body.abidar-dir-rtl .abidar-hero__eyebrow {
+	letter-spacing: 0;
+}
+
+/* چیدمان خط: فارسی به راست، انگلیسی و چینی به چپ. */
+body.abidar-dir-rtl {
+	text-align: right;
+}
+
+body.abidar-dir-ltr {
+	text-align: left;
+}
+
+/*
+ * عناصری که ذاتاً باید همیشه LTR بمانند، در هر زبانی: ایمیل، شماره تماس،
+ * کد مدرک، مختصات، آدرس‌های لاتین و بازه‌های عددی.
+ */
+.abidar-force-ltr,
+.abidar-entry-content code,
+.abidar-entry-content pre,
+.abidar-metric-box__num,
+.abidar-ticker-item {
+	direction: ltr;
+	unicode-bidi: isolate;
+}
+
+/*
+ * در حالت LTR، آینه‌سازی آیکون‌ها نباید انجام شود؛ فقط جهت حرکت تغییر می‌کند.
+ */
+body.abidar-dir-ltr .abidar-icon-arrow {
+	transform: none;
+}
+
+/*
+ * جدول‌ها و فرم‌ها در هر سه زبان: سرستون‌ها با جهت متن هم‌راستا باشند و
+ * ستون عددی همیشه LTR بماند.
+ */
+.abidar-table-wrap th,
+.abidar-entry-content table th {
+	text-align: start;
+}
+
+.abidar-entry-content table td[data-type="number"],
+.abidar-table-wrap td.is-numeric {
+	direction: ltr;
+	text-align: end;
+}
+
+/* فیلدهای ورودی در همه زبان‌ها از جهت صفحه پیروی می‌کنند مگر خلافش بخواهیم. */
+input,
+select,
+textarea {
+	text-align: start;
+}
+
+input[type="email"],
+input[type="url"],
+input[type="tel"],
+input[type="number"] {
+	direction: ltr;
+	text-align: start;
+}
+
+/*
+ * سوییچر زبان هم باید در هر سه زبان درست بایستد: فلش منوی کشویی در RTL و LTR
+ * فقط با منطقی‌بودن جهت‌ها جابه‌جا می‌شود، و متن زبان‌های لاتین در فهرست
+ * فارسی به‌هم نمی‌ریزد.
+ */
+.abidar-lang-widget__name,
+.abidar-lang-widget__flag,
+.abidar-lang-bar__label,
+.abidar-lang-bar__flag,
+.abidar-lang-dropdown__item {
+	unicode-bidi: isolate;
+}
+
+/* نام زبان انگلیسی/چینی همیشه چپ‌به‌راست خوانده شود، حتی داخل فهرست فارسی. */
+.abidar-lang-widget__item[lang="en"] .abidar-lang-widget__name,
+.abidar-lang-widget__item[lang="zh"] .abidar-lang-widget__name,
+.abidar-lang-dropdown__item[lang="en"] .abidar-lang-widget__name,
+.abidar-lang-dropdown__item[lang="zh"] .abidar-lang-widget__name {
+	direction: ltr;
+}
+
+/* --- پایان بلوک چندزبانه --- */
 
 /* --- Small phones --- */
 @media (max-width: 480px) {
