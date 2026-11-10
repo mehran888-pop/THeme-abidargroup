@@ -460,6 +460,54 @@ class Abidar_Admin_Settings {
 			empty( $bom ),
 		);
 
+		// ---- وضعیت تک‌تک المان‌های اختصاصی ----
+		$widgets = array(
+			'Abidar_Widget_Header_Nav'     => 'abidar_header_nav',
+			'Abidar_Widget_Footer_Builder' => 'abidar_footer_builder',
+			'Abidar_Widget_Lang_Switcher'  => 'abidar_lang_switcher',
+			'Abidar_Widget_Hero_Slider'    => 'abidar_hero_slider',
+			'Abidar_Widget_Services'       => 'abidar_services',
+			'Abidar_Widget_Projects'       => 'abidar_projects',
+			'Abidar_Widget_Team'           => 'abidar_team',
+			'Abidar_Widget_Certificates'   => 'abidar_certificates',
+			'Abidar_Widget_About_Timeline' => 'abidar_about_timeline',
+			'Abidar_Widget_Contact_Hub'    => 'abidar_contact_hub',
+		);
+
+		$widget_base = 'Elementor' . chr( 92 ) . 'Widget_Base';
+
+		ob_start();
+		echo '<table class="widefat striped" style="margin-top:8px;">';
+		echo '<thead><tr><th>#</th><th>' . esc_html__( 'کلاس المان', 'abidar-group' ) . '</th>';
+		echo '<th>' . esc_html__( 'ساخته شده', 'abidar-group' ) . '</th>';
+		echo '<th>' . esc_html__( 'ارث‌بری از Widget_Base', 'abidar-group' ) . '</th>';
+		echo '<th>' . esc_html__( 'ثبت در پنل', 'abidar-group' ) . '</th></tr></thead><tbody>';
+		$i = 1;
+		foreach ( $widgets as $class_name => $slug ) {
+			$exists   = class_exists( $class_name );
+			$inherits = $exists && is_subclass_of( $class_name, $widget_base );
+			$panel    = false;
+			if ( $exists && class_exists( '\Elementor\Plugin' ) ) {
+				try {
+					$manager = \Elementor\Plugin::instance()->widgets_manager;
+					$panel   = (bool) $manager->get_widget_types( $slug );
+				} catch ( \Throwable $e ) {
+					$panel = false;
+				}
+			}
+
+			echo '<tr>';
+			echo '<td>' . (int) $i . '</td>';
+			echo '<td><code>' . esc_html( $class_name ) . '</code></td>';
+			echo '<td>' . ( $exists ? '&#10004;' : '&#10008;' ) . '</td>';
+			echo '<td>' . ( $inherits ? '&#10004;' : '&#10008;' ) . '</td>';
+			echo '<td>' . ( $panel ? '&#10004;' : '&#10008;' ) . '</td>';
+			echo '</tr>';
+			$i++;
+		}
+		echo '</tbody></table>';
+		$widgets_table = ob_get_clean();
+
 		$rows[] = array(
 			esc_html__( 'دموی برگه‌ها نصب شده', 'abidar-group' ),
 			get_option( 'abidar_demo_installed_v2' )
@@ -472,6 +520,8 @@ class Abidar_Admin_Settings {
 			<p>
 				<?php esc_html_e( 'اگر ویرایشگر المنتور روی «در حال بارگذاری» می‌ماند، این جدول را بررسی کنید. هر ردیف با ✘ باید ابتدا رفع شود.', 'abidar-group' ); ?>
 			</p>
+			<?php echo $widgets_table; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<h3 style="margin-top:22px;"><?php esc_html_e( 'بررسی‌های عمومی', 'abidar-group' ); ?></h3>
 			<table class="widefat striped" style="margin-top:12px;">
 				<thead>
 					<tr>
