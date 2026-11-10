@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ثوابت اصلی قالب (شروع از نسخه 2.0.0 طبق درخواست کارفرما)
  */
-define( 'ABIDAR_VERSION', '3.0.0' );
+define( 'ABIDAR_VERSION', '3.0.1' );
 define( 'ABIDAR_DIR', get_template_directory() );
 define( 'ABIDAR_URI', get_template_directory_uri() );
 define( 'ABIDAR_OPTION_KEY', 'abidar_theme_options_v2' );
