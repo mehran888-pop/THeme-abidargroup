@@ -26,54 +26,69 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return bool آیا کلاس پایه سازگار با Elementor\Widget_Base در دسترس است؟
  */
-function abidar_declare_elementor_widget_base() {
-	if ( class_exists( 'Abidar_Elementor_Widget_Base' ) ) {
-		// اگر کلاس پایه قبلاً در مسیر «بدون المنتور» (Stub) اعلان شده باشد،
-		// ویجت‌ها هرگز از Widget_Base واقعی ارث نمی‌برند و ثبت آن‌ها در
-		// Widgets_Manager::register() خطای مهلک می‌دهد. در این حالت اصلاً
-		// ویجت‌ها را بارگذاری نمی‌کنیم تا ویرایشگر سالم بماند.
-		// نام کامل کلاس به‌صورت متغیر ساخته می‌شود تا خطای فرار (escape) کاراکتر
-		// بک‌اسلش دوباره رخ ندهد؛ یک بک‌اسلش اضافه باعث می‌شود is_subclass_of()
-		// همیشه false برگرداند و در نتیجه هیچ ویجتی در پنل المنتور دیده نشود.
-		$elementor_widget_base = 'Elementor' . chr( 92 ) . 'Widget_Base';
+/**
+ * آیا کلاس پایه ویجت‌ها واقعاً از Widget_Base المنتور ارث می‌برد؟
+ *
+ * اگر پاسخ منفی باشد، `class X extends Abidar_Elementor_Widget_Base` یک خطای
+ * مهلک (نه Exception) می‌دهد که با try/catch قابل مهار نیست. بنابراین پیش از
+ * بارگذاری هر فایل ویجت باید این بررسی انجام شود.
+ *
+ * @return bool
+ */
+function abidar_widget_base_is_elementor() {
+	if ( ! class_exists( 'Abidar_Elementor_Widget_Base' ) ) {
+		return false;
+	}
 
+	$elementor_widget_base = 'Elementor' . chr( 92 ) . 'Widget_Base';
+
+	return class_exists( $elementor_widget_base )
+		&& is_subclass_of( 'Abidar_Elementor_Widget_Base', $elementor_widget_base );
+}
+
+function abidar_declare_elementor_widget_base() {
+	$elementor_widget_base = 'Elementor' . chr( 92 ) . 'Widget_Base';
+
+	// کلاس قبلاً اعلان شده است: فقط گزارش می‌کنیم که آیا تبارش درست است.
+	if ( class_exists( 'Abidar_Elementor_Widget_Base' ) ) {
 		return class_exists( $elementor_widget_base )
 			&& is_subclass_of( 'Abidar_Elementor_Widget_Base', $elementor_widget_base );
 	}
 
-	if ( class_exists( '\Elementor\Widget_Base' ) ) {
-		// مسیر اصلی: المنتور فعال است و ویجت‌ها با API رسمی آن ثبت می‌شوند.
+	if ( class_exists( $elementor_widget_base ) ) {
+		// مسیر اصلی: المنتور بارگذاری شده است؛ ویجت‌ها از API رسمی آن ارث می‌برند.
 		abstract class Abidar_Elementor_Widget_Base extends \Elementor\Widget_Base {}
 
 		return true;
-	} else {
-		// مسیر جانشین: المنتور نصب نیست؛ هدر و فوتر داخلی قالب باید همچنان رندر شوند.
-		abstract class Abidar_Elementor_Widget_Base {
-			protected $settings = array();
+	}
 
-			public function __construct( $data = array(), $args = null ) {
-				if ( is_array( $data ) ) {
-					$this->settings = $data;
-				}
+	// مسیر جانشین: المنتور نصب نیست. کلاس پایه سبک اعلان می‌شود تا هدر و فوتر
+	// داخلی قالب روی فرانت‌اند همچنان رندر شوند. این کلاس هرگز در پنل المنتور
+	// ثبت نمی‌شود، چون در این حالت المنتوری وجود ندارد.
+	abstract class Abidar_Elementor_Widget_Base {
+		protected $settings = array();
+
+		public function __construct( $data = array(), $args = null ) {
+			if ( is_array( $data ) ) {
+				$this->settings = $data;
 			}
-
-			public function get_settings_for_display( $key = null ) {
-				if ( null !== $key ) {
-					return isset( $this->settings[ $key ] ) ? $this->settings[ $key ] : null;
-				}
-				return $this->settings;
-			}
-
-			public function start_controls_section( $id, $args = array() ) {}
-			public function end_controls_section() {}
-			public function add_control( $id, $args = array() ) {}
-			public function add_group_control( $type, $args = array() ) {}
-			public function add_responsive_control( $id, $args = array() ) {}
 		}
 
-		// مسیر جانشین: ویجت‌ها کلاس المنتور واقعی ندارند و نباید در ویرایشگر ثبت شوند.
-		return false;
+		public function get_settings_for_display( $key = null ) {
+			if ( null !== $key ) {
+				return isset( $this->settings[ $key ] ) ? $this->settings[ $key ] : null;
+			}
+			return $this->settings;
+		}
+
+		public function start_controls_section( $id, $args = array() ) {}
+		public function end_controls_section() {}
+		public function add_control( $id, $args = array() ) {}
+		public function add_group_control( $type, $args = array() ) {}
+		public function add_responsive_control( $id, $args = array() ) {}
 	}
+
+	return false;
 }
 
 /**
@@ -135,12 +150,24 @@ class Abidar_Elementor_Init {
 	 * راه‌اندازی قلاب‌های المنتور
 	 */
 	public static function init() {
-		// بارگذاری زودهنگام کلاس‌های ویجت، تنها زمانی که المنتور کاملاً آماده شده است.
-		add_action( 'elementor/loaded', array( __CLASS__, 'load_widget_files' ), 5 );
-
-		// مسیر جانشین (Fallback): اگر المنتور نصب/فعال نباشد، ویجت‌ها با کلاس پایه سبک
-		// بارگذاری می‌شوند تا هدر و فوتر داخلی قالب همچنان رندر شوند.
-		add_action( 'after_setup_theme', array( __CLASS__, 'load_widget_files_fallback' ), 20 );
+		/**
+		 * بارگذاری فایل‌های ویجت — فقط روی `init`.
+		 *
+		 * چرا نه `elementor/loaded`؟ چون آن اکشن پیش از بارگذاری قالب اجرا
+		 * می‌شود: elementor.php در زمان بارگذاری افزونه includes/plugin.php را
+		 * require می‌کند و آن فایل در سطح فایل Plugin::instance() را صدا می‌زند.
+		 * هر شنونده‌ای که قالب روی آن اکشن ثبت کند هرگز اجرا نمی‌شود.
+		 *
+		 * چرا نه `after_setup_theme`؟ چون در آن لحظه ممکن است autoloader
+		 * المنتور هنوز آماده نباشد. در این حالت کلاس پایه «جانشین» اعلان
+		 * می‌شود و چون PHP اجازه اعلان دوباره نمی‌دهد، ویجت‌ها برای همیشه از
+		 * Widget_Base واقعی محروم می‌مانند و در پنل المنتور دیده نمی‌شوند.
+		 *
+		 * در `init` المنتور قطعاً بارگذاری شده است (افزونه‌ها روی
+		 * `plugins_loaded` بارگذاری می‌شوند که قبل از `init` است) و قالب‌ها هم
+		 * خیلی دیرتر رندر می‌شوند. پس این امن‌ترین نقطه است.
+		 */
+		add_action( 'init', array( __CLASS__, 'load_widget_files' ), 5 );
 
 		// ثبت دسته‌بندی‌های اختصاصی در پنل المنتور
 		add_action( 'elementor/elements/categories_registered', array( __CLASS__, 'register_widget_categories' ) );
@@ -201,6 +228,12 @@ class Abidar_Elementor_Init {
 				continue;
 			}
 
+			// اگر کلاس پایه جانشین اعلان شده باشد، `extends` خطای مهلک می‌دهد و
+			// catch (\Throwable) آن را نمی‌گیرد. پس پیش از require بررسی می‌کنیم.
+			if ( ! abidar_widget_base_is_elementor() ) {
+				continue;
+			}
+
 			// اگر یک فایل ویجت خطای مهلک بدهد، بقیه ویجت‌ها و کل صفحه باید سالم بمانند.
 			try {
 				require_once $full_path;
@@ -218,14 +251,7 @@ class Abidar_Elementor_Init {
 	 * حتماً از \Elementor\Widget_Base ارث‌بری کنند (جلوگیری از خطای TypeError).
 	 */
 	public static function load_widget_files_fallback() {
-		// المنتور ممکن است در این لحظه هنوز 'elementor/loaded' را اجرا نکرده باشد ولی
-		// کلاس Widget_Base آن از قبل در دسترس باشد. اگر به is_elementor_active()
-		// تکیه کنیم، کلاس پایه نادرست در حافظه قفل می‌شود و بعداً ثبت ویجت‌ها با
-		// خطای مهلک «must be of type Elementor\\Widget_Base» صفحه را سفید می‌کند.
-		if ( class_exists( '\Elementor\Widget_Base' ) ) {
-			return;
-		}
-
+		// نام قدیمی برای سازگاری؛ بارگذاری واقعی در load_widget_files() انجام می‌شود.
 		self::load_widget_files();
 	}
 
@@ -275,15 +301,18 @@ class Abidar_Elementor_Init {
 	 * @param \Elementor\Widgets_Manager $widgets_manager مدیر ویجت‌های المنتور.
 	 */
 	public static function register_widgets( $widgets_manager ) {
-		self::load_widget_files();
+		$elementor_widget_base = 'Elementor' . chr( 92 ) . 'Widget_Base';
 
-		// اگر کلاس پایه از Widget_Base واقعی المنتور ارث نمی‌برد، ثبت ویجت‌ها
-		// در Widgets_Manager::register() خطای مهلک TypeError می‌دهد؛ پس فقط در
-		// این حالت صرف‌نظر می‌کنیم. در همه حالت‌های دیگر ویجت‌ها باید کامل در پنل
-		// دیده شوند.
-		if ( ! abidar_declare_elementor_widget_base() ) {
+		// اگر ویجت‌ها با کلاس پایه «جانشین» (بدون المنتور) اعلان شده باشند،
+		// هرگز نمی‌توان آن‌ها را در المنتور ثبت کرد؛ چون آن کلاس از Widget_Base
+		// واقعی ارث نمی‌برد. این حالت زمانی رخ می‌دهد که فایل‌های ویجت پیش از
+		// در دسترس قرار گرفتن کلاس‌های المنتور بارگذاری شده باشند.
+		if ( class_exists( 'Abidar_Widget_Services' )
+			&& ! is_subclass_of( 'Abidar_Widget_Services', $elementor_widget_base ) ) {
 			return;
 		}
+
+		self::load_widget_files();
 
 		$widget_classes = array(
 			'Abidar_Widget_Header_Nav',

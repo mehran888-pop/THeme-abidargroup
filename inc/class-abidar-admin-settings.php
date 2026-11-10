@@ -460,6 +460,16 @@ class Abidar_Admin_Settings {
 			empty( $bom ),
 		);
 
+		// ---- بارگذاری فایل‌های ویجت ----
+		$files_loaded = class_exists( 'Abidar_Widget_Services' );
+		$rows[] = array(
+			esc_html__( 'فایل‌های ویجت بارگذاری شده‌اند', 'abidar-group' ),
+			$files_loaded
+				? esc_html__( 'بله (قلب init اجرا شده است)', 'abidar-group' )
+				: esc_html__( 'خیر — قلاب init اجرا نشده یا المنتور فعال نیست', 'abidar-group' ),
+			$files_loaded,
+		);
+
 		// ---- وضعیت تک‌تک المان‌های اختصاصی ----
 		$widgets = array(
 			'Abidar_Widget_Header_Nav'     => 'abidar_header_nav',
