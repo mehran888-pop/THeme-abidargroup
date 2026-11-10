@@ -23,15 +23,24 @@ if ( ! defined( 'ABSPATH' ) ) {
  * ارث‌بری نمی‌کنند؛ سپس Elementor\Widgets_Manager::register() با خطای
  * «TypeError: Argument #1 ($widget_instance) must be of type Elementor\Widget_Base»
  * متوقف می‌شود. با اعلان تنبل (Lazy)، ویجت‌ها همیشه از کلاس صحیح ارث‌بری می‌کنند.
+ *
+ * @return bool آیا کلاس پایه سازگار با Elementor\Widget_Base در دسترس است؟
  */
 function abidar_declare_elementor_widget_base() {
 	if ( class_exists( 'Abidar_Elementor_Widget_Base' ) ) {
-		return;
+		// اگر کلاس پایه قبلاً در مسیر «بدون المنتور» (Stub) اعلان شده باشد،
+		// ویجت‌ها هرگز از Widget_Base واقعی ارث نمی‌برند و ثبت آن‌ها در
+		// Widgets_Manager::register() خطای مهلک می‌دهد. در این حالت اصلاً
+		// ویجت‌ها را بارگذاری نمی‌کنیم تا ویرایشگر سالم بماند.
+		return class_exists( '\Elementor\Widget_Base' )
+			&& is_subclass_of( 'Abidar_Elementor_Widget_Base', 'Elementor\\Widget_Base' );
 	}
 
 	if ( class_exists( '\Elementor\Widget_Base' ) ) {
 		// مسیر اصلی: المنتور فعال است و ویجت‌ها با API رسمی آن ثبت می‌شوند.
 		abstract class Abidar_Elementor_Widget_Base extends \Elementor\Widget_Base {}
+
+		return true;
 	} else {
 		// مسیر جانشین: المنتور نصب نیست؛ هدر و فوتر داخلی قالب باید همچنان رندر شوند.
 		abstract class Abidar_Elementor_Widget_Base {
@@ -56,6 +65,9 @@ function abidar_declare_elementor_widget_base() {
 			public function add_group_control( $type, $args = array() ) {}
 			public function add_responsive_control( $id, $args = array() ) {}
 		}
+
+		// مسیر جانشین: ویجت‌ها کلاس المنتور واقعی ندارند و نباید در ویرایشگر ثبت شوند.
+		return false;
 	}
 }
 
@@ -131,33 +143,40 @@ class Abidar_Elementor_Init {
 		// ثبت ویجت‌ها در المنتور (منطبق با آخرین نسخه المنتور 3.25+)
 		add_action( 'elementor/widgets/register', array( __CLASS__, 'register_widgets' ) );
 
-		// فعال‌سازی ویرایشگر المنتور روی پست‌تایپ‌های اختصاصی هلدینگ (هدر/فوتر ساز، خدمات، پروژه‌ها)
-		add_filter( 'elementor/utils/get_public_post_types', array( __CLASS__, 'enable_elementor_for_cpts' ) );
+		// فعال‌سازی ویرایشگر المنتور روی پست‌تایپ‌های اختصاصی هلدینگ (هدر/فوتر ساز، خدمات، پروژه‌ها).
+		// توجه: قلاب قدیمی `elementor/utils/get_public_post_types` دیگر در المنتور وجود ندارد؛
+		// مکانیزم رسمی و پایدار، افزودن پشتیبانی `elementor` به خود پست‌تایپ است.
+		add_action( 'init', array( __CLASS__, 'enable_elementor_for_cpts' ), 20 );
 	}
 
 	/**
-	 * افزودن پست‌تایپ‌های اختصاصی به فهرست پست‌تایپ‌های قابل ویرایش با المنتور
+	 * فعال‌سازی ویرایشگر المنتور روی پست‌تایپ‌های اختصاصی هلدینگ.
 	 *
-	 * @param array $post_types فهرست پست‌تایپ‌های عمومی.
-	 * @return array
+	 * المنتور تنها پست‌تایپ‌هایی را ویرایش می‌کند که (یا در تنظیمات
+	 * `elementor_cpt_support` باشند و یا) پشتیبانی `elementor` داشته باشند.
+	 * چون این پست‌تایپ‌ها توسط خود قالب ثبت می‌شوند، همان‌جا پشتیبانی اضافه شده
+	 * است؛ این متد تضمین می‌کند حتی اگر تنظیمات المنتور بازنویسی شده باشد،
+	 * ویرایشگر برای این پست‌تایپ‌ها در دسترس بماند.
 	 */
-	public static function enable_elementor_for_cpts( $post_types ) {
-		$extra = array( 'abidar_hf', 'abidar_service', 'abidar_project' );
+	public static function enable_elementor_for_cpts() {
+		$extra = array( 'abidar_hf', 'abidar_service', 'abidar_project', 'abidar_team', 'abidar_certificate' );
 
 		foreach ( $extra as $post_type ) {
-			if ( post_type_exists( $post_type ) && ! in_array( $post_type, $post_types, true ) ) {
-				$post_types[] = $post_type;
+			if ( post_type_exists( $post_type ) && ! post_type_supports( $post_type, 'elementor' ) ) {
+				add_post_type_support( $post_type, 'elementor' );
 			}
 		}
-
-		return $post_types;
 	}
 
 	/**
 	 * بارگذاری فایل‌های ویجت‌های اختصاصی گروه آبیدر
 	 */
 	public static function load_widget_files() {
-		abidar_declare_elementor_widget_base();
+		// کلاس پایه را اعلان کن؛ اگر المنتور تازه در دسترس قرار گرفته باشد و کلاس پایه
+		// قبلاً در مسیر جانشین ساخته شده باشد، بارگذاری ویجت‌ها بی‌خطر لغو می‌شود.
+		if ( ! abidar_declare_elementor_widget_base() ) {
+			return;
+		}
 
 		$widget_files = array(
 			'/elementor/widgets/class-widget-header-nav.php',
@@ -195,7 +214,11 @@ class Abidar_Elementor_Init {
 	 * حتماً از \Elementor\Widget_Base ارث‌بری کنند (جلوگیری از خطای TypeError).
 	 */
 	public static function load_widget_files_fallback() {
-		if ( self::is_elementor_active() ) {
+		// المنتور ممکن است در این لحظه هنوز 'elementor/loaded' را اجرا نکرده باشد ولی
+		// کلاس Widget_Base آن از قبل در دسترس باشد. اگر به is_elementor_active()
+		// تکیه کنیم، کلاس پایه نادرست در حافظه قفل می‌شود و بعداً ثبت ویجت‌ها با
+		// خطای مهلک «must be of type Elementor\\Widget_Base» صفحه را سفید می‌کند.
+		if ( class_exists( '\Elementor\Widget_Base' ) ) {
 			return;
 		}
 
@@ -303,8 +326,20 @@ class Abidar_Elementor_Init {
 		$header_layout    = abidar_get_option( 'header_layout', 'layout_1' );
 		$custom_header_id = (int) abidar_get_option( 'custom_header_id', 0 );
 
+		/**
+		 * اگر در بوم/پیش‌نمایش ویرایشگر المنتور هستیم، هرگز سند المنتور دیگری
+		 * (هدر یا فوتر ساخته‌شده در abidar_hf) را تودرتو رندر نمی‌کنیم.
+		 *
+		 * رندر تودرتوی یک سند کامل المنتور داخل iframe پیش‌نمایش، شنونده‌های
+		 * `elementor/frontend/init` را دوباره ثبت می‌کند و پیام پایان بارگذاری
+		 * هرگز به پنل ویرایشگر نمی‌رسد؛ نتیجه همان «المنتور در حال بارگذاری
+		 * می‌ماند و صفحه ویرایش باز نمی‌شود» است. در این حالت ویجت هدر داخلی
+		 * قالب رندر می‌شود تا پیش‌نمایش کامل و سبک باقی بماند.
+		 */
+		$is_editor = self::is_elementor_editor_context();
+
 		// اگر کاربر هدری در پست‌تایپ abidar_hf ساخته و فعال کرده باشد
-		if ( 'elementor_custom' === $header_layout || $custom_header_id > 0 ) {
+		if ( ! $is_editor && ( 'elementor_custom' === $header_layout || $custom_header_id > 0 ) ) {
 			$hf_query = new WP_Query(
 				array(
 					'post_type'      => 'abidar_hf',
@@ -347,6 +382,11 @@ class Abidar_Elementor_Init {
 
 		// رندر ویجت هدر اختصاصی گروه آبیدر با چیدمان انتخاب‌شده
 		if ( class_exists( 'Abidar_Widget_Header_Nav' ) ) {
+			// در ویرایشگر، اگر چیدمان انتخاب‌شده «هدر المنتور» باشد ویجت داخلی جایگزین می‌شود.
+			if ( 'elementor_custom' === $header_layout ) {
+				$header_layout = 'layout_1';
+			}
+
 			Abidar_Widget_Header_Nav::render_output(
 				array(
 					'layout_style'       => $header_layout,
@@ -382,7 +422,10 @@ class Abidar_Elementor_Init {
 		$footer_layout    = abidar_get_option( 'footer_layout', 'layout_1' );
 		$custom_footer_id = (int) abidar_get_option( 'custom_footer_id', 0 );
 
-		if ( 'elementor_custom' === $footer_layout || $custom_footer_id > 0 ) {
+		// همان دلیل هدر: رندر تودرتوی سند المنتور در ویرایشگر ممنوع است.
+		$is_editor = self::is_elementor_editor_context();
+
+		if ( ! $is_editor && ( 'elementor_custom' === $footer_layout || $custom_footer_id > 0 ) ) {
 			$hf_query = new WP_Query(
 				array(
 					'post_type'      => 'abidar_hf',
@@ -423,6 +466,10 @@ class Abidar_Elementor_Init {
 		self::load_widget_files();
 
 		if ( class_exists( 'Abidar_Widget_Footer_Builder' ) ) {
+			if ( 'elementor_custom' === $footer_layout ) {
+				$footer_layout = 'layout_1';
+			}
+
 			Abidar_Widget_Footer_Builder::render_output(
 				array(
 					'layout_style' => $footer_layout,
