@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ثوابت اصلی قالب (شروع از نسخه 2.0.0 طبق درخواست کارفرما)
  */
-define( 'ABIDAR_VERSION', '2.4.1' );
+define( 'ABIDAR_VERSION', '3.0.0' );
 define( 'ABIDAR_DIR', get_template_directory() );
 define( 'ABIDAR_URI', get_template_directory_uri() );
 define( 'ABIDAR_OPTION_KEY', 'abidar_theme_options_v2' );
@@ -560,6 +560,7 @@ require_once ABIDAR_DIR . '/inc/class-abidar-preloader.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-mobile-nav.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-floating-contact.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-demo-importer.php';
+require_once ABIDAR_DIR . '/inc/class-abidar-landing.php';
 require_once ABIDAR_DIR . '/inc/class-abidar-admin-settings.php';
 require_once ABIDAR_DIR . '/elementor/class-abidar-elementor-init.php';
 

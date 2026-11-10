@@ -6436,6 +6436,833 @@ input[type="number"] {
 
 /* --- پایان بلوک چندزبانه --- */
 
+/*
+ * ============================================================================
+ * ABIDAR POWER HERO (v3.0.0)
+ * ----------------------------------------------------------------------------
+ * ۸ چیدمان مستقل + ۶ نوع پس‌زمینه (مش، شبکه، تصویر، ویدیو، یوتیوب، ذرات).
+ * تمام رنگ‌ها از متغیرهای CSS می‌آیند تا در المنتور قابل تغییر باشند.
+ * ============================================================================
+ */
+
+.abidar-hp {
+	--hp-accent: #d97706;
+	--hp-accent-2: #0ea5e9;
+	--hp-ink: #f8fafc;
+	--hp-muted: rgba(226, 232, 240, 0.82);
+	--hp-surface: #05101f;
+	--hp-overlay: 60%;
+	--hp-overlay-color: #05101f;
+	position: relative;
+	display: flex;
+	align-items: center;
+	isolation: isolate;
+	overflow: hidden;
+	background: var(--hp-surface);
+	color: var(--hp-ink);
+	padding-block: clamp(64px, 9vw, 120px);
+}
+
+/* ارتفاع‌ها */
+.abidar-hp--h-medium { min-height: 70vh; }
+.abidar-hp--h-tall   { min-height: 90vh; }
+.abidar-hp--h-full   { min-height: 100vh; }
+
+/* چینش محتوا */
+.abidar-hp--align-center .abidar-hp__content { text-align: center; align-items: center; margin-inline: auto; }
+.abidar-hp--align-end .abidar-hp__content    { text-align: end; align-items: flex-end; margin-inline-start: auto; }
+
+.abidar-hp__inner {
+	position: relative;
+	z-index: 3;
+	width: 100%;
+}
+
+/* ---------------------------------------------------------------- backgrounds */
+.abidar-hp__bg {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+/* پرده رنگی مشترک */
+.abidar-hp__bg::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: color-mix(in srgb, var(--hp-overlay-color) var(--hp-overlay), transparent);
+	z-index: 2;
+	pointer-events: none;
+}
+
+/* مش گرادیانت متحرک */
+.abidar-hp__bg--mesh {
+	background:
+		radial-gradient(60% 70% at 18% 20%, rgba(217, 119, 6, 0.42), transparent 62%),
+		radial-gradient(55% 65% at 85% 25%, rgba(14, 165, 233, 0.34), transparent 60%),
+		radial-gradient(70% 80% at 50% 100%, rgba(120, 53, 15, 0.5), transparent 65%),
+		linear-gradient(160deg, #05101f 0%, #0b1c33 55%, #04101d 100%);
+	animation: abidar-hp-mesh 22s ease-in-out infinite alternate;
+}
+
+@keyframes abidar-hp-mesh {
+	0%   { transform: scale(1) translate3d(0, 0, 0); }
+	100% { transform: scale(1.12) translate3d(-2%, -2%, 0); }
+}
+
+/* شبکه فنی */
+.abidar-hp__bg--grid {
+	background-color: #05101f;
+	background-image:
+		linear-gradient(rgba(148, 163, 184, 0.16) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(148, 163, 184, 0.16) 1px, transparent 1px),
+		radial-gradient(60% 60% at 50% 0%, rgba(217, 119, 6, 0.26), transparent 70%);
+	background-size: 64px 64px, 64px 64px, 100% 100%;
+	animation: abidar-hp-grid-drift 40s linear infinite;
+}
+
+@keyframes abidar-hp-grid-drift {
+	from { background-position: 0 0, 0 0, center; }
+	to   { background-position: 64px 64px, 64px 64px, center; }
+}
+
+/* تصویر */
+.abidar-hp__bg--image {
+	background-size: cover;
+	background-position: center;
+	animation: abidar-hp-kenburns 26s ease-in-out infinite alternate;
+}
+
+@keyframes abidar-hp-kenburns {
+	from { transform: scale(1); }
+	to   { transform: scale(1.08); }
+}
+
+/* ویدیو */
+.abidar-hp__bg--video video,
+.abidar-hp__bg--yt iframe {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 100vw;
+	height: 56.25vw;      /* 16:9 */
+	min-height: 100%;
+	min-width: 177.77vh;  /* پوشش کامل */
+	transform: translate(-50%, -50%);
+	object-fit: cover;
+	border: 0;
+	pointer-events: none;
+}
+
+/* ذرات شناور */
+.abidar-hp__bg--particles {
+	background:
+		radial-gradient(70% 70% at 50% 110%, rgba(217, 119, 6, 0.22), transparent 65%),
+		linear-gradient(155deg, #05101f, #0a1a2e 60%, #04101d);
+}
+
+.abidar-hp__particle {
+	position: absolute;
+	bottom: -10px;
+	left: var(--x);
+	width: var(--s);
+	height: var(--s);
+	border-radius: 50%;
+	background: var(--hp-accent);
+	box-shadow: 0 0 12px 2px color-mix(in srgb, var(--hp-accent) 60%, transparent);
+	opacity: 0;
+	animation: abidar-hp-float var(--d) linear infinite;
+	animation-delay: var(--delay);
+}
+
+@keyframes abidar-hp-float {
+	0%   { opacity: 0; transform: translateY(0) scale(0.8); }
+	15%  { opacity: 0.9; }
+	85%  { opacity: 0.5; }
+	100% { opacity: 0; transform: translateY(-92vh) scale(1.2); }
+}
+
+/* ---------------------------------------------------------------- typography */
+.abidar-hp__content {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 18px;
+	max-width: 720px;
+}
+
+.abidar-hp__kicker {
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	padding: 7px 15px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--hp-accent) 14%, transparent);
+	border: 1px solid color-mix(in srgb, var(--hp-accent) 42%, transparent);
+	font-size: 0.76rem;
+	font-weight: 700;
+	color: color-mix(in srgb, var(--hp-accent) 72%, white);
+	backdrop-filter: blur(8px);
+}
+
+.abidar-hp__kicker-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--hp-accent);
+	box-shadow: 0 0 0 0 color-mix(in srgb, var(--hp-accent) 60%, transparent);
+	animation: abidar-hp-pulse 2.4s ease-out infinite;
+}
+
+@keyframes abidar-hp-pulse {
+	0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hp-accent) 55%, transparent); }
+	70%  { box-shadow: 0 0 0 10px transparent; }
+	100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.abidar-hp__title {
+	margin: 0;
+	font-size: clamp(1.6rem, 4.2vw, 3.4rem);
+	font-weight: 800;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+	color: var(--hp-ink);
+}
+
+.abidar-hp__subtitle {
+	margin: 0;
+	font-size: clamp(0.94rem, 1.35vw, 1.1rem);
+	line-height: 1.95;
+	color: var(--hp-muted);
+	max-width: 640px;
+}
+
+/* عنوان با گرادیانت طلایی روی کلمه کلیدی */
+.abidar-hp__title::first-line {
+	color: var(--hp-ink);
+}
+
+.abidar-hp__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 6px;
+}
+
+.abidar-hp__btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 26px;
+	border-radius: 999px;
+	font-size: 0.9rem;
+	font-weight: 700;
+	text-decoration: none;
+	transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.abidar-hp__btn--primary {
+	background: linear-gradient(135deg, var(--hp-accent), color-mix(in srgb, var(--hp-accent) 62%, #000));
+	color: #fff;
+	box-shadow: 0 14px 34px color-mix(in srgb, var(--hp-accent) 34%, transparent);
+}
+
+.abidar-hp__btn--primary:hover {
+	transform: translateY(-3px);
+	box-shadow: 0 20px 44px color-mix(in srgb, var(--hp-accent) 44%, transparent);
+}
+
+.abidar-hp__btn-arrow {
+	transition: transform 0.3s ease;
+}
+
+.abidar-hp__btn--primary:hover .abidar-hp__btn-arrow {
+	transform: translateX(-4px);
+}
+
+.abidar-hp__btn--ghost {
+	background: rgba(255, 255, 255, 0.07);
+	border: 1px solid rgba(226, 232, 240, 0.28);
+	color: var(--hp-ink);
+	backdrop-filter: blur(10px);
+}
+
+.abidar-hp__btn--ghost:hover {
+	background: rgba(255, 255, 255, 0.14);
+	transform: translateY(-3px);
+}
+
+/* ---------------------------------------------------------------- metrics */
+.abidar-hp__metrics {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 14px;
+	margin-top: 30px;
+	width: 100%;
+	max-width: 640px;
+}
+
+.abidar-hp__metric {
+	padding: 14px 16px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.055);
+	border: 1px solid rgba(226, 232, 240, 0.12);
+	backdrop-filter: blur(10px);
+	transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.abidar-hp__metric:hover {
+	border-color: color-mix(in srgb, var(--hp-accent) 55%, transparent);
+	transform: translateY(-2px);
+}
+
+.abidar-hp__metric-num {
+	display: block;
+	font-size: clamp(1.2rem, 2.3vw, 1.7rem);
+	font-weight: 800;
+	color: color-mix(in srgb, var(--hp-accent) 80%, white);
+	line-height: 1.2;
+}
+
+.abidar-hp__metric-label {
+	display: block;
+	margin-top: 4px;
+	font-size: 0.72rem;
+	color: var(--hp-muted);
+	line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------- pillars */
+.abidar-hp__pillars {
+	display: flex;
+	gap: 10px;
+	width: 100%;
+	min-height: 340px;
+}
+
+.abidar-hp__pillar {
+	position: relative;
+	flex: 1 1 0;
+	min-width: 0;
+	border-radius: 18px;
+	overflow: hidden;
+	background-size: cover;
+	background-position: center;
+	cursor: pointer;
+	transition: flex-grow 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+	isolation: isolate;
+}
+
+.abidar-hp__pillar.is-open {
+	flex-grow: 2.4;
+}
+
+.abidar-hp__pillar-shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, rgba(4, 12, 24, 0.15) 0%, rgba(4, 12, 24, 0.9) 100%);
+	transition: opacity 0.4s ease;
+	z-index: 1;
+}
+
+.abidar-hp__pillar.is-open .abidar-hp__pillar-shade {
+	opacity: 0.82;
+}
+
+.abidar-hp__pillar-body {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	gap: 8px;
+	height: 100%;
+	padding: 18px;
+}
+
+.abidar-hp__pillar-num {
+	font-size: 0.68rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	color: color-mix(in srgb, var(--hp-accent) 78%, white);
+}
+
+.abidar-hp__pillar-title {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 800;
+	color: #fff;
+	line-height: 1.4;
+}
+
+.abidar-hp__pillar-desc,
+.abidar-hp__pillar-link {
+	display: none;
+}
+
+.abidar-hp__pillar.is-open .abidar-hp__pillar-desc,
+.abidar-hp__pillar.is-open .abidar-hp__pillar-link {
+	display: block;
+	animation: abidar-hp-fade 0.5s ease;
+}
+
+.abidar-hp__pillar-desc {
+	margin: 0;
+	font-size: 0.78rem;
+	line-height: 1.85;
+	color: rgba(226, 232, 240, 0.86);
+}
+
+.abidar-hp__pillar-link {
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--hp-accent);
+	text-decoration: none;
+}
+
+@keyframes abidar-hp-fade {
+	from { opacity: 0; transform: translateY(6px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------------------------------------------------------- LAYOUT 1: split */
+.abidar-hp__split {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	gap: clamp(24px, 4vw, 56px);
+	align-items: center;
+}
+
+/* ستون‌های طرح ۱ */
+.abidar-hp__split-text,
+.abidar-hp__asym-text {
+	min-width: 0;
+}
+
+.abidar-hp__split-art {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-width: 0;
+}
+
+/* قاب کج تصویر/اثر هنری در کنار متن */
+.abidar-hp__split-art::before {
+	content: "";
+	position: absolute;
+	inset: 6% 4%;
+	border-radius: 26px;
+	background:
+		linear-gradient(135deg, color-mix(in srgb, var(--hp-accent) 26%, transparent), transparent 60%),
+		rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(226, 232, 240, 0.16);
+	transform: rotate(4deg);
+	animation: abidar-hp-tilt 14s ease-in-out infinite alternate;
+}
+
+@keyframes abidar-hp-tilt {
+	from { transform: rotate(4deg) scale(1); }
+	to   { transform: rotate(-2deg) scale(1.03); }
+}
+
+/* ---------------------------------------------------------------- LAYOUT 2: fullscreen center */
+.abidar-hp__center {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 26px;
+	text-align: center;
+}
+
+.abidar-hp__content--center {
+	max-width: 820px;
+	align-items: center;
+	text-align: center;
+}
+
+.abidar-hp__content--center .abidar-hp__metrics {
+	max-width: 760px;
+}
+
+.abidar-hp--fullscreen_center .abidar-hp__pillars {
+	margin-top: 44px;
+	min-height: 260px;
+	max-width: 1100px;
+	margin-inline: auto;
+}
+
+/* ---------------------------------------------------------------- LAYOUT 3: mosaic / bento */
+.abidar-hp__mosaic {
+	display: grid;
+	grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+	gap: 18px;
+	align-items: stretch;
+}
+
+.abidar-hp__mosaic-main {
+	display: flex;
+	align-items: center;
+	padding: clamp(20px, 3vw, 40px);
+	border-radius: 22px;
+	background: rgba(255, 255, 255, 0.045);
+	border: 1px solid rgba(226, 232, 240, 0.12);
+	backdrop-filter: blur(14px);
+}
+
+.abidar-hp__mosaic-side {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.abidar-hp__mosaic-side .abidar-hp__metrics {
+	margin-top: 0;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	max-width: none;
+}
+
+.abidar-hp__mosaic-side .abidar-hp__pillars {
+	min-height: 200px;
+}
+
+/* ---------------------------------------------------------------- LAYOUT 4: asymmetric */
+.abidar-hp__asym {
+	display: grid;
+	grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+	gap: clamp(20px, 4vw, 50px);
+	align-items: center;
+}
+
+.abidar-hp__asym-art {
+	position: relative;
+	aspect-ratio: 1 / 1;
+	max-height: 460px;
+	display: grid;
+	place-items: center;
+}
+
+.abidar-hp__asym-ring {
+	position: absolute;
+	inset: 8%;
+	border-radius: 50%;
+	border: 1.5px solid color-mix(in srgb, var(--hp-accent) 42%, transparent);
+	animation: abidar-hp-spin 26s linear infinite;
+}
+
+.abidar-hp__asym-ring--2 {
+	inset: 22%;
+	border-style: dashed;
+	border-color: color-mix(in srgb, var(--hp-accent-2) 46%, transparent);
+	animation-direction: reverse;
+	animation-duration: 34s;
+}
+
+@keyframes abidar-hp-spin {
+	to { transform: rotate(360deg); }
+}
+
+.abidar-hp__asym-badge {
+	position: relative;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	width: 42%;
+	aspect-ratio: 1;
+	border-radius: 50%;
+	background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--hp-accent) 46%, transparent), rgba(5, 16, 31, 0.9) 70%);
+	border: 1px solid color-mix(in srgb, var(--hp-accent) 50%, transparent);
+	color: #fff;
+	font-weight: 800;
+	font-size: clamp(0.9rem, 1.8vw, 1.3rem);
+	text-align: center;
+	padding: 12px;
+	box-shadow: 0 0 60px color-mix(in srgb, var(--hp-accent) 30%, transparent);
+	backdrop-filter: blur(10px);
+}
+
+/* ---------------------------------------------------------------- LAYOUT 5: stacked type */
+.abidar-hp__stacked {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.abidar-hp__type {
+	margin: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 0.28em;
+	font-size: clamp(2.4rem, 9vw, 7rem);
+	font-weight: 900;
+	line-height: 1.02;
+	letter-spacing: -0.03em;
+	text-transform: none;
+}
+
+.abidar-hp__type-word {
+	display: inline-block;
+	background: linear-gradient(120deg, #fff 0%, color-mix(in srgb, var(--hp-accent) 70%, white) 55%, var(--hp-accent-2) 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	opacity: 0;
+	transform: translateY(28px);
+	animation: abidar-hp-word 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation-delay: calc(var(--i) * 0.09s);
+}
+
+@keyframes abidar-hp-word {
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.abidar-hp__content--stacked {
+	margin-top: 18px;
+	max-width: 640px;
+}
+
+/* ---------------------------------------------------------------- LAYOUT 6: slider */
+.abidar-hp__slider {
+	position: relative;
+	min-height: 320px;
+	display: flex;
+	align-items: center;
+}
+
+.abidar-hp__slide {
+	display: none;
+}
+
+.abidar-hp__slide.is-active {
+	display: block;
+	animation: abidar-hp-fade 0.6s ease;
+}
+
+.abidar-hp__slider-nav {
+	display: flex;
+	gap: 8px;
+	margin-top: 24px;
+}
+
+.abidar-hp__slider-dot {
+	width: 34px;
+	height: 4px;
+	border-radius: 3px;
+	border: 0;
+	padding: 0;
+	background: rgba(226, 232, 240, 0.28);
+	cursor: pointer;
+	transition: background-color 0.3s ease, width 0.3s ease;
+}
+
+.abidar-hp__slider-dot.is-active {
+	width: 54px;
+	background: var(--hp-accent);
+}
+
+/* ---------------------------------------------------------------- LAYOUT 7: glass card */
+.abidar-hp__glass-wrap {
+	display: flex;
+	justify-content: center;
+}
+
+.abidar-hp__content--glass {
+	max-width: 760px;
+	padding: clamp(24px, 4vw, 48px);
+	border-radius: 26px;
+	background: rgba(255, 255, 255, 0.07);
+	border: 1px solid rgba(255, 255, 255, 0.16);
+	backdrop-filter: blur(22px);
+	box-shadow: 0 30px 80px rgba(3, 10, 20, 0.42);
+}
+
+/* ---------------------------------------------------------------- LAYOUT 8: minimal wide */
+.abidar-hp__minimal {
+	max-width: 900px;
+}
+
+.abidar-hp__content--minimal {
+	max-width: 100%;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 26px;
+}
+
+.abidar-hp__content--minimal .abidar-hp__title {
+	flex: 1 1 420px;
+}
+
+.abidar-hp__strip {
+	margin-top: 34px;
+	padding-top: 22px;
+	border-top: 1px solid rgba(226, 232, 240, 0.16);
+}
+
+.abidar-hp__strip .abidar-hp__metrics {
+	margin-top: 0;
+	max-width: none;
+}
+
+/* ---------------------------------------------------------------- scroll hint */
+.abidar-hp__scroll {
+	position: absolute;
+	bottom: 22px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 4;
+}
+
+.abidar-hp__scroll-track {
+	display: block;
+	width: 22px;
+	height: 36px;
+	border-radius: 12px;
+	border: 1.5px solid rgba(226, 232, 240, 0.34);
+	position: relative;
+}
+
+.abidar-hp__scroll-dot {
+	position: absolute;
+	top: 6px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 3px;
+	height: 7px;
+	border-radius: 2px;
+	background: var(--hp-accent);
+	animation: abidar-hp-scroll 1.8s ease-in-out infinite;
+}
+
+@keyframes abidar-hp-scroll {
+	0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+	55%      { transform: translateX(-50%) translateY(13px); opacity: 0.35; }
+}
+
+/* ---------------------------------------------------------------- responsive */
+@media (max-width: 1024px) {
+	.abidar-hp__split,
+	.abidar-hp__asym,
+	.abidar-hp__mosaic {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.abidar-hp__asym-art {
+		order: -1;
+		max-height: 280px;
+		aspect-ratio: 16 / 9;
+	}
+
+	.abidar-hp__pillars {
+		min-height: 280px;
+	}
+}
+
+@media (max-width: 767px) {
+	.abidar-hp {
+		padding-block: 56px;
+	}
+
+	.abidar-hp--h-full,
+	.abidar-hp--h-tall {
+		min-height: auto;
+	}
+
+	.abidar-hp__inner {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.abidar-hp__content {
+		max-width: 100%;
+		min-width: 0;
+	}
+
+	/* کارت‌های حوزه در موبایل عمودی می‌شوند. */
+	.abidar-hp__pillars {
+		flex-direction: column;
+		min-height: 0;
+	}
+
+	.abidar-hp__pillar,
+	.abidar-hp__pillar.is-open {
+		flex: 0 0 auto;
+		min-height: 150px;
+	}
+
+	.abidar-hp__pillar-desc,
+	.abidar-hp__pillar-link {
+		display: block;
+	}
+
+	.abidar-hp__metrics,
+	.abidar-hp__mosaic-side .abidar-hp__metrics {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.abidar-hp__metrics {
+		max-width: none;
+	}
+
+	.abidar-hp__type {
+		font-size: clamp(2rem, 13vw, 3.2rem);
+	}
+
+	.abidar-hp__actions {
+		width: 100%;
+	}
+
+	.abidar-hp__btn {
+		flex: 1 1 100%;
+		justify-content: center;
+	}
+
+	.abidar-hp__content--minimal {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.abidar-hp__scroll {
+		display: none;
+	}
+
+	/* ویدیو در موبایل سبک‌تر بارگذاری شود. */
+	.abidar-hp__bg--video video {
+		display: none;
+	}
+}
+
+@media (max-width: 480px) {
+	.abidar-hp__metrics {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.abidar-hp__metric {
+		padding: 12px 14px;
+	}
+}
+
+/* احترام به تنظیم کاهش حرکت */
+@media (prefers-reduced-motion: reduce) {
+	.abidar-hp__bg--mesh,
+	.abidar-hp__bg--grid,
+	.abidar-hp__bg--image,
+	.abidar-hp__asym-ring,
+	.abidar-hp__particle,
+	.abidar-hp__type-word,
+	.abidar-hp__scroll-dot,
+	.abidar-hp__kicker-dot {
+		animation: none !important;
+	}
+
+	.abidar-hp__type-word {
+		opacity: 1;
+		transform: none;
+	}
+}
+
 /* --- Small phones --- */
 @media (max-width: 480px) {
 	.abidar-hero__metrics {

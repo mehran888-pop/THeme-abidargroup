@@ -736,6 +736,135 @@
 		}
 	};
 
+	/**
+	 * هیرو قدرت: کارت‌های حوزه (باز/بسته)، اسلایدر و شمارنده آمار.
+	 */
+	const initPowerHero = () => {
+		// ۱. کارت‌های سه حوزه: کلیک، کارت را باز می‌کند و بقیه را می‌بندد.
+		$$( '[data-hp-pillar]' ).forEach( ( card ) => {
+			card.addEventListener( 'click', ( event ) => {
+				// اگر روی لینک کلیک شده، ناوبری را متوقف نکن.
+				if ( event.target.closest( 'a' ) ) {
+					return;
+				}
+
+				const group = card.parentElement;
+				if ( ! group ) {
+					return;
+				}
+
+				group.querySelectorAll( '[data-hp-pillar]' ).forEach( ( sibling ) => {
+					sibling.classList.toggle( 'is-open', sibling === card );
+				} );
+			} );
+
+			// دسترس‌پذیری با کیبورد.
+			card.setAttribute( 'tabindex', '0' );
+			card.setAttribute( 'role', 'button' );
+			card.addEventListener( 'keydown', ( event ) => {
+				if ( 'Enter' === event.key || ' ' === event.key ) {
+					event.preventDefault();
+					card.click();
+				}
+			} );
+		} );
+
+		// ۲. اسلایدر هیرو.
+		$$( '[data-hp-slider]' ).forEach( ( slider ) => {
+			const slides = slider.querySelectorAll( '[data-hp-slide]' );
+			const dots = slider.querySelectorAll( '[data-hp-slide-to]' );
+
+			if ( slides.length < 2 ) {
+				return;
+			}
+
+			let active = 0;
+			let timer = null;
+
+			const show = ( index ) => {
+				active = ( index + slides.length ) % slides.length;
+
+				slides.forEach( ( slide, i ) => {
+					slide.classList.toggle( 'is-active', i === active );
+				} );
+
+				dots.forEach( ( dot, i ) => {
+					const on = i === active;
+					dot.classList.toggle( 'is-active', on );
+					dot.setAttribute( 'aria-selected', on ? 'true' : 'false' );
+				} );
+			};
+
+			dots.forEach( ( dot, i ) => {
+				dot.addEventListener( 'click', () => {
+					show( i );
+					restart();
+				} );
+			} );
+
+			const restart = () => {
+				if ( timer ) {
+					clearInterval( timer );
+				}
+				timer = window.setInterval( () => show( active + 1 ), 6500 );
+			};
+
+			// اگر کاربر روی اسلایدر نگه دارد، چرخش متوقف شود.
+			slider.addEventListener( 'mouseenter', () => timer && clearInterval( timer ) );
+			slider.addEventListener( 'mouseleave', restart );
+
+			restart();
+		} );
+
+		// ۳. شمارنده آمار — فقط وقتی وارد دید شد.
+		const counters = $$( '[data-count]' );
+
+		if ( ! counters.length || ! ( 'IntersectionObserver' in window ) ) {
+			return;
+		}
+
+		const animate = ( el ) => {
+			const target = parseFloat( el.getAttribute( 'data-count' ) ) || 0;
+			const prefix = el.getAttribute( 'data-count-prefix' ) || '';
+			const suffix = el.getAttribute( 'data-count-suffix' ) || '';
+			const decimals = parseInt( el.getAttribute( 'data-count-decimals' ) || '0', 10 );
+			const duration = 1500;
+			const start = performance.now();
+
+			const step = ( now ) => {
+				const progress = Math.min( ( now - start ) / duration, 1 );
+				// easeOutCubic
+				const eased = 1 - Math.pow( 1 - progress, 3 );
+				const value = target * eased;
+
+				el.textContent = prefix + value.toLocaleString( 'en-US', {
+					minimumFractionDigits: decimals,
+					maximumFractionDigits: decimals,
+				} ) + suffix;
+
+				if ( progress < 1 ) {
+					requestAnimationFrame( step );
+				}
+			};
+
+			requestAnimationFrame( step );
+		};
+
+		const observer = new IntersectionObserver(
+			( entries ) => {
+				entries.forEach( ( entry ) => {
+					if ( entry.isIntersecting ) {
+						animate( entry.target );
+						observer.unobserve( entry.target );
+					}
+				} );
+			},
+			{ threshold: 0.4 }
+		);
+
+		counters.forEach( ( el ) => observer.observe( el ) );
+	};
+
 	/* ======================================================================
 	 * BOOTSTRAP
 	 * ==================================================================== */
@@ -745,6 +874,7 @@
 		initFloatingHub();
 		initLayoutSwitchers();
 		initLangDropdowns();
+		initPowerHero();
 		initSectorFilters();
 		initHeroPillars();
 		initCertificateLightbox();
