@@ -678,6 +678,46 @@
 	};
 
 	/**
+	 * منوی کشویی انتخاب زبان.
+	 *
+	 * دسترس‌پذیری: با کلیک، کلید Enter/Space و Escape کار می‌کند؛ با کلیک بیرون
+	 * بسته می‌شود و `aria-expanded` همگام نگه داشته می‌شود.
+	 */
+	const initLangDropdowns = () => {
+		$$( '[data-lang-dropdown]' ).forEach( ( root ) => {
+			const dropdown = $( '.abidar-lang-dropdown', root );
+			const trigger = $( '.abidar-lang-widget__current', root );
+			if ( ! dropdown || ! trigger ) {
+				return;
+			}
+
+			const setOpen = ( open ) => {
+				dropdown.classList.toggle( 'is-open', open );
+				trigger.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
+			};
+
+			trigger.addEventListener( 'click', ( event ) => {
+				event.preventDefault();
+				event.stopPropagation();
+				setOpen( ! dropdown.classList.contains( 'is-open' ) );
+			} );
+
+			document.addEventListener( 'click', ( event ) => {
+				if ( ! root.contains( event.target ) ) {
+					setOpen( false );
+				}
+			} );
+
+			document.addEventListener( 'keydown', ( event ) => {
+				if ( 'Escape' === event.key && dropdown.classList.contains( 'is-open' ) ) {
+					setOpen( false );
+					trigger.focus();
+				}
+			} );
+		} );
+	};
+
+	/**
 	 * بستن خودکار اعلان‌ها با کلید Escape (برای پنل‌های شناور).
 	 */
 	const initA11yHelpers = () => {
@@ -704,6 +744,7 @@
 		initMobileNav();
 		initFloatingHub();
 		initLayoutSwitchers();
+		initLangDropdowns();
 		initSectorFilters();
 		initHeroPillars();
 		initCertificateLightbox();
@@ -732,6 +773,7 @@
 			if ( window.elementorFrontend && window.elementorFrontend.hooks ) {
 				window.elementorFrontend.hooks.addAction( 'frontend/element_ready/global', () => {
 					initLayoutSwitchers();
+		initLangDropdowns();
 					initSectorFilters();
 					initHeroPillars();
 					initCertificateLightbox();

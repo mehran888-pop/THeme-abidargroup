@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ثوابت اصلی قالب (شروع از نسخه 2.0.0 طبق درخواست کارفرما)
  */
-define( 'ABIDAR_VERSION', '2.2.3' );
+define( 'ABIDAR_VERSION', '2.2.4' );
 define( 'ABIDAR_DIR', get_template_directory() );
 define( 'ABIDAR_URI', get_template_directory_uri() );
 define( 'ABIDAR_OPTION_KEY', 'abidar_theme_options_v2' );
@@ -242,7 +242,7 @@ function abidar_get_default_options() {
 		// ۷. تنظیمات زبان سایت (Multilingual & Custom Languages)
 		'multilang_enabled'        => true,
 		'default_language'         => 'fa',
-		'lang_switcher_style'      => 'pills_flag', // pills_flag | dropdown | compact_iso
+		'lang_switcher_style'      => 'pills_flag', // pills_flag | compact_iso | flags_only | flags_round | dropdown | dropdown_flags
 		'custom_languages'         => array(
 			// امکان افزودن زبان‌های جدید علاوه بر فارسی، انگلیسی و چینی
 			array(

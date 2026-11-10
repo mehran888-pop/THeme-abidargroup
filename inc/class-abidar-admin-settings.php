@@ -206,6 +206,12 @@ class Abidar_Admin_Settings {
 			}
 		}
 
+		// مقدار طرح زبان باید یکی از ۶ طرح مجاز باشد.
+		$allowed_lang_styles = array( 'pills_flag', 'compact_iso', 'flags_only', 'flags_round', 'dropdown', 'dropdown_flags' );
+		if ( isset( $options['lang_switcher_style'] ) && ! in_array( $options['lang_switcher_style'], $allowed_lang_styles, true ) ) {
+			$options['lang_switcher_style'] = 'pills_flag';
+		}
+
 		// ۴. پاک‌سازی لینک‌ها و فایل‌های فونت اختصاصی
 		$url_fields = array(
 			'custom_font_woff2_url',
@@ -996,6 +1002,29 @@ class Abidar_Admin_Settings {
 						<div class="abidar-admin-card">
 							<h3><?php esc_html_e( 'سه زبان پیش‌فرض فعال در هسته قالب', 'abidar-group' ); ?></h3>
 							<p><?php esc_html_e( 'زبان‌های فارسی (RTL)، انگلیسی (LTR) و چینی (中文 LTR) به صورت پیش‌فرض با دیکشنری کامل در قالب فعال هستند.', 'abidar-group' ); ?></p>
+							<label><?php esc_html_e( 'طرح نمایش انتخاب‌گر زبان (در هدر و ویجت تغییر زبان):', 'abidar-group' ); ?>
+								<select name="abidar[lang_switcher_style]">
+									<?php
+									$lang_styles = array(
+										'pills_flag'     => 'طرح ۱: دکمه‌های کپسولی با پرچم و نام',
+										'compact_iso'    => 'طرح ۲: کدهای کوتاه استاندارد (FA | EN | ZH)',
+										'flags_only'     => 'طرح ۳: فقط پرچم‌ها (مربعی)',
+										'flags_round'    => 'طرح ۴: فقط پرچم‌ها (دایره‌ای)',
+										'dropdown'       => 'طرح ۵: منوی کشویی حرفه‌ای',
+										'dropdown_flags' => 'طرح ۶: منوی کشویی فقط پرچم',
+									);
+									foreach ( $lang_styles as $style_key => $style_label ) :
+										?>
+										<option value="<?php echo esc_attr( $style_key ); ?>" <?php selected( $options['lang_switcher_style'], $style_key ); ?>>
+											<?php echo esc_html( $style_label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</label>
+							<p class="description">
+								<?php esc_html_e( 'این طرح هم در نوار بالای هدر سایت و هم در المان «تغییر زبان هوشمند» المنتور اعمال می‌شود. هر المان در ویرایشگر المنتور می‌تواند طرح مستقل خودش را هم داشته باشد.', 'abidar-group' ); ?>
+							</p>
+
 							<label><?php esc_html_e( 'زبان پیش‌فرض اولیه سایت:', 'abidar-group' ); ?>
 								<select name="abidar[default_language]">
 									<?php foreach ( Abidar_I18n::get_languages() as $l_code => $l_info ) : ?>

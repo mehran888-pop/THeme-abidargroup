@@ -169,16 +169,37 @@ class Abidar_Widget_Header_Nav extends Abidar_Elementor_Widget_Base {
 						<div class="abidar-topbar__right">
 							<a href="tel:+982188104000" class="abidar-topbar__phone" dir="ltr">📞 +98 (21) 8810-4000</a>
 							<?php if ( $show_lang ) : ?>
-								<div class="abidar-lang-bar" role="navigation" aria-label="<?php esc_attr_e( 'انتخاب زبان سایت', 'abidar-group' ); ?>">
-									<?php foreach ( $languages as $code => $l_data ) : ?>
-										<a href="<?php echo esc_url( Abidar_I18n::get_language_url( $code ) ); ?>"
-										   class="abidar-lang-bar__item <?php echo ( $curr_lang === $code ) ? 'is-active' : ''; ?>"
-										   title="<?php echo esc_attr( $l_data['name'] ); ?>">
-											<span class="abidar-lang-bar__flag"><?php echo esc_html( $l_data['flag'] ); ?></span>
-											<span class="abidar-lang-bar__label"><?php echo esc_html( $l_data['native_name'] ); ?></span>
-										</a>
-									<?php endforeach; ?>
-								</div>
+								<?php
+								/**
+								 * همان ۶ طرح حرفه‌ای ویجت «تغییر زبان» استفاده می‌شود تا
+								 * طرح انتخاب‌شده در پیشخوان روی هدر سایت هم اعمال شود و
+								 * دو ظاهر متفاوت در یک صفحه نداشته باشیم.
+								 */
+								if ( class_exists( 'Abidar_Widget_Lang_Switcher' ) ) {
+									Abidar_Widget_Lang_Switcher::render_output(
+										array(
+											'layout_style'    => abidar_get_option( 'lang_switcher_style', 'pills_flag' ),
+											'dropdown_align'  => 'end',
+											'show_label'      => 'no',
+										)
+									);
+								} else {
+									// اگر المنتور فعال نباشد، فایل‌های ویجت بارگذاری نمی‌شوند؛
+									// نوار ساده زبان باید همچنان کار کند.
+									?>
+									<div class="abidar-lang-bar" role="navigation" aria-label="<?php esc_attr_e( 'انتخاب زبان سایت', 'abidar-group' ); ?>">
+										<?php foreach ( $languages as $code => $l_data ) : ?>
+											<a href="<?php echo esc_url( Abidar_I18n::get_language_url( $code ) ); ?>"
+											   class="abidar-lang-bar__item <?php echo ( $curr_lang === $code ) ? 'is-active' : ''; ?>"
+											   title="<?php echo esc_attr( $l_data['name'] ); ?>">
+												<span class="abidar-lang-bar__flag"><?php echo esc_html( $l_data['flag'] ); ?></span>
+												<span class="abidar-lang-bar__label"><?php echo esc_html( $l_data['native_name'] ); ?></span>
+											</a>
+										<?php endforeach; ?>
+									</div>
+									<?php
+								}
+								?>
 							<?php endif; ?>
 						</div>
 					</div>

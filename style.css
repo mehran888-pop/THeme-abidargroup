@@ -4,7 +4,7 @@ Theme URI: https://abidargroup.com/
 Author: Abidar Group Engineering & Digital Team
 Author URI: https://abidargroup.com/
 Description: قالب وردپرسی شرکتی و صنعتی اختصاصی هلدینگ «گروه آبیدر» در حوزه‌های معادن، انرژی و نفت. دارای پشتیبانی کامل از صفحه‌ساز المنتور رایگان (هدر ساز، فوتر ساز و ۱۰ المان اختصاصی با چیدمان‌های متنوع)، سیستم چندزبانه هوشمند (فارسی، انگلیسی، چینی + افزودن بی‌نهایت زبان از پیشخوان)، ماژول امنیت پیشرفته (تغییر آدرس ورود، محدودیت تلاش ورود، ضد اسپم و هدرهای امنیتی)، دکمه شناور ارتباط چندبخشی، ناوبری موبایل حرفه‌ای و پنل تنظیمات تفکیک‌شده.
-Version: 2.2.3
+Version: 2.2.4
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 8.0
@@ -73,6 +73,16 @@ html {
 	font-size: var(--abidar-base-size);
 	scroll-behavior: smooth;
 	-webkit-text-size-adjust: 100%;
+	/*
+	 * جلوگیری از اسکرول افقی در موبایل.
+	 * `clip` برخلاف `hidden` یک ظرف اسکرول نمی‌سازد، بنابراین رفتار
+	 * sticky/normal صفحه را خراب نمی‌کند. `hidden` به‌عنوان جانشین امن
+	 * برای مرورگرهای قدیمی نگه داشته می‌شود.
+	 */
+	overflow-x: hidden;
+	overflow-x: clip;
+	width: 100%;
+	max-width: 100%;
 }
 
 body {
@@ -81,7 +91,36 @@ body {
 	color: var(--abidar-text-main);
 	background-color: var(--abidar-surface-light);
 	overflow-x: hidden;
+	overflow-x: clip;
+	width: 100%;
+	max-width: 100%;
 	-webkit-font-smoothing: antialiased;
+}
+
+/*
+ * لایه محافظت: هیچ تصویر/ویدیو/iframe/جدولی نباید از عرض ظرف خود بیشتر شود.
+ * عناصر رسانه‌ای و جدول‌های عریض شایع‌ترین علت اسکرول افقی در موبایل هستند.
+ */
+img,
+video,
+audio,
+canvas,
+svg,
+iframe,
+embed,
+object {
+	max-width: 100%;
+	height: auto;
+}
+
+table {
+	max-width: 100%;
+}
+
+/* متن‌های طولانی بدون فاصله (ایمیل، لینک، کد) هرگز صفحه را پهن نمی‌کنند. */
+body {
+	overflow-wrap: break-word;
+	word-break: break-word;
 }
 
 /* WordPress Core Accessibility & Alignment Classes */

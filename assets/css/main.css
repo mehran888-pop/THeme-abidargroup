@@ -4074,6 +4074,8 @@ html[dir="ltr"] .abidar-article-hero__title {
 	flex-direction: column;
 	align-items: flex-end;
 	gap: 14px;
+	/* هرگز از عرض دید بیرون نمی‌زند (خصوصاً روی موبایل باریک). */
+	max-width: calc(100vw - 32px);
 }
 
 .abidar-floating-hub--bottom-left {
@@ -4143,7 +4145,8 @@ html[dir="ltr"] .abidar-article-hero__title {
 .abidar-floating-hub__panel {
 	position: absolute;
 	bottom: 74px;
-	width: min(440px, calc(100vw - 32px));
+	/* عرض پنل با احتساب فاصله ۲۴ پیکسلی هر دو طرف؛ هرگز از دید عبور نمی‌کند. */
+	width: min(440px, calc(100vw - 48px));
 	max-height: min(78vh, 620px);
 	overflow-y: auto;
 	background: #fff;
@@ -5473,16 +5476,171 @@ html[dir="rtl"] .abidar-search-form {
 	display: none;
 }
 
-.abidar-lang-widget--dropdown {
-	border-radius: 10px;
-	border: 1px solid rgba(148, 163, 184, 0.3);
-	padding: 4px;
-	background: #fff;
+/* ---------- سوییچر زبان: حالت‌های حرفه‌ای ---------- */
+
+.abidar-lang-widget__label {
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--abidar-text-muted);
+	margin-inline-end: 2px;
+	white-space: nowrap;
 }
 
-.abidar-lang-widget--dropdown .abidar-lang-widget__item {
-	border: none;
-	border-radius: 7px;
+/* طرح ۳: فقط پرچم، قاب مربعی */
+.abidar-lang-widget--flags_only .abidar-lang-widget__item {
+	padding: 6px;
+	border-radius: 9px;
+	line-height: 1;
+}
+
+.abidar-lang-widget--flags_only .abidar-lang-widget__flag {
+	font-size: 1.05rem;
+}
+
+/* طرح ۴: فقط پرچم، قاب دایره‌ای */
+.abidar-lang-widget--flags_round .abidar-lang-widget__item {
+	padding: 0;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	justify-content: center;
+	line-height: 1;
+}
+
+.abidar-lang-widget--flags_round .abidar-lang-widget__flag {
+	font-size: 1rem;
+}
+
+/* ---------- طرح ۵ و ۶: منوی کشویی حرفه‌ای ---------- */
+
+.abidar-lang-widget--dropdown,
+.abidar-lang-widget--dropdown_flags {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.abidar-lang-dropdown {
+	position: relative;
+}
+
+.abidar-lang-widget__current {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 7px 12px;
+	border-radius: 999px;
+	border: 1px solid rgba(148, 163, 184, 0.34);
+	background: #fff;
+	font-family: inherit;
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: var(--abidar-text-main);
+	cursor: pointer;
+	transition: var(--abidar-transition);
+	white-space: nowrap;
+}
+
+.abidar-lang-widget__current:hover,
+.abidar-lang-dropdown.is-open .abidar-lang-widget__current {
+	border-color: var(--abidar-primary);
+	color: var(--abidar-primary);
+}
+
+.abidar-lang-dropdown__caret {
+	width: 0;
+	height: 0;
+	border-inline-start: 4px solid transparent;
+	border-inline-end: 4px solid transparent;
+	border-top: 5px solid currentColor;
+	transition: transform 0.25s ease;
+}
+
+.abidar-lang-dropdown.is-open .abidar-lang-dropdown__caret {
+	transform: rotate(180deg);
+}
+
+.abidar-lang-dropdown__menu {
+	position: absolute;
+	top: calc(100% + 8px);
+	min-width: 190px;
+	max-width: calc(100vw - 32px);
+	margin: 0;
+	padding: 6px;
+	list-style: none;
+	background: #fff;
+	border: 1px solid rgba(148, 163, 184, 0.26);
+	border-radius: 14px;
+	box-shadow: 0 22px 60px rgba(7, 16, 30, 0.2);
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-6px);
+	transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+	z-index: 120;
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+/* جهت باز شدن منوی کشویی */
+.abidar-lang-widget--align-start .abidar-lang-dropdown__menu {
+	inset-inline-start: 0;
+}
+
+.abidar-lang-widget--align-end .abidar-lang-dropdown__menu {
+	inset-inline-end: 0;
+}
+
+.abidar-lang-dropdown.is-open .abidar-lang-dropdown__menu {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+
+.abidar-lang-dropdown__item {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 9px 11px;
+	border-radius: 9px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--abidar-text-main);
+	transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.abidar-lang-dropdown__item:hover {
+	background: rgba(148, 163, 184, 0.14);
+	color: var(--abidar-primary);
+}
+
+.abidar-lang-dropdown__item.is-active {
+	background: rgba(217, 119, 6, 0.1);
+	color: var(--abidar-primary);
+}
+
+.abidar-lang-dropdown__check {
+	margin-inline-start: auto;
+	font-size: 0.75rem;
+	color: var(--abidar-primary);
+}
+
+/* در هدر تیره، رنگ‌ها با پس‌زمینه هماهنگ می‌شوند */
+.abidar-site-header .abidar-lang-widget__current {
+	background: rgba(255, 255, 255, 0.06);
+	border-color: rgba(148, 163, 184, 0.3);
+	color: rgba(226, 232, 240, 0.9);
+}
+
+/* روی موبایل، منو تمام‌عرض و بدون سرریز می‌شود */
+@media (max-width: 767px) {
+	.abidar-lang-widget__label {
+		display: none;
+	}
+
+	.abidar-lang-dropdown__menu {
+		min-width: 170px;
+	}
 }
 
 .abidar-site-header .abidar-lang-widget__item {
@@ -6016,6 +6174,101 @@ html[dir="rtl"] .abidar-search-form {
 
 	.abidar-floating-hub__panel {
 		max-height: 70vh;
+	}
+}
+
+/*
+ * ============================================================================
+ * MOBILE: NO HORIZONTAL SCROLL
+ * ============================================================================
+ * در موبایل هیچ بخشی از قالب نباید صفحه را از عرض دید عبور دهد.
+ * این بلوک سه کار می‌کند: جلوگیری از پهن شدن گریدها، محدود کردن رسانه‌ها و
+ * اجازه شکستن واژه‌های طولانی. سپس چند عنصری که به‌طور ساختاری عریض بودند
+ * اصلاح می‌شوند.
+ */
+@media (max-width: 767px) {
+	/* گریدهای چندستونه هرگز عرض ثابت بیش از فضای موجود نمی‌سازند. */
+	.abidar-widget-grid,
+	.abidar-archive-grid,
+	.abidar-blog-grid,
+	.abidar-certs-grid,
+	.abidar-services-grid,
+	.abidar-projects-grid,
+	.abidar-team-grid,
+	.abidar-offices-list,
+	.abidar-footer-offices__grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	/* هر ظرف گریدی که ستون minmax با مقدار ثابت دارد. */
+	.abidar-with-sidebar,
+	.abidar-single-layout,
+	.abidar-member-hero__grid,
+	.abidar-cert-hero__grid,
+	.abidar-article-hero__inner,
+	.abidar-single-hero,
+	.abidar-contact-hub__grid,
+	.abidar-site-footer__main {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	/* متن‌های بلند بدون فاصله: ایمیل، لینک، کد مدرک، شماره تماس. */
+	.abidar-container,
+	.abidar-section,
+	.abidar-entry-content,
+	.abidar-contact-hub,
+	.abidar-site-footer {
+		overflow-wrap: anywhere;
+		word-break: break-word;
+		min-width: 0;
+	}
+
+	/* جدول‌های عریض داخل یک ظرف اسکرول‌پذیر بروند، نه اینکه صفحه را پهن کنند. */
+	.abidar-table-wrap,
+	.abidar-entry-content table {
+		max-width: 100%;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	/* اسلایدرها و نوارهای افقی فقط داخل خودشان اسکرول شوند. */
+	.abidar-layout-switcher,
+	.abidar-filter-pills,
+	.abidar-section__controls {
+		max-width: 100%;
+	}
+
+	/*
+	 * هدر و تاپ‌بار عمداً در این لیست نیستند: منوی کشویی زبان از کادر
+	 * تاپ‌بار به پایین باز می‌شود و `overflow-x: clip` آن را می‌برید.
+	 * به‌جای بریدن، با min-width: 0 و flex-wrap از سرریز جلوگیری می‌کنیم.
+	 */
+	.abidar-hero,
+	.abidar-site-footer {
+		max-width: 100vw;
+		overflow-x: clip;
+	}
+
+	.abidar-topbar__inner,
+	.abidar-navbar__inner,
+	.abidar-topbar__right,
+	.abidar-navbar__actions {
+		min-width: 0;
+		flex-wrap: wrap;
+	}
+
+	/* منوی کشویی زبان در موبایل کامل داخل دید بماند. */
+	.abidar-lang-dropdown__menu {
+		max-width: calc(100vw - 24px);
+	}
+
+	/* تصاویر و رسانه‌ها. */
+	img,
+	video,
+	iframe,
+	svg {
+		max-width: 100%;
+		height: auto;
 	}
 }
 
