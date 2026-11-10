@@ -105,14 +105,13 @@
 		} );
 
 		/*
-		 * اگر لینک قدیمی با #anchor باز شود (نشانه‌گذاری نسخه‌های قبل)، به
-		 * صفحهٔ همان کارت هدایت می‌شود تا کاربر به بن‌بست نخورد.
+		 * اگر آدرس قدیمی با #anchor باز شود (پیوندهای ذخیره‌شده در نسخه‌های
+		 * قبل)، همان بخش در صفحهٔ جاری اسکرول می‌شود تا کاربر به بن‌بست نخورد.
 		 */
 		if ( window.location.hash ) {
 			const hash = window.location.hash.replace( '#', '' );
-			const link = $( '.abidar-admin-submenu__link[data-scroll-target="' + hash + '"], #' + hash );
 
-			if ( link.length ) {
+			if ( hash && document.getElementById( hash ) ) {
 				window.setTimeout( () => {
 					const el = document.getElementById( hash );
 					if ( el ) {
