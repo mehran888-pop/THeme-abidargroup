@@ -123,6 +123,15 @@ class Abidar_Demo_Importer {
 				'is_front'    => false,
 				'widgets'     => array( 'abidar_contact_hub' ),
 			),
+			'landing'      => array(
+				'title_fa'    => 'لندینگ پیج معرفی هلدینگ',
+				'title_en'    => 'Holding Landing Page',
+				'title_zh'    => '集团介绍落地页',
+				'slug'        => 'holding-landing',
+				'template'    => 'page-templates/template-landing.php',
+				'is_front'    => false,
+				'widgets'     => array( 'abidar_hero_power', 'abidar_services', 'abidar_projects', 'abidar_contact_hub' ),
+			),
 		);
 	}
 
@@ -211,6 +220,20 @@ class Abidar_Demo_Importer {
 				);
 				break;
 
+			case 'abidar_hero_power':
+				$settings = array_merge(
+					$settings,
+					array(
+						'layout_style'    => 'split_cinematic',
+						'hero_height'     => 'tall',
+						'background_type' => 'mesh',
+						'show_metrics'    => 'yes',
+						'show_pillars'    => 'yes',
+						'show_scroll_hint' => 'yes',
+					)
+				);
+				break;
+
 			case 'abidar_services':
 				$settings = array_merge(
 					$settings,
@@ -261,6 +284,7 @@ class Abidar_Demo_Importer {
 			'abidar_footer_builder' => array( 'layout_1', 'layout_2', 'layout_3' ),
 			'abidar_lang_switcher'  => array( 'pills_flag', 'compact_iso', 'dropdown' ),
 			'abidar_hero_slider'    => array( 'layout_1', 'layout_2', 'layout_3' ),
+			'abidar_hero_power'     => array( 'split_cinematic', 'fullscreen_center', 'mosaic', 'asymmetric', 'stacked_type', 'slider', 'glass_card', 'minimal_wide' ),
 			'abidar_about_timeline' => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
 			'abidar_services'       => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
 			'abidar_projects'       => array( 'layout_1', 'layout_2', 'layout_3', 'layout_4' ),
@@ -311,6 +335,12 @@ class Abidar_Demo_Importer {
 				update_post_meta( $page_id, '_elementor_template_type', 'wp-page' );
 				update_post_meta( $page_id, '_elementor_version', '3.25.0' );
 				update_post_meta( $page_id, '_elementor_data', wp_slash( self::build_elementor_json_for_page( $key, $info['widgets'] ) ) );
+				// برگه لندینگ: حالت اسکرول را هم تنظیم می‌کنیم تا کاربر بلافاصله ببیند.
+				if ( 'landing' === $key && class_exists( 'Abidar_Landing' ) ) {
+					update_post_meta( $page_id, Abidar_Landing::META_SCROLL, 'vertical' );
+					update_post_meta( $page_id, Abidar_Landing::META_SNAP, 'yes' );
+				}
+
 				update_post_meta( $page_id, '_abidar_title_en', $info['title_en'] );
 				update_post_meta( $page_id, '_abidar_title_zh', $info['title_zh'] );
 
