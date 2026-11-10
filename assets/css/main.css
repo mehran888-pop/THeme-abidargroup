@@ -6492,6 +6492,8 @@ input[type="number"] {
 	content: "";
 	position: absolute;
 	inset: 0;
+	/* بازگشتی برای مرورگرهای قدیمی که color-mix ندارند. */
+	background: rgba(5, 16, 31, 0.6);
 	background: color-mix(in srgb, var(--hp-overlay-color) var(--hp-overlay), transparent);
 	z-index: 2;
 	pointer-events: none;
