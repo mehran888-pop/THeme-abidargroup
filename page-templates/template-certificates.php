@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 get_header();
 
-if ( abidar_is_elementor_page() ) {
+if ( abidar_is_elementor_page() || ( class_exists( 'Abidar_Elementor_Init' ) && Abidar_Elementor_Init::is_elementor_editor_context() ) ) {
 	?>
 	<div class="abidar-elementor-content">
 		<?php

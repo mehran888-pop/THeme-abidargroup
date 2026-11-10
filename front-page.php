@@ -26,6 +26,24 @@ get_header();
 		endwhile;
 		?>
 	</div>
+<?php elseif ( class_exists( 'Abidar_Elementor_Init' ) && Abidar_Elementor_Init::is_elementor_editor_context() ) : ?>
+	<?php
+	/**
+	 * بوم/پیش‌نمایش المنتور روی برگه‌ای که هنوز دادهٔ المنتور ندارد.
+	 *
+	 * اینجا دموی پیش‌فرض رندر نمی‌شود، چون‌که شاخهٔ بالا هم اجرا نشده است.
+	 * تنها چیزی که المنتور برای اتصال سند لازم دارد همان `the_content()` است؛
+	 * بدون آن نشانگر بارگذاری بی‌پایان روی صفحه می‌ماند.
+	 */
+	?>
+	<div class="abidar-elementor-content">
+		<?php
+		while ( have_posts() ) :
+			the_post();
+			the_content();
+		endwhile;
+		?>
+	</div>
 <?php else : ?>
 	<?php
 	// دموی پیش‌فرض صفحه اصلی با ویجت‌های اختصاصی هلدینگ.

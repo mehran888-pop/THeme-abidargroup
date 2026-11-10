@@ -626,8 +626,88 @@ function abidar_is_elementor_page( $post_id = null ) {
 	$edit_mode = get_post_meta( $post_id, '_elementor_edit_mode', true );
 	$data      = get_post_meta( $post_id, '_elementor_data', true );
 
-	return ( 'builder' === $edit_mode && ! empty( $data ) );
+	if ( 'builder' === $edit_mode && ! empty( $data ) ) {
+		return true;
+	}
+
+	/**
+	 * حالت لب‌های بحرانی: برگه‌ای که «تازه» ساخته شده و هنوز هیچ داده‌ای در
+	 * `_elementor_data` ندارد.
+	 *
+	 * در این لحظه `_elementor_edit_mode` معمولاً ست نشده است، بنابراین شرط بالا
+	 * false می‌شود و قالب شاخهٔ «بدون المنتور» را رندر می‌کند؛ یعنی
+	 * `the_content()` هرگز فرا خوانده نمی‌شود. المنتور برای اتصال سند خود به
+	 * بوم پیش‌نمایش به `<div class="elementor elementor-{id}">` که همان
+	 * `the_content()` تولید می‌کند نیاز دارد؛ بدون آن پیام پایان بارگذاری
+	 * هرگز به پنل نمی‌رسد و ویرایشگر روی «در حال بارگذاری» می‌ماند.
+	 *
+	 * پس در بوم/پیش‌نمایش المنتور همیشه مسیر محتوا را باز می‌گذاریم.
+	 */
+	if ( class_exists( 'Abidar_Elementor_Init' ) && Abidar_Elementor_Init::is_elementor_editor_context() ) {
+		return true;
+	}
+
+	// سند المنتور در حال ساخت است ولی پیش‌نمایش هنوز ست نشده.
+	if ( class_exists( '\Elementor\Plugin' ) && 'builder' === $edit_mode ) {
+		return true;
+	}
+
+	return false;
 }
+
+/**
+ * تضمین رندر محتوای المنتور در بوم ویرایشگر.
+ *
+ * قالب‌های اختصاصی این پوسته (و همچنین `front-page.php`) بر اساس
+ * `abidar_is_elementor_page()` تصمیم می‌گیرند محتوای المنتور را رندر کنند یا
+ * دموی پیش‌فرض را. اما المنتور برای اتصال سند به iframe پیش‌نمایش، به
+ * `<div class="elementor elementor-{id}">` که از `the_content()` می‌آید نیاز
+ * دارد. اگر به هر دلیلی آن شرط برقرار نباشد، بوم خالی می‌ماند و نشانگر
+ * بارگذاری هرگز پایان نمی‌یابد.
+ *
+ * این متد با قلاب `loop_start` (که قبل از هر `while ( have_posts() )` اجرا
+ * می‌شود) محتوا را دقیقاً یک‌بار تضمین می‌کند. اگر قالب خودش `the_content()`
+ * را صدا زده باشد، پرچم خروجی تولیدشده روی false برمی‌گردد و چیزی تکرار
+ * نمی‌شود.
+ */
+function abidar_ensure_elementor_canvas() {
+	static $done = false;
+
+	if ( $done ) {
+		return;
+	}
+
+	if ( ! class_exists( 'Abidar_Elementor_Init' ) || ! Abidar_Elementor_Init::is_elementor_editor_context() ) {
+		return;
+	}
+
+	// فقط روی اسناد قابل ویرایش با المنتور.
+	if ( ! is_singular() ) {
+		return;
+	}
+
+	$post_id = get_queried_object_id();
+	if ( ! $post_id ) {
+		return;
+	}
+
+	global $post;
+	if ( ! $post instanceof WP_Post || (int) $post->ID !== (int) $post_id ) {
+		return;
+	}
+
+	// خروجی قبلاً تولید شده است.
+	if ( false !== strpos( (string) $post->post_content, 'elementor elementor-' ) ) {
+		return;
+	}
+
+	$done = true;
+
+	echo '<div class="abidar-elementor-content">';
+	the_content();
+	echo '</div>';
+}
+add_action( 'loop_start', 'abidar_ensure_elementor_canvas', 1 );
 
 /**
  * تولید عنوان صفحه (Hero Header) برای صفحات داخلی و آرشیوها
