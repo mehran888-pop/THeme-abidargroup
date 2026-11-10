@@ -30,28 +30,44 @@ $abidar_show_header   = $abidar_landing_meta['header'];
 $abidar_show_footer   = $abidar_landing_meta['footer'];
 
 /**
- * کلاس‌های بدنه. از بستار استفاده می‌شود تا اعلان تابع در فایل قالب
- * (که ممکن است دو بار بارگذاری شود) خطای تکرار تابع ندهد.
+ * کلاس‌های بدنه: حالت اسکرول + وضعیت هدر/فوتر.
+ * بستار استفاده شده تا اعلان تابع در فایل قالب خطای «تابع تکراری» ندهد.
  */
-$abidar_landing_body_class = static function ( $classes ) use ( $abidar_scroll_mode, $abidar_snap ) {
+$abidar_landing_body_class = static function ( $classes ) use ( $abidar_scroll_mode, $abidar_snap, $abidar_show_header, $abidar_show_footer ) {
 	$classes[] = 'abidar-landing';
 	$classes[] = 'abidar-landing--' . $abidar_scroll_mode;
 	$classes[] = 'abidar-landing--snap-' . $abidar_snap;
+
+	if ( 'yes' !== $abidar_show_header ) {
+		$classes[] = 'abidar-landing--no-header';
+	}
+
+	if ( 'yes' !== $abidar_show_footer ) {
+		$classes[] = 'abidar-landing--no-footer';
+	}
 
 	return $classes;
 };
 
 add_filter( 'body_class', $abidar_landing_body_class );
 
-if ( 'yes' === $abidar_show_header ) {
-	get_header();
-} else {
-	// هدر حذف شده؛ فقط استایل/اسکریپت‌های ضروری وردپرس بارگذاری می‌شوند.
-	wp_head();
-}
+/*
+ * همیشه get_header() صدا زده می‌شود، چون header.php خودِ پوستهٔ سند
+ * (<!DOCTYPE>, <html>, <head>, <body>, body_class, wp_head) را می‌سازد و
+ * بدون آن برگه بدون doctype و بدون کلاس‌های body رندر می‌شود — و حالت
+ * افقی اصلاً فعال نمی‌شد. برای حذف «ظاهرِ» هدر/فوتر از CSS استفاده
+ * می‌کنیم، نه از حذف فراخوانی.
+ */
+get_header();
 ?>
 
-<main
+<?php
+/*
+ * <div> عمداً، نه <main>: header.php خودش <main id="abidar-main-content"> را
+ * باز می‌کند و footer.php می‌بندد. <main> تودرتو HTML نامعتبر است.
+ */
+?>
+<div
 	id="abidar-landing"
 	class="abidar-landing__main abidar-landing__main--<?php echo esc_attr( $abidar_scroll_mode ); ?>"
 	data-landing-mode="<?php echo esc_attr( $abidar_scroll_mode ); ?>"
@@ -102,11 +118,9 @@ if ( 'yes' === $abidar_show_header ) {
 
 	<?php endif; ?>
 
-</main>
+</div>
 
 <?php
-if ( 'yes' === $abidar_show_footer ) {
-	get_footer();
-} else {
-	wp_footer();
-}
+// فوتر همیشه برای بستن درست سند فراخوانی می‌شود؛ در حالت بدونِ هدر/فوتر
+// با کلاس روی body پنهان می‌شود.
+get_footer();

@@ -178,7 +178,31 @@
 	}
 }
 
-/* حالت‌های تمام‌صفحه و بدون هدر/فوتر */
+/* -------------------------------------------------- حالت بدون هدر / بدون فوتر */
+/*
+ * هدر و فوتر همیشه در ساختار سند هستند (برای معتبرماندن HTML و اجرای
+ * wp_head/wp_footer). برای حذف ظاهرشان همین کلاس‌ها کافی است.
+ */
+body.abidar-landing--no-header .abidar-site-header,
+body.abidar-landing--no-header .abidar-preloader,
+body.abidar-landing--no-header .abidar-mobile-drawer,
+body.abidar-landing--no-header .skip-link {
+	display: none !important;
+}
+
+body.abidar-landing--no-footer .abidar-site-footer,
+body.abidar-landing--no-footer .abidar-mobile-drawer,
+body.abidar-landing--no-footer .abidar-mobile-bottom-bar,
+body.abidar-landing--no-footer .abidar-floating-hub {
+	display: none !important;
+}
+
+/* فضای بالای محتوا وقتی هدر پنهان است */
+body.abidar-landing--no-header .abidar-main {
+	padding-top: 0;
+}
+
+/* در حالت افقی فوتر جریان صفحه را می‌شکند */
 body.abidar-landing--horizontal .abidar-site-footer {
 	display: none;
 }
