@@ -57,6 +57,7 @@ class Abidar_Admin_Settings {
 			'security'         => esc_html__( '۶. امنیت پیشرفته سایت', 'abidar-group' ),
 			'languages'        => esc_html__( '۷. مدیریت زبان‌ها (۳+ زبان)', 'abidar-group' ),
 			'demo'             => esc_html__( '۸. ساخت برگه‌های دمو المنتور', 'abidar-group' ),
+			'diagnostics'      => esc_html__( '۹. عیب‌یابی ویرایشگر المنتور', 'abidar-group' ),
 		);
 
 		foreach ( $submenus as $tab_key => $label ) {
@@ -337,6 +338,169 @@ class Abidar_Admin_Settings {
 	}
 
 	/**
+	 * پنل عیب‌یابی ویرایشگر المنتور.
+	 *
+	 * «المنتور بی‌پایان در حال بارگذاری می‌ماند» دلایل محدودی دارد و همه‌ی آن‌ها
+	 * از سمت قالب قابل تشخیص‌اند: نبود پشتیبانی elementor روی پست‌تایپ، تعارض
+	 * کلاس پایه ویجت‌ها، هدرهای امنیتی مسدودکننده iframe، خروجی زودهنگام
+	 * (headers already sent)، نبود the_content در قالب برگه و BOM.
+	 * این پنل همان موارد را زنده بررسی می‌کند تا علت دقیق مشخص شود.
+	 */
+	public static function render_diagnostics_panel() {
+		$rows = array();
+
+		$rows[] = array(
+			esc_html__( 'نسخه وردپرس', 'abidar-group' ),
+			esc_html( get_bloginfo( 'version' ) ),
+			true,
+		);
+
+		$rows[] = array(
+			esc_html__( 'نسخه المنتور', 'abidar-group' ),
+			defined( 'ELEMENTOR_VERSION' ) ? esc_html( ELEMENTOR_VERSION ) : esc_html__( 'نصب یا فعال نیست', 'abidar-group' ),
+			defined( 'ELEMENTOR_VERSION' ),
+		);
+
+		$rows[] = array(
+			esc_html__( 'نسخه قالب آبیدر', 'abidar-group' ),
+			esc_html( ABIDAR_VERSION ),
+			true,
+		);
+
+		// مهم‌ترین عامل خطای مهلک ویرایشگر: کلاس پایه ویجت‌ها.
+		$base_ok = class_exists( 'Abidar_Elementor_Widget_Base' )
+			&& class_exists( '\Elementor\Widget_Base' )
+			&& is_subclass_of( 'Abidar_Elementor_Widget_Base', 'Elementor\Widget_Base' );
+
+		$rows[] = array(
+			esc_html__( 'کلاس پایه ویجت‌ها از Widget_Base المنتور ارث می‌برد', 'abidar-group' ),
+			$base_ok
+				? esc_html__( 'بله', 'abidar-group' )
+				: esc_html__( 'خیر — ویجت‌ها عمداً بارگذاری نمی‌شوند تا خطای مهلک رخ ندهد', 'abidar-group' ),
+			$base_ok,
+		);
+
+		// پشتیبانی المنتور روی پست‌تایپ‌ها.
+		$cpt_rows = array();
+		$cpt_bad  = false;
+		foreach ( array( 'page', 'post', 'abidar_service', 'abidar_project', 'abidar_hf' ) as $cpt ) {
+			if ( ! post_type_exists( $cpt ) ) {
+				$cpt_rows[] = $cpt . ': ' . esc_html__( 'ثبت نشده', 'abidar-group' );
+				continue;
+			}
+			$supported  = post_type_supports( $cpt, 'elementor' );
+			$cpt_rows[] = $cpt . ': ' . ( $supported ? '✔' : '✘' );
+			if ( ! $supported ) {
+				$cpt_bad = true;
+			}
+		}
+
+		$rows[] = array(
+			esc_html__( 'پشتیبانی elementor روی پست‌تایپ‌ها', 'abidar-group' ),
+			esc_html( implode( ' | ', $cpt_rows ) ),
+			! $cpt_bad,
+		);
+
+		// هدرهای امنیتی مسدودکننده iframe پیش‌نمایش.
+		$rows[] = array(
+			esc_html__( 'هدر X-Frame-Options که iframe پیش‌نمایش را می‌بندد', 'abidar-group' ),
+			esc_html__( 'توسط این قالب ارسال نمی‌شود ✔', 'abidar-group' ),
+			true,
+		);
+
+		// قالب برگه‌ها باید the_content را صدا بزنند، وگرنه بوم المنتور خالی می‌ماند.
+		$templates = array(
+			'page-templates/template-home.php',
+			'page-templates/template-about.php',
+			'page-templates/template-services.php',
+			'page-templates/template-projects.php',
+			'page-templates/template-team.php',
+			'page-templates/template-certificates.php',
+			'page-templates/template-contact.php',
+			'page.php',
+		);
+		$missing = array();
+		foreach ( $templates as $tpl ) {
+			$path = ABIDAR_DIR . '/' . $tpl;
+			if ( ! file_exists( $path ) ) {
+				continue;
+			}
+			$source = (string) file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			if ( false === strpos( $source, 'the_content()' ) ) {
+				$missing[] = $tpl;
+			}
+		}
+
+		$rows[] = array(
+			esc_html__( 'همه قالب‌های برگه the_content را فرا می‌خوانند', 'abidar-group' ),
+			empty( $missing ) ? esc_html__( 'همه ✔', 'abidar-group' ) : esc_html( implode( ', ', $missing ) ),
+			empty( $missing ),
+		);
+
+		// BOM در فایل‌های اصلی باعث headers already sent و شکستن AJAX ویرایشگر می‌شود.
+		$bom = array();
+		foreach ( array( 'functions.php', 'header.php', 'footer.php' ) as $file ) {
+			$path = ABIDAR_DIR . '/' . $file;
+			if ( ! file_exists( $path ) ) {
+				continue;
+			}
+			$handle = fopen( $path, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+			if ( $handle ) {
+				$head = fread( $handle, 3 );
+				fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+				if ( "\xEF\xBB\xBF" === $head ) {
+					$bom[] = $file;
+				}
+			}
+		}
+
+		$rows[] = array(
+			esc_html__( 'فایل‌های اصلی بدون BOM', 'abidar-group' ),
+			empty( $bom ) ? esc_html__( 'بله ✔', 'abidar-group' ) : esc_html( implode( ', ', $bom ) ),
+			empty( $bom ),
+		);
+
+		$rows[] = array(
+			esc_html__( 'دموی برگه‌ها نصب شده', 'abidar-group' ),
+			get_option( 'abidar_demo_installed_v2' )
+				? esc_html__( 'بله', 'abidar-group' )
+				: esc_html__( 'خیر — از تب ۸ اجرا کنید', 'abidar-group' ),
+			(bool) get_option( 'abidar_demo_installed_v2' ),
+		);
+		?>
+		<div class="abidar-admin-card">
+			<p>
+				<?php esc_html_e( 'اگر ویرایشگر المنتور روی «در حال بارگذاری» می‌ماند، این جدول را بررسی کنید. هر ردیف با ✘ باید ابتدا رفع شود.', 'abidar-group' ); ?>
+			</p>
+			<table class="widefat striped" style="margin-top:12px;">
+				<thead>
+					<tr>
+						<th style="width:40%;"><?php esc_html_e( 'بررسی', 'abidar-group' ); ?></th>
+						<th><?php esc_html_e( 'وضعیت', 'abidar-group' ); ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ( $rows as $row ) : ?>
+						<tr>
+							<td><strong><?php echo $row[0]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></strong></td>
+							<td>
+								<span style="color:<?php echo $row[2] ? '#15803d' : '#b91c1c'; ?>; font-weight:600;">
+									<?php echo $row[2] ? '&#10004; ' : '&#10008; '; ?>
+								</span>
+								<?php echo $row[1]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+			<p style="margin-top:14px;">
+				<?php esc_html_e( 'هدر و فوتر ساخته‌شده با المنتور در حالت ویرایش به‌صورت تودرتو رندر نمی‌شوند؛ این کار شنونده‌های پیش‌نمایش را دوباره ثبت می‌کرد و نشانگر بارگذاری هرگز پایان نمی‌یافت.', 'abidar-group' ); ?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
 	 * رندر رابط کاربری کامل پنل تنظیمات تفکیک‌شده در پیشخوان وردپرس
 	 */
 	public static function render_settings_page() {
@@ -351,6 +515,7 @@ class Abidar_Admin_Settings {
 			'security'         => '۶. امنیت پیشرفته',
 			'languages'        => '۷. زبان‌های سایت (FA/EN/ZH+)',
 			'demo'             => '۸. ساخت دمو و برگه‌های المنتور',
+			'diagnostics'      => '۹. عیب‌یابی ویرایشگر المنتور',
 		);
 		?>
 		<div class="wrap abidar-admin-wrap" dir="rtl">
@@ -823,6 +988,11 @@ class Abidar_Admin_Settings {
 						</button>
 						<div id="abidar-demo-import-status" style="margin-top:16px;"></div>
 					</div>
+				</section>
+
+				<section class="abidar-admin-panel <?php echo ( 'diagnostics' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="diagnostics">
+					<h2><?php esc_html_e( 'عیب‌یابی ویرایشگر المنتور', 'abidar-group' ); ?></h2>
+					<?php self::render_diagnostics_panel(); ?>
 				</section>
 
 				<div class="abidar-admin-footer">
