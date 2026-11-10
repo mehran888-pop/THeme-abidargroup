@@ -615,32 +615,105 @@ class Abidar_Admin_Settings {
 	/**
 	 * رندر رابط کاربری کامل پنل تنظیمات تفکیک‌شده در پیشخوان وردپرس
 	 */
-	public static function render_settings_page() {
-		$options    = abidar_get_all_options();
-		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'layout'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		/*
-		 * نام تب‌ها با تابع ترجمه وردپرس خوانده می‌شوند تا اگر مدیر پیشخوان
-		 * انگلیسی یا چینی باشد، برچسب‌ها هم به همان زبان دربیایند. متن فارسی
-		 * خودِ msgid است؛ پس بدون فایل ترجمه هم چیزی تغییر نمی‌کند.
-		 */
-		$tabs       = array(
-			'layout'           => __( '۱. طرح و چیدمان و فونت', 'abidar-group' ),
-			'mobile-nav'       => __( '۲. ناوبری موبایل', 'abidar-group' ),
-			'floating-contact' => __( '۳. دکمه شناور تماس چندبخشی', 'abidar-group' ),
-			'blog'             => __( '۴. قالب مقاله و پست‌ها', 'abidar-group' ),
-			'preloader'        => __( '۵. پیش‌بارگذاری سایت', 'abidar-group' ),
-			'security'         => __( '۶. امنیت پیشرفته', 'abidar-group' ),
-			'languages'        => __( '۷. زبان‌های سایت (FA/EN/ZH+)', 'abidar-group' ),
-			'demo'             => __( '۸. ساخت دمو و برگه‌های المنتور', 'abidar-group' ),
-			'diagnostics'      => __( '۹. عیب‌یابی ویرایشگر المنتور', 'abidar-group' ),
+	/**
+	 * ساختار درختی منوی تنظیمات: گروه‌های اصلی و زیرگروه‌های هر گروه.
+	 *
+	 * هر گروه یک آیکون، یک عنوان و یک آدرس ثابت دارد (همان `tab` قدیمی) تا
+	 * لینک‌های موجود و بوکمارک‌های مدیر از کار نیفتند. زیرگروه‌ها فقط نمایشی
+	 * هستند: همه در یک صفحه رندر می‌شوند و کلیک روی هرکدام صفحه را به همان
+	 * بخش اسکرول می‌کند؛ بنابراین هیچ تنظیمی از دست نمی‌رود و لازم نیست فرم
+	 * بین چند صفحه تقسیم شود.
+	 *
+	 * @return array
+	 */
+	public static function get_settings_menu() {
+		return array(
+			'layout'           => array(
+				'label'    => __( 'طراحی و چیدمان', 'abidar-group' ),
+				'icon'     => 'dashicons-admin-appearance',
+				'children' => array(
+					'layout-settings' => __( 'چیدمان و کانتینر', 'abidar-group' ),
+					'colors'          => __( 'رنگ‌بندی', 'abidar-group' ),
+					'fonts'           => __( 'فونت و تایپوگرافی', 'abidar-group' ),
+					'header-footer'   => __( 'هدر و فوتر', 'abidar-group' ),
+				),
+			),
+			'mobile-nav'       => array(
+				'label'    => __( 'ناوبری موبایل', 'abidar-group' ),
+				'icon'     => 'dashicons-smartphone',
+				'children' => array(
+					'mobile-settings' => __( 'چیدمان و تنظیمات', 'abidar-group' ),
+					'mobile-buttons'  => __( 'دکمه‌ها و لینک‌ها', 'abidar-group' ),
+				),
+			),
+			'floating-contact' => array(
+				'label'    => __( 'دکمه شناور تماس', 'abidar-group' ),
+				'icon'     => 'dashicons-phone',
+				'children' => array(
+					'floating-general' => __( 'تنظیمات عمومی', 'abidar-group' ),
+					'floating-depts'   => __( 'بخش‌های تماس', 'abidar-group' ),
+				),
+			),
+			'blog'             => array(
+				'label'    => __( 'مقاله و پست‌ها', 'abidar-group' ),
+				'icon'     => 'dashicons-admin-post',
+				'children' => array(
+					'blog-layout' => __( 'چیدمان و بخش‌های مقاله', 'abidar-group' ),
+				),
+			),
+			'preloader'        => array(
+				'label'    => __( 'پیش‌بارگذاری سایت', 'abidar-group' ),
+				'icon'     => 'dashicons-update',
+				'children' => array(
+					'preloader-settings' => __( 'ظاهر و زمان‌بندی', 'abidar-group' ),
+				),
+			),
+			'security'         => array(
+				'label'    => __( 'امنیت پیشرفته', 'abidar-group' ),
+				'icon'     => 'dashicons-shield',
+				'children' => array(
+					'security-login' => __( 'ورود و مسدودسازی', 'abidar-group' ),
+					'security-ip'    => __( 'لیست سفید IP', 'abidar-group' ),
+					'security-log'   => __( 'گزارش رویدادها', 'abidar-group' ),
+				),
+			),
+			'languages'        => array(
+				'label'    => __( 'زبان‌های سایت', 'abidar-group' ),
+				'icon'     => 'dashicons-translation',
+				'children' => array(
+					'lang-default' => __( 'زبان پیش‌فرض و نمایش', 'abidar-group' ),
+					'lang-custom'  => __( 'زبان‌های اضافی', 'abidar-group' ),
+				),
+			),
+			'demo'             => array(
+				'label'    => __( 'ساخت دمو المنتور', 'abidar-group' ),
+				'icon'     => 'dashicons-download',
+				'children' => array(
+					'demo-import' => __( 'ایمپورت برگه‌های دمو', 'abidar-group' ),
+				),
+			),
+			'diagnostics'      => array(
+				'label'    => __( 'عیب‌یابی المنتور', 'abidar-group' ),
+				'icon'     => 'dashicons-sos',
+				'children' => array(
+					'diagnostics-status' => __( 'وضعیت ویجت‌ها', 'abidar-group' ),
+				),
+			),
 		);
-		?>
-		<?php
-		/*
-		 * جهت پنل از زبان واقعی پیشخوان گرفته می‌شود، نه از زبان سایت.
-		 * مدیرِ پیشخوان انگلیسی باید همان چیدمان LTR را ببیند که بقیه وردپرس
-		 * به او نشان می‌دهد؛ وگرنه پنل تنها بخش راست‌به‌چپِ صفحه می‌شود.
-		 */
+	}
+
+	/**
+	 * رندر رابط کاربری کامل پنل تنظیمات تفکیک‌شده در پیشخوان وردپرس
+	 */
+	public static function render_settings_page() {
+		$options = abidar_get_all_options();
+		$menu    = self::get_settings_menu();
+
+		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'layout'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! isset( $menu[ $active_tab ] ) ) {
+			$active_tab = 'layout';
+		}
+
 		$abidar_admin_dir = is_rtl() ? 'rtl' : 'ltr';
 		?>
 		<div class="wrap abidar-admin-wrap" dir="<?php echo esc_attr( $abidar_admin_dir ); ?>">
@@ -665,16 +738,45 @@ class Abidar_Admin_Settings {
 				</div>
 			<?php endif; ?>
 
-			<!-- تب‌های تفکیک‌شده تنظیمات قالب -->
-			<nav class="abidar-admin-tabs">
-				<?php foreach ( $tabs as $tab_key => $tab_label ) : ?>
-					<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'abidar-settings', 'tab' => $tab_key ), admin_url( 'admin.php' ) ) ); ?>"
-					   class="abidar-admin-tab <?php echo ( $active_tab === $tab_key ) ? 'is-active' : ''; ?>"
-					   data-tab-target="<?php echo esc_attr( $tab_key ); ?>">
-						<?php echo esc_html( $tab_label ); ?>
-					</a>
-				<?php endforeach; ?>
-			</nav>
+			<div class="abidar-admin-shell">
+				<!-- دکمه باز/بسته سایدبار در موبایل -->
+				<button type="button" class="abidar-admin-menu-toggle" id="abidar-menu-toggle" aria-expanded="false" aria-controls="abidar-settings-menu">
+					<span class="dashicons dashicons-menu" aria-hidden="true"></span>
+					<span><?php esc_html_e( 'فهرست تنظیمات', 'abidar-group' ); ?></span>
+				</button>
+
+				<!-- فهرست عمودی تنظیمات: گروه اصلی + زیرگروه‌ها -->
+				<aside class="abidar-admin-sidebar" id="abidar-settings-menu" aria-label="<?php esc_attr_e( 'فهرست تنظیمات قالب', 'abidar-group' ); ?>">
+					<nav class="abidar-admin-menu">
+						<?php foreach ( $menu as $group_key => $group ) : ?>
+							<?php $group_is_active = ( $active_tab === $group_key ); ?>
+							<div class="abidar-admin-menu__group <?php echo $group_is_active ? 'is-active' : ''; ?>">
+								<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'abidar-settings', 'tab' => $group_key ), admin_url( 'admin.php' ) ) ); ?>"
+								   class="abidar-admin-menu__link"
+								   data-tab-target="<?php echo esc_attr( $group_key ); ?>"
+								   aria-expanded="<?php echo $group_is_active ? 'true' : 'false'; ?>">
+									<span class="dashicons <?php echo esc_attr( $group['icon'] ); ?>" aria-hidden="true"></span>
+									<span class="abidar-admin-menu__text"><?php echo esc_html( $group['label'] ); ?></span>
+									<span class="abidar-admin-menu__chevron" aria-hidden="true"></span>
+								</a>
+								<?php if ( ! empty( $group['children'] ) ) : ?>
+									<ul class="abidar-admin-submenu">
+										<?php foreach ( $group['children'] as $child_key => $child_label ) : ?>
+											<li>
+												<a href="#<?php echo esc_attr( $child_key ); ?>" class="abidar-admin-submenu__link" data-scroll-target="<?php echo esc_attr( $child_key ); ?>">
+													<?php echo esc_html( $child_label ); ?>
+												</a>
+											</li>
+										<?php endforeach; ?>
+									</ul>
+								<?php endif; ?>
+							</div>
+						<?php endforeach; ?>
+					</nav>
+				</aside>
+
+				<!-- محتوای تنظیمات -->
+				<div class="abidar-admin-content">
 
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="abidar-admin-form">
 				<input type="hidden" name="action" value="abidar_save_settings" />
@@ -692,10 +794,10 @@ class Abidar_Admin_Settings {
 				<!-- ================================================================
 				     تب ۱: تنظیمات طرح، چیدمان، رنگ‌ها و آپلود فونت اختصاصی
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'layout' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="layout">
+				<section class="abidar-admin-panel <?php echo ( 'layout' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="layout" aria-hidden="<?php echo ( 'layout' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات طرح و چیدمان، رنگ‌بندی، تایپوگرافی و فونت اختصاصی', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="layout-settings">
 							<h3><?php esc_html_e( 'ابعاد کانتینر و چیدمان صفحات', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'حالت چیدمان کلی قالب:', 'abidar-group' ); ?>
 								<select name="abidar[layout_mode]">
@@ -715,7 +817,7 @@ class Abidar_Admin_Settings {
 							</label>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="colors">
 							<h3><?php esc_html_e( 'پالت رنگ سازمانی گروه آبیدر', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'رنگ اصلی برند (طلایی معدنی و صنعتی):', 'abidar-group' ); ?>
 								<input type="text" name="abidar[primary_color]" value="<?php echo esc_attr( $options['primary_color'] ); ?>" class="abidar-color-picker" />
@@ -731,7 +833,7 @@ class Abidar_Admin_Settings {
 							</label>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="fonts">
 							<h3><?php esc_html_e( 'سایز فونت‌ها و بارگذاری فونت اختصاصی (WOFF2 / TTF)', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'سایز پایه متن سایت (px):', 'abidar-group' ); ?>
 								<input type="number" name="abidar[base_font_size]" value="<?php echo esc_attr( $options['base_font_size'] ); ?>" min="13" max="22" />
@@ -756,7 +858,7 @@ class Abidar_Admin_Settings {
 							</label>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="header-footer">
 							<h3><?php esc_html_e( 'چیدمان هدر و فوتر (پیش‌فرض یا ساخته‌شده با المنتور رایگان)', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'طرح هدر سایت:', 'abidar-group' ); ?>
 								<select name="abidar[header_layout]">
@@ -786,10 +888,10 @@ class Abidar_Admin_Settings {
 				<!-- ================================================================
 				     تب ۲: تنظیمات ناوبری موبایل
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'mobile-nav' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="mobile-nav">
+				<section class="abidar-admin-panel <?php echo ( 'mobile-nav' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="mobile-nav" aria-hidden="<?php echo ( 'mobile-nav' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات ناوبری حرفه‌ای موبایل (چیدمان‌های متفاوت + تعریف دکمه‌ها و لینک‌ها)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="mobile-settings">
 							<h3><?php esc_html_e( 'چیدمان و عملکرد منوی موبایل', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[mobile_nav_enabled]" value="1" <?php checked( $options['mobile_nav_enabled'], true ); ?> />
@@ -814,7 +916,7 @@ class Abidar_Admin_Settings {
 							</label>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="mobile-buttons">
 							<h3><?php esc_html_e( 'تعریف دکمه‌ها و لینک‌های نوار ناوبری موبایل', 'abidar-group' ); ?></h3>
 							<p class="description">
 								<?php esc_html_e( 'هر ردیف یک دکمه در منوی موبایل است. با دکمه «افزودن دکمه» ردیف تازه بسازید و با «حذف» ردیف اضافی را بردارید. حذف پس از ذخیره تنظیمات قطعی می‌شود.', 'abidar-group' ); ?>
@@ -847,10 +949,10 @@ class Abidar_Admin_Settings {
 				<!-- ================================================================
 				     تب ۳: تنظیمات دکمه شناور تماس با ما و بخش‌های مختلف هلدینگ
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'floating-contact' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="floating-contact">
+				<section class="abidar-admin-panel <?php echo ( 'floating-contact' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="floating-contact" aria-hidden="<?php echo ( 'floating-contact' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات دکمه شناور ارتباط چندبخشی و شبکه‌های اجتماعی', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="floating-general">
 							<h3><?php esc_html_e( 'تنظیمات عمومی و لینک شبکه‌های اجتماعی', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[floating_contact_enabled]" value="1" <?php checked( $options['floating_contact_enabled'], true ); ?> />
@@ -879,7 +981,7 @@ class Abidar_Admin_Settings {
 							</label>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="floating-depts">
 							<h3><?php esc_html_e( 'مدیریت بخش‌های مختلف در دکمه شناور تماس (معادن، انرژی، نفت، بین‌الملل و...)', 'abidar-group' ); ?></h3>
 							<p class="description"><?php esc_html_e( 'کاربر با کلیک روی دکمه شناور، لیست این بخش‌ها را مشاهده کرده و مستقیماً با همان بخش تماس می‌گیرد.', 'abidar-group' ); ?></p>
 							<div id="abidar-departments-list" class="abidar-repeater-list">
@@ -939,15 +1041,16 @@ class Abidar_Admin_Settings {
 								<?php esc_html_e( 'اگر هیچ بخشی تعریف نشود، سایت از بخش‌های پیش‌فرض (معادن، انرژی، نفت و گاز، بین‌الملل) استفاده می‌کند.', 'abidar-group' ); ?>
 							</p>
 					</div>
+					</div>
 				</section>
 
 				<!-- ================================================================
 				     تب ۴: تنظیمات قالب مقاله و پست‌ها
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'blog' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="blog">
+				<section class="abidar-admin-panel <?php echo ( 'blog' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="blog" aria-hidden="<?php echo ( 'blog' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات قالب پیش‌فرض مقاله و پست‌های خبری هلدینگ', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="blog-layout">
 							<h3><?php esc_html_e( 'انتخاب قالب پیش‌فرض نمایش مقالات (Single Post Template)', 'abidar-group' ); ?></h3>
 							<p class="description"><?php esc_html_e( 'هر مقاله‌ای که در بخش نوشته‌های وردپرس منتشر شود، به صورت خودکار با این قالب حرفه‌ای نمایش داده می‌شود.', 'abidar-group' ); ?></p>
 							<label><?php esc_html_e( 'طرح قالب مقاله:', 'abidar-group' ); ?>
@@ -984,10 +1087,10 @@ class Abidar_Admin_Settings {
 				<!-- ================================================================
 				     تب ۵: تنظیمات پیش‌بارگذاری سایت (Preloader)
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'preloader' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="preloader">
+				<section class="abidar-admin-panel <?php echo ( 'preloader' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="preloader" aria-hidden="<?php echo ( 'preloader' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات پیش‌بارگذاری سایت (Preloader)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="preloader-settings">
 							<h3><?php esc_html_e( 'استایل و زمان‌بندی پیش‌بارگذاری', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[preloader_enabled]" value="1" <?php checked( $options['preloader_enabled'], true ); ?> />
@@ -1016,10 +1119,10 @@ class Abidar_Admin_Settings {
 				<!-- ================================================================
 				     تب ۶: تنظیمات امنیت سایت (High-Security Suite)
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'security' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="security">
+				<section class="abidar-admin-panel <?php echo ( 'security' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="security" aria-hidden="<?php echo ( 'security' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'سپر امنیتی پیشرفته گروه آبیدر (تغییر آدرس ادمین، محدودیت ورود، ضد اسپم)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="security-login">
 							<h3><?php esc_html_e( '۱. تغییر آدرس ورود ادمین و مخفی‌سازی wp-login.php', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[security_custom_login_enabled]" value="1" <?php checked( $options['security_custom_login_enabled'], true ); ?> />
@@ -1039,7 +1142,7 @@ class Abidar_Admin_Settings {
 							</p>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="security-brute">
 							<h3><?php esc_html_e( '۲. محدودیت تعداد تلاش ورود و جلوگیری از ورود بیش از حد (Brute-Force)', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[security_limit_login_enabled]" value="1" <?php checked( $options['security_limit_login_enabled'], true ); ?> />
@@ -1051,6 +1154,13 @@ class Abidar_Admin_Settings {
 							<label><?php esc_html_e( 'مدت زمان مسدودسازی مهاجم (دقیقه):', 'abidar-group' ); ?>
 								<input type="number" name="abidar[security_lockout_duration]" value="<?php echo esc_attr( $options['security_lockout_duration'] ); ?>" min="5" max="1440" />
 							</label>
+						</div>
+
+						<div class="abidar-admin-card" id="security-ip">
+							<h3><?php esc_html_e( '۲ب. لیست سفید IPهای مجاز', 'abidar-group' ); ?></h3>
+							<p class="description">
+								<?php esc_html_e( 'این آی‌پی‌ها هرگز مسدود نمی‌شوند و محدودیت تلاش ورود برایشان اعمال نمی‌شود. اگر پشت VPN یا پراکسی هستید، آی‌پی خود را اینجا وارد کنید تا از پیشخوان قفل نشوید.', 'abidar-group' ); ?>
+							</p>
 							<label><?php esc_html_e( 'لیست سفید IPهای مجاز:', 'abidar-group' ); ?>
 								<textarea name="abidar[security_ip_whitelist]" rows="4" dir="ltr" placeholder="203.0.113.10&#10;198.51.100.0/24"><?php echo esc_textarea( $options['security_ip_whitelist'] ); ?></textarea>
 							</label>
@@ -1087,7 +1197,7 @@ class Abidar_Admin_Settings {
 							</label>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="security-log">
 							<h3><?php esc_html_e( '۴. گزارش زنده رویدادهای امنیتی ثبت‌شده', 'abidar-group' ); ?></h3>
 							<table class="widefat striped">
 								<thead>
@@ -1116,10 +1226,10 @@ class Abidar_Admin_Settings {
 				<!-- ================================================================
 				     تب ۷: تنظیمات زبان سایت (سه زبان پیش‌فرض + افزودن زبان جدید)
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'languages' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="languages">
+				<section class="abidar-admin-panel <?php echo ( 'languages' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="languages" aria-hidden="<?php echo ( 'languages' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'مدیریت سیستم چندزبانه (فارسی، انگلیسی، چینی + افزودن زبان جدید)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="lang-default">
 							<h3><?php esc_html_e( 'سه زبان پیش‌فرض فعال در هسته قالب', 'abidar-group' ); ?></h3>
 							<p><?php esc_html_e( 'زبان‌های فارسی (RTL)، انگلیسی (LTR) و چینی (中文 LTR) به صورت پیش‌فرض با دیکشنری کامل در قالب فعال هستند.', 'abidar-group' ); ?></p>
 							<label><?php esc_html_e( 'طرح نمایش انتخاب‌گر زبان (در هدر و ویجت تغییر زبان):', 'abidar-group' ); ?>
@@ -1156,7 +1266,7 @@ class Abidar_Admin_Settings {
 							</label>
 						</div>
 
-						<div class="abidar-admin-card">
+						<div class="abidar-admin-card" id="lang-custom">
 							<h3><?php esc_html_e( 'افزودن زبان‌های اضافی (جدا از سه زبان پیش‌فرض)', 'abidar-group' ); ?></h3>
 							<p class="description">
 								<?php esc_html_e( 'سه زبان فارسی، انگلیسی و چینی همیشه فعال‌اند. هر زبان دیگری که لازم دارید اینجا اضافه کنید؛ کد زبان باید استاندارد باشد (مثلاً ar برای عربی، ru برای روسی، tr برای ترکی).', 'abidar-group' ); ?>
@@ -1198,9 +1308,9 @@ class Abidar_Admin_Settings {
 				<!-- ================================================================
 				     تب ۸: ساخت خودکار برگه‌های دمو و داده‌های المنتور
 				     ================================================================ -->
-				<section class="abidar-admin-panel <?php echo ( 'demo' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="demo">
+				<section class="abidar-admin-panel <?php echo ( 'demo' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="demo" aria-hidden="<?php echo ( 'demo' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'ساخت خودکار برگه‌های دمو با صفحه‌ساز المنتور', 'abidar-group' ); ?></h2>
-					<div class="abidar-admin-card">
+					<div class="abidar-admin-card" id="demo-import">
 						<p><?php esc_html_e( 'با کلیک روی دکمه زیر، تمامی ۷ برگه اصلی (صفحه اصلی، درباره ما، خدمات، پروژه‌ها، تیم ما، مدارک و اسناد، تماس با ما) در بخش «برگه‌ها»ی وردپرس ایجاد شده و ساختار کامل المان‌های اختصاصی المنتور روی آن‌ها بارگذاری می‌گردد.', 'abidar-group' ); ?></p>
 						<button type="button" class="button button-primary button-hero" id="abidar-run-demo-importer">
 							<?php esc_html_e( 'ساخت و بازسازی تمام برگه‌های دمو المنتور و محتوای نمونه', 'abidar-group' ); ?>
@@ -1209,7 +1319,7 @@ class Abidar_Admin_Settings {
 					</div>
 				</section>
 
-				<section class="abidar-admin-panel <?php echo ( 'diagnostics' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="diagnostics">
+				<section id="diagnostics-status" class="abidar-admin-panel <?php echo ( 'diagnostics' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="diagnostics" aria-hidden="<?php echo ( 'diagnostics' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'عیب‌یابی ویرایشگر المنتور', 'abidar-group' ); ?></h2>
 					<?php self::render_diagnostics_panel(); ?>
 				</section>
@@ -1220,7 +1330,10 @@ class Abidar_Admin_Settings {
 					</button>
 				</div>
 			</form>
-		</div>
+
+				</div><!-- /.abidar-admin-content -->
+			</div><!-- /.abidar-admin-shell -->
+		</div><!-- /.abidar-admin-wrap -->
 		<?php
 	}
 }

@@ -63,51 +63,137 @@
 	};
 
 	/* ======================================================================
-	 * 02. TABS
-	 * ==================================================================== */
-	const initTabs = () => {
-		const tabs = $( '.abidar-admin-tab' );
+	 * 02. VERTICAL SETTINGS MENU
+	 * ====================================================================
+	 * سایدبار عمودی: هر گروه اصلی یک پنل کامل نشان می‌دهد و زیرگروه‌ها
+	 * داخل همان پنل به بخش مربوطه اسکرول می‌کنند. چون همه چیز در یک فرم
+	 * است، جابه‌جایی بین گروه‌ها هیچ ورودی‌ای را از دست نمی‌دهد.
+	 */
+	const initSettingsMenu = () => {
+		const menuLinks = $( '.abidar-admin-menu__link' );
 		const panels = $( '.abidar-admin-panel' );
 		const hiddenInput = $( '#abidar-active-tab-input' );
 		const panelInput = $( '[data-abidar-panel-mirror]' );
 
-		if ( ! tabs.length || ! panels.length ) {
+		if ( ! menuLinks.length || ! panels.length ) {
 			return;
 		}
 
-		tabs.on( 'click', function ( event ) {
+		/**
+		 * فعال کردن یک گروه: پنلش را نشان می‌دهد و بقیه را پنهان می‌کند.
+		 *
+		 * @param {string} target شناسه گروه.
+		 */
+		const activateGroup = ( target ) => {
+			menuLinks
+				.removeClass( 'is-active' )
+				.attr( 'aria-expanded', 'false' )
+				.closest( '.abidar-admin-menu__group' )
+				.removeClass( 'is-active' );
+
+			const link = menuLinks.filter( '[data-tab-target="' + target + '"]' );
+			link.addClass( 'is-active' )
+				.attr( 'aria-expanded', 'true' )
+				.closest( '.abidar-admin-menu__group' )
+				.addClass( 'is-active' );
+
+			panels.removeClass( 'is-active' ).attr( 'aria-hidden', 'true' );
+			$( '[data-tab-panel="' + target + '"]' ).addClass( 'is-active' ).attr( 'aria-hidden', 'false' );
+
+			if ( hiddenInput.length ) {
+				hiddenInput.val( target );
+			}
+
+			if ( panelInput.length ) {
+				panelInput.val( target );
+			}
+		};
+
+		menuLinks.on( 'click', function ( event ) {
 			const target = $( this ).data( 'tab-target' );
 
-			// اگر لینک تب به صفحه فعلی اشاره دارد، فقط نمایش را تغییر می‌دهیم (بدون بارگذاری مجدد).
-			if ( target && $( '[data-tab-panel="' + target + '"]' ).length ) {
-				event.preventDefault();
+			if ( ! target || ! $( '[data-tab-panel="' + target + '"]' ).length ) {
+				return;
+			}
 
-				tabs.removeClass( 'is-active' ).attr( 'aria-selected', 'false' );
-				$( this ).addClass( 'is-active' ).attr( 'aria-selected', 'true' );
+			event.preventDefault();
+			activateGroup( target );
 
-				panels.removeClass( 'is-active' ).attr( 'aria-hidden', 'true' );
-				$( '[data-tab-panel="' + target + '"]' ).addClass( 'is-active' ).attr( 'aria-hidden', 'false' );
+			// آدرس صفحه به‌روز می‌شود تا رفرش روی همان گروه بماند.
+			if ( window.history && window.history.replaceState ) {
+				const url = new URL( window.location.href );
+				url.searchParams.set( 'page', 'abidar-settings' );
+				url.searchParams.set( 'tab', target );
+				window.history.replaceState( {}, '', url.toString() );
+			}
 
-				if ( hiddenInput.length ) {
-					hiddenInput.val( target );
-				}
-
-				if ( panelInput.length ) {
-					panelInput.val( target );
-				}
-
-				// به‌روزرسانی آدرس صفحه برای قابلیت بوکمارک بدون بارگذاری مجدد.
-				if ( window.history && window.history.replaceState ) {
-					const url = new URL( window.location.href );
-					url.searchParams.set( 'page', 'abidar-settings' );
-					url.searchParams.set( 'tab', target );
-					window.history.replaceState( {}, '', url.toString() );
-				}
+			// در موبایل، بعد از انتخاب گروه صفحه به بالای محتوا برمی‌گردد.
+			const content = $( '.abidar-admin-content' );
+			if ( content.length && window.matchMedia( '(max-width: 960px)' ).matches ) {
+				window.scrollTo( { top: content.offset().top - 40, behavior: 'smooth' } );
 			}
 		} );
 
-		tabs.attr( 'role', 'tab' );
-		panels.attr( 'role', 'tabpanel' );
+		/**
+		 * زیرگروه‌ها: اسکرول نرم به بخش مربوطه داخل همان پنل.
+		 */
+		$( document ).on( 'click', '.abidar-admin-submenu__link', function ( event ) {
+			const anchor = $( this ).data( 'scroll-target' );
+			if ( ! anchor ) {
+				return;
+			}
+
+			const section = document.getElementById( anchor );
+			if ( ! section ) {
+				return;
+			}
+
+			event.preventDefault();
+			section.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+
+			$( '.abidar-admin-submenu__link' ).removeClass( 'is-active' );
+			$( this ).addClass( 'is-active' );
+
+			// بخش هدف چند لحظه هایلایت می‌شود تا کاربر بفهمد کجا رفت.
+			$( section ).addClass( 'is-highlighted' );
+			window.setTimeout( () => $( section ).removeClass( 'is-highlighted' ), 1400 );
+		} );
+
+		// اگر آدرس صفحه شامل #anchor باشد، بعد از بارگذاری همان بخش باز شود.
+		if ( window.location.hash ) {
+			const hash = window.location.hash.replace( '#', '' );
+			const target = document.getElementById( hash );
+			if ( target ) {
+				window.setTimeout( () => target.scrollIntoView( { behavior: 'smooth', block: 'start' } ), 200 );
+			}
+		}
+	};
+
+	/* ======================================================================
+	 * 02b. MOBILE MENU TOGGLE
+	 * ====================================================================
+	 * در موبایل سایدبار جمع می‌شود و با یک دکمه باز/بسته می‌شود.
+	 */
+	const initSidebarToggle = () => {
+		const toggle = $( '#abidar-menu-toggle' );
+		const sidebar = $( '.abidar-admin-sidebar' );
+
+		if ( ! toggle.length || ! sidebar.length ) {
+			return;
+		}
+
+		toggle.on( 'click', () => {
+			const isOpen = sidebar.toggleClass( 'is-open' ).hasClass( 'is-open' );
+			toggle.attr( 'aria-expanded', isOpen ? 'true' : 'false' );
+		} );
+
+		// انتخاب یک گروه، سایدبار موبایل را می‌بندد.
+		$( document ).on( 'click', '.abidar-admin-menu__link', () => {
+			if ( window.matchMedia( '(max-width: 960px)' ).matches ) {
+				sidebar.removeClass( 'is-open' );
+				toggle.attr( 'aria-expanded', 'false' );
+			}
+		} );
 	};
 
 	/* ======================================================================
@@ -442,7 +528,8 @@
 	 * ==================================================================== */
 	$( document ).ready( () => {
 		initColorPickers();
-		initTabs();
+		initSettingsMenu();
+		initSidebarToggle();
 		initMediaUploader();
 		initRepeaters();
 		initDemoImporter();

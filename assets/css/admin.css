@@ -138,46 +138,224 @@
 	background: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* --- Tabs --- */
-.abidar-admin-tabs {
+/* --- Shell: سایدبار عمودی + محتوا --- */
+.abidar-admin-shell {
+	display: grid;
+	grid-template-columns: 250px minmax(0, 1fr);
+	gap: 18px;
+	align-items: start;
+}
+
+/* --- فهرست عمودی تنظیمات --- */
+.abidar-admin-sidebar {
+	position: sticky;
+	top: 46px;
+	max-height: calc(100vh - 70px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
+}
+
+.abidar-admin-menu {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 6px;
-	padding: 8px;
+	flex-direction: column;
+	gap: 3px;
 	background: #fff;
 	border: 1px solid #dcdcde;
 	border-radius: 12px;
-	margin-bottom: 18px;
+	padding: 8px;
 	box-shadow: 0 2px 8px rgba(11, 25, 44, 0.05);
 }
 
-.abidar-admin-tab {
-	display: inline-flex;
-	align-items: center;
-	padding: 9px 15px;
-	border-radius: 8px;
-	font-size: 0.82rem;
-	font-weight: 700;
-	color: #475569;
-	text-decoration: none;
-	transition: all 0.22s ease;
-	white-space: nowrap;
+.abidar-admin-menu__group {
+	border-radius: 9px;
 }
 
-.abidar-admin-tab:hover {
+/* گروه فعال یک زمینهٔ ملایم می‌گیرد تا مسیر فعلی واضح باشد. */
+.abidar-admin-menu__group.is-active {
+	background: rgba(217, 119, 6, 0.05);
+}
+
+.abidar-admin-menu__link {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 10px 11px;
+	border-radius: 9px;
+	font-size: 0.83rem;
+	font-weight: 700;
+	color: #334155;
+	text-decoration: none;
+	transition: background-color 0.18s ease, color 0.18s ease;
+	line-height: 1.5;
+}
+
+.abidar-admin-menu__link .dashicons {
+	font-size: 17px;
+	width: 17px;
+	height: 17px;
+	flex: 0 0 auto;
+	color: #64748b;
+	transition: color 0.18s ease;
+}
+
+.abidar-admin-menu__text {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+
+/* فلش گروه‌ها: با باز شدن گروه ۱۸۰ درجه می‌چرخد. */
+.abidar-admin-menu__chevron {
+	width: 7px;
+	height: 7px;
+	flex: 0 0 auto;
+	border-right: 1.8px solid #94a3b8;
+	border-bottom: 1.8px solid #94a3b8;
+	transform: rotate(-45deg);
+	transition: transform 0.22s ease;
+	margin-inline-start: 2px;
+}
+
+.abidar-admin-menu__group.is-active .abidar-admin-menu__chevron {
+	transform: rotate(45deg);
+	border-color: #b45309;
+}
+
+.abidar-admin-menu__link:hover {
+	background: rgba(148, 163, 184, 0.13);
+	color: #0b192c;
+}
+
+.abidar-admin-menu__link:hover .dashicons {
+	color: #d97706;
+}
+
+.abidar-admin-menu__link:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px #d97706;
+}
+
+.abidar-admin-menu__link.is-active {
+	background: linear-gradient(135deg, #d97706, #b45309);
+	color: #fff;
+	box-shadow: 0 5px 14px rgba(217, 119, 6, 0.28);
+}
+
+.abidar-admin-menu__link.is-active .dashicons {
+	color: #fff;
+}
+
+/* --- زیرگروه‌ها --- */
+.abidar-admin-submenu {
+	list-style: none;
+	margin: 0;
+	padding: 0 0 6px;
+	display: none;
+}
+
+.abidar-admin-menu__group.is-active .abidar-admin-submenu {
+	display: block;
+}
+
+.abidar-admin-submenu__link {
+	display: block;
+	padding: 6px 11px 6px 30px;
+	font-size: 0.77rem;
+	font-weight: 600;
+	color: #64748b;
+	text-decoration: none;
+	border-radius: 7px;
+	position: relative;
+	transition: color 0.16s ease, background-color 0.16s ease;
+	overflow-wrap: anywhere;
+}
+
+/* نقطه راهنما کنار هر زیرگروه، با جهت صفحه هماهنگ است. */
+.abidar-admin-submenu__link::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 16px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: currentColor;
+	opacity: 0.45;
+}
+
+.abidar-admin-submenu__link:hover,
+.abidar-admin-submenu__link.is-active {
+	color: #b45309;
 	background: rgba(217, 119, 6, 0.08);
+}
+
+.abidar-admin-submenu__link.is-active::before {
+	opacity: 1;
+	background: #d97706;
+	box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18);
+}
+
+.abidar-admin-submenu__link:focus {
+	outline: none;
+	box-shadow: 0 0 0 2px #d97706;
+}
+
+/* --- دکمه سایدبار در موبایل --- */
+.abidar-admin-menu-toggle {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	width: 100%;
+	padding: 11px 14px;
+	margin-bottom: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 10px;
+	background: #fff;
+	font-family: inherit;
+	font-size: 0.84rem;
+	font-weight: 700;
+	color: #0b192c;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(11, 25, 44, 0.05);
+}
+
+.abidar-admin-menu-toggle .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+	color: #d97706;
+}
+
+.abidar-admin-menu-toggle:hover {
+	border-color: #d97706;
 	color: #b45309;
 }
 
-.abidar-admin-tab.is-active {
-	background: linear-gradient(135deg, #d97706, #b45309);
-	color: #fff;
-	box-shadow: 0 6px 16px rgba(217, 119, 6, 0.3);
-}
-
-.abidar-admin-tab:focus {
+.abidar-admin-menu-toggle:focus {
 	outline: none;
 	box-shadow: 0 0 0 2px #d97706;
+}
+
+/* --- محتوای تنظیمات --- */
+.abidar-admin-content {
+	min-width: 0;
+}
+
+/* بخشی که از سایدبار هدف گرفته شده، لحظه‌ای هایلایت می‌شود. */
+.abidar-admin-card.is-highlighted {
+	animation: abidar-card-flash 1.4s ease;
+}
+
+@keyframes abidar-card-flash {
+	0% {
+		box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.55);
+	}
+	100% {
+		box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+	}
 }
 
 /* --- Panels --- */
@@ -188,6 +366,7 @@
 .abidar-admin-panel {
 	display: none;
 	animation: abidar-admin-fade 0.3s ease;
+	scroll-margin-top: 60px;
 }
 
 .abidar-admin-panel.is-active {
@@ -244,6 +423,7 @@
 }
 
 .abidar-admin-card {
+	scroll-margin-top: 60px;
 	background: #fff;
 	border: 1px solid #dcdcde;
 	border-radius: 12px;
@@ -578,6 +758,17 @@
 	}
 }
 
+@media (max-width: 1100px) {
+	.abidar-admin-shell {
+		grid-template-columns: 218px minmax(0, 1fr);
+		gap: 14px;
+	}
+}
+
+/*
+ * زیر ۹۶۰ پیکسل سایدبار از کنار کنار می‌رود و به یک منوی بازشو تبدیل می‌شود.
+ * بدون این، ستون ۲۵۰ پیکسلی تمام عرض محتوا را در تبلت و موبایل می‌خورد.
+ */
 @media (max-width: 960px) {
 	.abidar-admin-grid {
 		grid-template-columns: 1fr;
@@ -585,6 +776,49 @@
 
 	.abidar-admin-header {
 		padding: 20px;
+	}
+
+	.abidar-admin-shell {
+		display: block;
+	}
+
+	.abidar-admin-menu-toggle {
+		display: flex;
+	}
+
+	.abidar-admin-sidebar {
+		position: static;
+		max-height: none;
+		overflow: visible;
+		display: none;
+		margin-bottom: 14px;
+	}
+
+	.abidar-admin-sidebar.is-open {
+		display: block;
+	}
+
+	/* در حالت بازشو، فهرست دو ستونه می‌شود تا ارتفاع کمتری بگیرد. */
+	.abidar-admin-menu {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 4px;
+	}
+
+	.abidar-admin-menu__group {
+		min-width: 0;
+	}
+
+	.abidar-admin-menu__group.is-active {
+		grid-column: 1 / -1;
+	}
+
+	.abidar-admin-submenu {
+		padding-bottom: 8px;
+	}
+
+	.abidar-admin-submenu__link {
+		padding-inline-start: 30px;
 	}
 }
 
@@ -627,16 +861,13 @@
 		grid-template-columns: 1fr;
 	}
 
-	/* تب‌ها فقط داخل خودشان اسکرول شوند، نه کل صفحه. */
-	.abidar-admin-tabs {
-		overflow-x: auto;
-		flex-wrap: nowrap;
-		-webkit-overflow-scrolling: touch;
-		scrollbar-width: thin;
+	/* در موبایل فهرست تک‌ستونه می‌شود تا برچسب‌ها کامل خوانده شوند. */
+	.abidar-admin-menu {
+		grid-template-columns: 1fr;
 	}
 
-	.abidar-admin-tab {
-		flex: 0 0 auto;
+	.abidar-admin-panel > h2 {
+		font-size: 0.98rem;
 	}
 
 	.abidar-admin-card {
