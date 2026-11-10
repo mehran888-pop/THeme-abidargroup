@@ -637,7 +637,14 @@ class Abidar_Widget_Hero_Power extends Abidar_Elementor_Widget_Base {
 				$attrs .= sprintf( ' data-count-decimals="%s"', esc_attr( $m['decimals'] ) );
 			}
 
-			$display = ( ! empty( $m['prefix'] ) ? $m['prefix'] : '' ) . number_format( (float) $m['num'], isset( $m['decimals'] ) ? (int) $m['decimals'] : 0 ) . ( ! empty( $m['suffix'] ) ? $m['suffix'] : '' );
+			/*
+			 * جداکننده هزارگان باید با شمارنده JS یکی باشد (en-US با کاما).
+			 * پیش‌تر number_format بدون جداکننده بود: عدد اولیه «4200» دیده
+			 * می‌شد و لحظه‌ای که انیمیشن شروع می‌شد به «4,200» می‌پرید.
+			 */
+			$display = ( ! empty( $m['prefix'] ) ? $m['prefix'] : '' )
+				. number_format( (float) $m['num'], isset( $m['decimals'] ) ? (int) $m['decimals'] : 0, '.', ',' )
+				. ( ! empty( $m['suffix'] ) ? $m['suffix'] : '' );
 
 			printf(
 				'<div class="abidar-hp__metric"><strong class="abidar-hp__metric-num"><span %s dir="ltr">%s</span></strong><span class="abidar-hp__metric-label">%s</span></div>',
