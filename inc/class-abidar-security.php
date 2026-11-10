@@ -606,6 +606,99 @@ class Abidar_Security {
 		}
 		return $logs;
 	}
+
+	/**
+	 * دریافت یک صفحه از گزارش امنیتی با فیلتر و جست‌وجو.
+	 *
+	 * گزارش زنده تا ۵۰ رویداد نگه می‌دارد و نمایش همه آن‌ها در یک جدول، پنل را
+	 * شلوغ و کند می‌کند. این متد صفحه‌بندی می‌کند تا مدیر فقط همان تعدادی را
+	 * ببیند که خواسته و بتواند بین رویدادها جست‌وجو یا بر اساس نوع فیلتر کند.
+	 *
+	 * @param array $args {
+	 *     @type int    $page     شماره صفحه (از ۱).
+	 *     @type int    $per_page تعداد رویداد در هر صفحه.
+	 *     @type string $type     فیلتر نوع رویداد؛ خالی یعنی همه.
+	 *     @type string $search   جست‌وجو در شرح و IP.
+	 * }
+	 * @return array {
+	 *     @type array $items      رویدادهای همین صفحه.
+	 *     @type int   $total      کل رویدادهای مطابق فیلتر.
+	 *     @type int   $page       صفحه جاری.
+	 *     @type int   $per_page   تعداد در هر صفحه.
+	 *     @type int   $pages      کل صفحات.
+	 *     @type array $types      همه نوع‌های موجود با تعداد.
+	 * }
+	 */
+	public static function get_security_logs_page( $args = array() ) {
+		$defaults = array(
+			'page'     => 1,
+			'per_page' => 10,
+			'type'     => '',
+			'search'   => '',
+		);
+		$args     = wp_parse_args( $args, $defaults );
+
+		$per_page = max( 1, min( 50, (int) $args['per_page'] ) );
+		$page     = max( 1, (int) $args['page'] );
+
+		$all = self::get_security_logs();
+
+		// شمارش نوع‌ها پیش از فیلتر، تا فهرست کشویی همیشه کامل بماند.
+		$types = array();
+		foreach ( $all as $row ) {
+			$type = isset( $row['type'] ) ? $row['type'] : 'unknown';
+			$types[ $type ] = isset( $types[ $type ] ) ? $types[ $type ] + 1 : 1;
+		}
+		arsort( $types );
+
+		$type   = sanitize_key( $args['type'] );
+		$search = trim( (string) $args['search'] );
+
+		$filtered = array();
+		foreach ( $all as $row ) {
+			if ( '' !== $type && ( isset( $row['type'] ) ? $row['type'] : '' ) !== $type ) {
+				continue;
+			}
+
+			if ( '' !== $search ) {
+				$haystack = ( isset( $row['details'] ) ? $row['details'] : '' ) . ' ' . ( isset( $row['ip'] ) ? $row['ip'] : '' ) . ' ' . ( isset( $row['type'] ) ? $row['type'] : '' );
+				// mbstring همیشه روی هاست‌های وردپرس فعال نیست؛ در نبودش به stripos برگرد.
+				$found = function_exists( 'mb_stripos' )
+					? mb_stripos( $haystack, $search )
+					: stripos( $haystack, $search );
+
+				if ( false === $found ) {
+					continue;
+				}
+			}
+
+			$filtered[] = $row;
+		}
+
+		$total = count( $filtered );
+		$pages = (int) ceil( $total / $per_page );
+		$pages = max( 1, $pages );
+		$page  = min( $page, $pages );
+
+		return array(
+			'items'    => array_slice( $filtered, ( $page - 1 ) * $per_page, $per_page ),
+			'total'    => $total,
+			'all'      => count( $all ),
+			'page'     => $page,
+			'per_page' => $per_page,
+			'pages'    => $pages,
+			'types'    => $types,
+		);
+	}
+
+	/**
+	 * پاک کردن کامل گزارش امنیتی.
+	 *
+	 * @return bool
+	 */
+	public static function clear_security_logs() {
+		return delete_option( self::LOG_OPTION_KEY );
+	}
 }
 
 Abidar_Security::init();

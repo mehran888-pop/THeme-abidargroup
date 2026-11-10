@@ -457,6 +457,60 @@
 	};
 
 	/* ======================================================================
+	 * 04b. SECURITY LOG FILTER
+	 * ====================================================================
+	 * نوار ابزار گزارش امنیتی داخل فرم اصلی ذخیره تنظیمات است، پس نمی‌تواند
+	 * فرم مستقل داشته باشد. به‌جای آن مقادیر کنترل‌ها به آدرس صفحه اضافه
+	 * می‌شوند و صفحه با فیلتر جدید باز می‌شود.
+	 */
+	const initLogFilter = () => {
+		const toolbar = $( '[data-abidar-log-filter]' );
+		if ( ! toolbar.length ) {
+			return;
+		}
+
+		const applyFilters = () => {
+			const base = toolbar.data( 'base-url' );
+			if ( ! base ) {
+				return;
+			}
+
+			const url = new URL( base, window.location.origin );
+
+			toolbar.find( '[data-log-key]' ).each( function () {
+				const field = $( this );
+				const key = field.data( 'log-key' );
+				const value = field.val();
+
+				if ( value ) {
+					url.searchParams.set( key, value );
+				} else {
+					url.searchParams.delete( key );
+				}
+			} );
+
+			// با تغییر فیلتر، از صفحه اول شروع می‌کنیم.
+			url.searchParams.delete( 'log_page' );
+
+			window.location.href = url.toString();
+		};
+
+		toolbar.on( 'click', '[data-log-apply]', ( event ) => {
+			event.preventDefault();
+			applyFilters();
+		} );
+
+		// تغییر منوها فوراً اعمال می‌شود؛ جست‌وجو با Enter.
+		toolbar.on( 'change', 'select[data-log-key]', applyFilters );
+		toolbar.on( 'keydown', 'input[data-log-key]', ( event ) => {
+			if ( 'Enter' === event.key ) {
+				event.preventDefault();
+				applyFilters();
+			}
+		} );
+	};
+
+	/* ======================================================================
 	 * 05. DEMO IMPORTER (AJAX امن)
 	 * ==================================================================== */
 	const initDemoImporter = () => {
@@ -532,6 +586,7 @@
 		initSidebarToggle();
 		initMediaUploader();
 		initRepeaters();
+		initLogFilter();
 		initDemoImporter();
 		initLiveHints();
 	} );

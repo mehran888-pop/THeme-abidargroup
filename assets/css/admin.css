@@ -739,6 +739,122 @@
 	display: inline-block;
 }
 
+/* --- گزارش امنیتی: نوار ابزار، جدول و صفحه‌بندی --- */
+.abidar-log-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 10px;
+	padding: 12px;
+	margin-bottom: 12px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+}
+
+.abidar-log-toolbar__field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 1 1 160px;
+	min-width: 0;
+	margin: 0;
+}
+
+.abidar-log-toolbar__field--narrow {
+	flex: 0 0 110px;
+}
+
+.abidar-log-toolbar__field > span {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: #475569;
+}
+
+.abidar-log-toolbar__field select,
+.abidar-log-toolbar__field input {
+	width: 100%;
+	max-width: 100%;
+	min-height: 34px;
+	margin: 0 !important;
+	font-size: 0.8rem !important;
+}
+
+.abidar-log-toolbar .button {
+	flex: 0 0 auto;
+	min-height: 34px;
+	line-height: 1.6;
+}
+
+.abidar-log-summary {
+	margin: 0 0 10px;
+}
+
+.abidar-log-table {
+	margin-top: 4px;
+}
+
+/* جدول در پنل کوچک نباید صفحه را پهن کند. */
+.abidar-log-table td,
+.abidar-log-table th {
+	overflow-wrap: anywhere;
+	vertical-align: top;
+}
+
+.abidar-log-table td:nth-child(3),
+.abidar-log-table td:nth-child(4) {
+	white-space: nowrap;
+}
+
+.abidar-log-empty {
+	padding: 18px;
+	text-align: center;
+	font-size: 0.82rem;
+	color: #64748b;
+	background: #f8fafc;
+	border: 1px dashed #cbd5e1;
+	border-radius: 10px;
+}
+
+.abidar-log-pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-top: 12px;
+}
+
+.abidar-log-pagination .button.is-disabled,
+.abidar-log-pagination .button.disabled,
+.abidar-log-pagination .button[aria-disabled="true"] {
+	pointer-events: none;
+	opacity: 0.45;
+}
+
+.abidar-log-pagination__status {
+	font-size: 0.78rem;
+	font-weight: 700;
+	color: #475569;
+}
+
+@media (max-width: 782px) {
+	.abidar-log-toolbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.abidar-log-toolbar__field,
+	.abidar-log-toolbar__field--narrow {
+		flex: 1 1 auto;
+	}
+
+	.abidar-log-table td:nth-child(3),
+	.abidar-log-table td:nth-child(4) {
+		white-space: normal;
+	}
+}
+
 /* --- Demo importer status box --- */
 .abidar-demo-status {
 	display: flex;

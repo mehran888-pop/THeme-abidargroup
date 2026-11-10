@@ -1295,27 +1295,151 @@ class Abidar_Admin_Settings {
 						</div>
 
 						<div class="abidar-admin-card" id="security-log">
-							<h3><?php esc_html_e( '۴. گزارش زنده رویدادهای امنیتی ثبت‌شده', 'abidar-group' ); ?></h3>
-							<table class="widefat striped">
-								<thead>
-									<tr>
-										<th><?php esc_html_e( 'نوع رویداد', 'abidar-group' ); ?></th>
-										<th><?php esc_html_e( 'شرح امنیتی', 'abidar-group' ); ?></th>
-										<th><?php esc_html_e( 'آدرس IP', 'abidar-group' ); ?></th>
-										<th><?php esc_html_e( 'زمان', 'abidar-group' ); ?></th>
-									</tr>
-								</thead>
-								<tbody>
-									<?php foreach ( Abidar_Security::get_security_logs() as $log ) : ?>
+							<h3><?php esc_html_e( '۴. گزارش رویدادهای امنیتی', 'abidar-group' ); ?></h3>
+							<?php
+							/*
+							 * گزارش پیش‌تر همه ۵۰ ردیف را یک‌جا نشان می‌داد و پنل را
+							 * شلوغ می‌کرد. حالا صفحه‌بندی، فیلتر نوع رویداد و
+							 * جست‌وجو دارد و تعداد ردیف هر صفحه قابل انتخاب است.
+							 */
+							$log_page    = isset( $_GET['log_page'] ) ? max( 1, absint( wp_unslash( $_GET['log_page'] ) ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+							$log_type    = isset( $_GET['log_type'] ) ? sanitize_key( wp_unslash( $_GET['log_type'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+							$log_search  = isset( $_GET['log_s'] ) ? sanitize_text_field( wp_unslash( $_GET['log_s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+							$log_per     = isset( $_GET['log_per'] ) ? absint( wp_unslash( $_GET['log_per'] ) ) : 10; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+							$log_per     = in_array( $log_per, array( 5, 10, 25, 50 ), true ) ? $log_per : 10;
+
+							$log_data    = Abidar_Security::get_security_logs_page(
+								array(
+									'page'     => $log_page,
+									'per_page' => $log_per,
+									'type'     => $log_type,
+									'search'   => $log_search,
+								)
+							);
+							$log_base_url = add_query_arg( array( 'page' => 'abidar-settings', 'tab' => 'security' ), admin_url( 'admin.php' ) );
+							?>
+
+							<!--
+								نوار ابزار فیلتر. اینجا از <form> استفاده نمی‌کنیم چون کل
+								پنل داخل فرم اصلی ذخیره تنظیمات است و فرم تودرتو در HTML
+								نامعتبر است (مرورگر آن را می‌شکند). به‌جایش هر کنترل با
+								data-abidar-log-filter مقدارش را به آدرس اضافه می‌کند.
+							-->
+							<div class="abidar-log-toolbar"
+								data-abidar-log-filter
+								data-base-url="<?php echo esc_url( $log_base_url ); ?>">
+
+								<label class="abidar-log-toolbar__field">
+									<span><?php esc_html_e( 'نوع رویداد', 'abidar-group' ); ?></span>
+									<select data-log-key="log_type">
+										<option value=""><?php esc_html_e( 'همه رویدادها', 'abidar-group' ); ?></option>
+										<?php foreach ( $log_data['types'] as $type_key => $type_count ) : ?>
+											<option value="<?php echo esc_attr( $type_key ); ?>" <?php selected( $log_type, $type_key ); ?>>
+												<?php echo esc_html( $type_key . ' (' . $type_count . ')' ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</label>
+
+								<label class="abidar-log-toolbar__field">
+									<span><?php esc_html_e( 'جست‌وجو', 'abidar-group' ); ?></span>
+									<input type="search" data-log-key="log_s" value="<?php echo esc_attr( $log_search ); ?>" placeholder="<?php esc_attr_e( 'شرح یا آدرس IP', 'abidar-group' ); ?>" />
+								</label>
+
+								<label class="abidar-log-toolbar__field abidar-log-toolbar__field--narrow">
+									<span><?php esc_html_e( 'ردیف در صفحه', 'abidar-group' ); ?></span>
+									<select data-log-key="log_per">
+										<?php foreach ( array( 5, 10, 25, 50 ) as $per_option ) : ?>
+											<option value="<?php echo esc_attr( $per_option ); ?>" <?php selected( $log_per, $per_option ); ?>><?php echo esc_html( $per_option ); ?></option>
+										<?php endforeach; ?>
+									</select>
+								</label>
+
+								<button type="button" class="button button-primary" data-log-apply><?php esc_html_e( 'اعمال', 'abidar-group' ); ?></button>
+
+								<?php if ( '' !== $log_type || '' !== $log_search || 1 !== $log_page ) : ?>
+									<a href="<?php echo esc_url( $log_base_url ); ?>" class="button">
+										<?php esc_html_e( 'پاک کردن فیلترها', 'abidar-group' ); ?>
+									</a>
+								<?php endif; ?>
+							</div>
+
+							<p class="description abidar-log-summary">
+								<?php
+								printf(
+									/* translators: 1: shown count, 2: total matching, 3: total stored */
+									esc_html__( 'نمایش %1$s از %2$s رویداد مطابق فیلتر (از مجموع %3$s رویداد ذخیره‌شده). حداکثر ۵۰ رویداد اخیر نگه‌داری می‌شود.', 'abidar-group' ),
+									esc_html( count( $log_data['items'] ) ),
+									esc_html( $log_data['total'] ),
+									esc_html( $log_data['all'] )
+								);
+								?>
+							</p>
+
+							<?php if ( empty( $log_data['items'] ) ) : ?>
+								<div class="abidar-log-empty">
+									<?php esc_html_e( 'هیچ رویدادی با این فیلتر پیدا نشد.', 'abidar-group' ); ?>
+								</div>
+							<?php else : ?>
+								<table class="widefat striped abidar-log-table">
+									<thead>
 										<tr>
-											<td><code><?php echo esc_html( $log['type'] ); ?></code></td>
-											<td><?php echo esc_html( $log['details'] ); ?></td>
-											<td dir="ltr"><?php echo esc_html( $log['ip'] ); ?></td>
-											<td dir="ltr"><?php echo esc_html( $log['time'] ); ?></td>
+											<th><?php esc_html_e( 'نوع رویداد', 'abidar-group' ); ?></th>
+											<th><?php esc_html_e( 'شرح امنیتی', 'abidar-group' ); ?></th>
+											<th><?php esc_html_e( 'آدرس IP', 'abidar-group' ); ?></th>
+											<th><?php esc_html_e( 'زمان', 'abidar-group' ); ?></th>
 										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
+									</thead>
+									<tbody>
+										<?php foreach ( $log_data['items'] as $log ) : ?>
+											<tr>
+												<td><code><?php echo esc_html( $log['type'] ); ?></code></td>
+												<td><?php echo esc_html( $log['details'] ); ?></td>
+												<td dir="ltr"><?php echo esc_html( $log['ip'] ); ?></td>
+												<td dir="ltr"><?php echo esc_html( $log['time'] ); ?></td>
+											</tr>
+										<?php endforeach; ?>
+									</tbody>
+								</table>
+
+								<?php if ( $log_data['pages'] > 1 ) : ?>
+									<nav class="abidar-log-pagination" aria-label="<?php esc_attr_e( 'صفحه‌بندی گزارش امنیتی', 'abidar-group' ); ?>">
+										<?php
+										$page_link = function ( $target_page ) use ( $log_base_url, $log_type, $log_search, $log_per ) {
+											return add_query_arg(
+												array(
+													'log_page' => $target_page,
+													'log_type' => $log_type,
+													'log_s'    => $log_search,
+													'log_per'  => $log_per,
+												),
+												$log_base_url
+											);
+										};
+										?>
+										<a class="button <?php echo ( $log_data['page'] <= 1 ) ? 'disabled' : ''; ?>"
+										   href="<?php echo esc_url( $page_link( max( 1, $log_data['page'] - 1 ) ) ); ?>"
+										   <?php echo ( $log_data['page'] <= 1 ) ? 'aria-disabled="true" tabindex="-1"' : ''; ?>>
+											&larr; <?php esc_html_e( 'قبلی', 'abidar-group' ); ?>
+										</a>
+										<span class="abidar-log-pagination__status">
+											<?php
+											printf(
+												/* translators: 1: current page, 2: total pages */
+												esc_html__( 'صفحه %1$s از %2$s', 'abidar-group' ),
+												esc_html( $log_data['page'] ),
+												esc_html( $log_data['pages'] )
+											);
+											?>
+										</span>
+										<a class="button <?php echo ( $log_data['page'] >= $log_data['pages'] ) ? 'disabled' : ''; ?>"
+										   href="<?php echo esc_url( $page_link( min( $log_data['pages'], $log_data['page'] + 1 ) ) ); ?>"
+										   <?php echo ( $log_data['page'] >= $log_data['pages'] ) ? 'aria-disabled="true" tabindex="-1"' : ''; ?>>
+											<?php esc_html_e( 'بعدی', 'abidar-group' ); ?> &rarr;
+										</a>
+									</nav>
+								<?php endif; ?>
+							<?php endif; ?>
 						</div>
 					</div>
 				</section>
