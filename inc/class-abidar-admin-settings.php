@@ -141,7 +141,6 @@ class Abidar_Admin_Settings {
 			'custom_footer_id',
 			'mobile_breakpoint',
 			'post_related_count',
-			'blog_archive_columns',
 			'preloader_duration',
 			'security_max_login_attempts',
 			'security_lockout_duration',
@@ -275,7 +274,6 @@ class Abidar_Admin_Settings {
 			'security_block_user_enum',
 			'security_hide_wp_version',
 			'security_http_headers',
-			'multilang_enabled',
 		);
 		foreach ( $bool_fields as $field ) {
 			$options[ $field ] = ! empty( $posted[ $field ] );
@@ -815,6 +813,12 @@ class Abidar_Admin_Settings {
 							<label><?php esc_html_e( 'شعاع انحنای کارت‌ها و دکمه‌ها (Border Radius px):', 'abidar-group' ); ?>
 								<input type="number" name="abidar[border_radius]" value="<?php echo esc_attr( $options['border_radius'] ); ?>" min="0" max="36" />
 							</label>
+							<label><?php esc_html_e( 'فاصله عمودی بخش‌ها (Section Padding px):', 'abidar-group' ); ?>
+								<input type="number" name="abidar[section_padding]" value="<?php echo esc_attr( $options['section_padding'] ); ?>" min="40" max="160" />
+							</label>
+							<label><?php esc_html_e( 'نقطه شکست موبایل (px):', 'abidar-group' ); ?>
+								<input type="number" name="abidar[mobile_breakpoint]" value="<?php echo esc_attr( $options['mobile_breakpoint'] ); ?>" min="480" max="1024" />
+							</label>
 						</div>
 
 						<div class="abidar-admin-card" id="colors">
@@ -831,6 +835,12 @@ class Abidar_Admin_Settings {
 							<label><?php esc_html_e( 'رنگ پس‌زمینه بخش‌های تیره:', 'abidar-group' ); ?>
 								<input type="text" name="abidar[surface_dark_color]" value="<?php echo esc_attr( $options['surface_dark_color'] ); ?>" class="abidar-color-picker" />
 							</label>
+							<label><?php esc_html_e( 'رنگ پس‌زمینه بخش‌های روشن:', 'abidar-group' ); ?>
+								<input type="text" name="abidar[surface_light_color]" value="<?php echo esc_attr( $options['surface_light_color'] ); ?>" class="abidar-color-picker" />
+							</label>
+							<label><?php esc_html_e( 'رنگ متن اصلی:', 'abidar-group' ); ?>
+								<input type="text" name="abidar[text_main_color]" value="<?php echo esc_attr( $options['text_main_color'] ); ?>" class="abidar-color-picker" />
+							</label>
 						</div>
 
 						<div class="abidar-admin-card" id="fonts">
@@ -841,8 +851,29 @@ class Abidar_Admin_Settings {
 							<label><?php esc_html_e( 'سایز تیترهای H1 (px):', 'abidar-group' ); ?>
 								<input type="number" name="abidar[h1_font_size]" value="<?php echo esc_attr( $options['h1_font_size'] ); ?>" min="28" max="72" />
 							</label>
+							<h4 class="abidar-field-group-title"><?php esc_html_e( 'خانواده فونت هر زبان', 'abidar-group' ); ?></h4>
+							<p class="description">
+								<?php esc_html_e( 'هر زبان فونت خودش را می‌گیرد. اگر فونت اختصاصی آپلود کنید و نامش را پایین‌تر وارد کنید، همه زبان‌ها از آن استفاده می‌کنند.', 'abidar-group' ); ?>
+							</p>
+							<label><?php esc_html_e( 'فونت فارسی:', 'abidar-group' ); ?>
+								<input type="text" name="abidar[font_family_fa]" value="<?php echo esc_attr( $options['font_family_fa'] ); ?>" dir="ltr" placeholder="Vazirmatn, IRANSans, Tahoma" />
+							</label>
+							<label><?php esc_html_e( 'فونت انگلیسی:', 'abidar-group' ); ?>
+								<input type="text" name="abidar[font_family_en]" value="<?php echo esc_attr( $options['font_family_en'] ); ?>" dir="ltr" placeholder="Inter, Segoe UI" />
+							</label>
+							<label><?php esc_html_e( 'فونت چینی:', 'abidar-group' ); ?>
+								<input type="text" name="abidar[font_family_zh]" value="<?php echo esc_attr( $options['font_family_zh'] ); ?>" dir="ltr" placeholder="Noto Sans SC, Microsoft YaHei" />
+							</label>
+
+							<h4 class="abidar-field-group-title"><?php esc_html_e( 'فونت اختصاصی (آپلود فایل)', 'abidar-group' ); ?></h4>
 							<label><?php esc_html_e( 'نام خانواده فونت اختصاصی (در صورت آپلود):', 'abidar-group' ); ?>
 								<input type="text" name="abidar[custom_font_name]" value="<?php echo esc_attr( $options['custom_font_name'] ); ?>" placeholder="مثلاً IRANSansX یا Peyda" />
+							</label>
+							<label><?php esc_html_e( 'فایل فونت اختصاصی WOFF (نسخه قدیمی‌تر):', 'abidar-group' ); ?>
+								<div class="abidar-upload-row">
+									<input type="url" name="abidar[custom_font_woff_url]" id="custom_font_woff_url" value="<?php echo esc_url( $options['custom_font_woff_url'] ); ?>" dir="ltr" />
+									<button type="button" class="button abidar-media-upload" data-target="#custom_font_woff_url"><?php esc_html_e( 'بارگذاری فونت', 'abidar-group' ); ?></button>
+								</div>
 							</label>
 							<label><?php esc_html_e( 'فایل فونت اختصاصی WOFF2:', 'abidar-group' ); ?>
 								<div class="abidar-upload-row">
@@ -881,6 +912,17 @@ class Abidar_Admin_Settings {
 								<input type="checkbox" name="abidar[sticky_header]" value="1" <?php checked( $options['sticky_header'], true ); ?> />
 								<?php esc_html_e( 'فعال‌سازی هدر چسبان هوشمند (Sticky Header) هنگام اسکرول', 'abidar-group' ); ?>
 							</label>
+
+							<h4 class="abidar-field-group-title"><?php esc_html_e( 'انتخاب هدر و فوتر ساخته‌شده با المنتور', 'abidar-group' ); ?></h4>
+							<p class="description">
+								<?php esc_html_e( 'اگر طرح هدر یا فوتر را روی «المنتور» گذاشتید، شناسه برگه ساخته‌شده در بخش «هدر و فوتر» را اینجا وارد کنید. شناسه را از آدرس ویرایش آن برگه بردارید (post=۱۲۳).', 'abidar-group' ); ?>
+							</p>
+							<label><?php esc_html_e( 'شناسه برگه هدر المنتور:', 'abidar-group' ); ?>
+								<input type="number" name="abidar[custom_header_id]" value="<?php echo esc_attr( $options['custom_header_id'] ); ?>" min="0" dir="ltr" placeholder="0" />
+							</label>
+							<label><?php esc_html_e( 'شناسه برگه فوتر المنتور:', 'abidar-group' ); ?>
+								<input type="number" name="abidar[custom_footer_id]" value="<?php echo esc_attr( $options['custom_footer_id'] ); ?>" min="0" dir="ltr" placeholder="0" />
+							</label>
 						</div>
 					</div>
 				</section>
@@ -907,6 +949,12 @@ class Abidar_Admin_Settings {
 							</label>
 							<label><?php esc_html_e( 'عنوان دکمه اقدام سریع (CTA) در موبایل (فارسی):', 'abidar-group' ); ?>
 								<input type="text" name="abidar[mobile_cta_text_fa]" value="<?php echo esc_attr( $options['mobile_cta_text_fa'] ); ?>" />
+							</label>
+							<label><?php esc_html_e( 'عنوان دکمه اقدام سریع (English):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[mobile_cta_text_en]" value="<?php echo esc_attr( $options['mobile_cta_text_en'] ); ?>" dir="ltr" />
+							</label>
+							<label><?php esc_html_e( 'عنوان دکمه اقدام سریع (中文):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[mobile_cta_text_zh]" value="<?php echo esc_attr( $options['mobile_cta_text_zh'] ); ?>" dir="ltr" />
 							</label>
 							<label><?php esc_html_e( 'لینک دکمه اقدام سریع موبایل:', 'abidar-group' ); ?>
 								<input type="text" name="abidar[mobile_cta_url]" value="<?php echo esc_attr( $options['mobile_cta_url'] ); ?>" dir="ltr" />
@@ -958,6 +1006,32 @@ class Abidar_Admin_Settings {
 								<input type="checkbox" name="abidar[floating_contact_enabled]" value="1" <?php checked( $options['floating_contact_enabled'], true ); ?> />
 								<?php esc_html_e( 'نمایش دکمه شناور تماس چندبخشی در تمام صفحات', 'abidar-group' ); ?>
 							</label>
+							<label class="abidar-checkbox-label">
+								<input type="checkbox" name="abidar[floating_pulse]" value="1" <?php checked( $options['floating_pulse'], true ); ?> />
+								<?php esc_html_e( 'انیمیشن نبض (Pulse) روی دکمه شناور برای جلب توجه', 'abidar-group' ); ?>
+							</label>
+
+							<h4 class="abidar-field-group-title"><?php esc_html_e( 'متن عنوان و زیرعنوان دکمه شناور (سه‌زبانه)', 'abidar-group' ); ?></h4>
+							<label><?php esc_html_e( 'عنوان (فارسی):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[floating_title_fa]" value="<?php echo esc_attr( $options['floating_title_fa'] ?? '' ); ?>" placeholder="تماس با بخش‌های هلدینگ" />
+							</label>
+							<label><?php esc_html_e( 'عنوان (English):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[floating_title_en]" value="<?php echo esc_attr( $options['floating_title_en'] ?? '' ); ?>" dir="ltr" placeholder="Contact Our Divisions" />
+							</label>
+							<label><?php esc_html_e( 'عنوان (中文):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[floating_title_zh]" value="<?php echo esc_attr( $options['floating_title_zh'] ?? '' ); ?>" dir="ltr" placeholder="联系我们" />
+							</label>
+							<label><?php esc_html_e( 'زیرعنوان (فارسی):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[floating_subtitle_fa]" value="<?php echo esc_attr( $options['floating_subtitle_fa'] ?? '' ); ?>" />
+							</label>
+							<label><?php esc_html_e( 'زیرعنوان (English):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[floating_subtitle_en]" value="<?php echo esc_attr( $options['floating_subtitle_en'] ?? '' ); ?>" dir="ltr" />
+							</label>
+							<label><?php esc_html_e( 'زیرعنوان (中文):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[floating_subtitle_zh]" value="<?php echo esc_attr( $options['floating_subtitle_zh'] ?? '' ); ?>" dir="ltr" />
+							</label>
+
+							<h4 class="abidar-field-group-title"><?php esc_html_e( 'شبکه‌های اجتماعی', 'abidar-group' ); ?></h4>
 							<label><?php esc_html_e( 'جایگاه قرارگیری دکمه شناور:', 'abidar-group' ); ?>
 								<select name="abidar[floating_position]">
 									<option value="bottom-left" <?php selected( $options['floating_position'], 'bottom-left' ); ?>><?php esc_html_e( 'پایین چپ (Bottom Left)', 'abidar-group' ); ?></option>
@@ -1080,6 +1154,13 @@ class Abidar_Admin_Settings {
 								<input type="checkbox" name="abidar[post_related_articles]" value="1" <?php checked( $options['post_related_articles'], true ); ?> />
 								<?php esc_html_e( 'نمایش مقالات و گزارش‌های مرتبط در انتهای مقاله', 'abidar-group' ); ?>
 							</label>
+							<label><?php esc_html_e( 'تعداد مقالات مرتبط در پایین هر مقاله:', 'abidar-group' ); ?>
+								<input type="number" name="abidar[post_related_count]" value="<?php echo esc_attr( $options['post_related_count'] ); ?>" min="0" max="12" />
+							</label>
+							<label class="abidar-checkbox-label">
+								<input type="checkbox" name="abidar[post_share_buttons]" value="1" <?php checked( $options['post_share_buttons'], true ); ?> />
+								<?php esc_html_e( 'نمایش دکمه‌های اشتراک‌گذاری مقاله', 'abidar-group' ); ?>
+							</label>
 						</div>
 					</div>
 				</section>
@@ -1108,6 +1189,15 @@ class Abidar_Admin_Settings {
 							</label>
 							<label><?php esc_html_e( 'متن نمایشی پیش‌بارگذاری (انگلیسی):', 'abidar-group' ); ?>
 								<input type="text" name="abidar[preloader_text_en]" value="<?php echo esc_attr( $options['preloader_text_en'] ); ?>" dir="ltr" />
+							</label>
+							<label><?php esc_html_e( 'متن پیش‌بارگذاری (چینی):', 'abidar-group' ); ?>
+								<input type="text" name="abidar[preloader_text_zh]" value="<?php echo esc_attr( $options['preloader_text_zh'] ); ?>" dir="ltr" />
+							</label>
+							<label><?php esc_html_e( 'رنگ پس‌زمینه پیش‌بارگذاری:', 'abidar-group' ); ?>
+								<input type="text" name="abidar[preloader_bg_color]" value="<?php echo esc_attr( $options['preloader_bg_color'] ); ?>" class="abidar-color-picker" />
+							</label>
+							<label><?php esc_html_e( 'رنگ تاکید پیش‌بارگذاری:', 'abidar-group' ); ?>
+								<input type="text" name="abidar[preloader_accent_color]" value="<?php echo esc_attr( $options['preloader_accent_color'] ); ?>" class="abidar-color-picker" />
 							</label>
 							<label><?php esc_html_e( 'مدت زمان نمایش (میلی‌ثانیه):', 'abidar-group' ); ?>
 								<input type="number" name="abidar[preloader_duration]" value="<?php echo esc_attr( $options['preloader_duration'] ); ?>" min="300" max="4000" step="100" />
@@ -1190,6 +1280,13 @@ class Abidar_Admin_Settings {
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[security_block_user_enum]" value="1" <?php checked( $options['security_block_user_enum'], true ); ?> />
 								<?php esc_html_e( 'جلوگیری از استخراج لیست کاربران از طریق REST API', 'abidar-group' ); ?>
+							</label>
+							<label class="abidar-checkbox-label">
+								<input type="checkbox" name="abidar[security_hide_wp_version]" value="1" <?php checked( $options['security_hide_wp_version'], true ); ?> />
+								<?php esc_html_e( 'حذف شماره نسخه وردپرس از سورس صفحه و فیدها', 'abidar-group' ); ?>
+							</label>
+							<label><?php esc_html_e( 'حداقل زمان پر کردن فرم تماس (ثانیه) — کمتر از این، ربات تشخیص داده می‌شود:', 'abidar-group' ); ?>
+								<input type="number" name="abidar[security_antispam_min_seconds]" value="<?php echo esc_attr( $options['security_antispam_min_seconds'] ); ?>" min="0" max="120" />
 							</label>
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[security_http_headers]" value="1" <?php checked( $options['security_http_headers'], true ); ?> />

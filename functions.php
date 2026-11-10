@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * ثوابت اصلی قالب (شروع از نسخه 2.0.0 طبق درخواست کارفرما)
  */
-define( 'ABIDAR_VERSION', '2.4.0' );
+define( 'ABIDAR_VERSION', '2.4.1' );
 define( 'ABIDAR_DIR', get_template_directory() );
 define( 'ABIDAR_URI', get_template_directory_uri() );
 define( 'ABIDAR_OPTION_KEY', 'abidar_theme_options_v2' );
@@ -211,7 +211,6 @@ function abidar_get_default_options() {
 		'post_share_buttons'       => true,
 		'post_related_articles'    => true,
 		'post_related_count'       => 3,
-		'blog_archive_columns'     => 3,
 
 		// ۵. تنظیمات پیش‌بارگذاری سایت (Preloader Settings)
 		'preloader_enabled'        => true,
@@ -240,7 +239,6 @@ function abidar_get_default_options() {
 		'security_http_headers'         => true,
 
 		// ۷. تنظیمات زبان سایت (Multilingual & Custom Languages)
-		'multilang_enabled'        => true,
 		'default_language'         => 'fa',
 		'lang_switcher_style'      => 'pills_flag', // pills_flag | compact_iso | flags_only | flags_round | dropdown | dropdown_flags
 		'custom_languages'         => array(

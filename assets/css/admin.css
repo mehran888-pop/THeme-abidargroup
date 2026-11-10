@@ -442,6 +442,24 @@
 	margin-top: 0;
 }
 
+/* عنوان زیرگروه داخل یک کارت: فیلدها را به گروه‌های منطقی تقسیم می‌کند. */
+.abidar-field-group-title {
+	font-size: 0.8rem;
+	font-weight: 800;
+	color: #b45309;
+	margin: 18px 0 8px;
+	padding-top: 12px;
+	border-top: 1px dashed #e2e8f0;
+	letter-spacing: 0.01em;
+	line-height: 1.6;
+}
+
+.abidar-admin-card > .abidar-field-group-title:first-of-type {
+	margin-top: 6px;
+	padding-top: 0;
+	border-top: 0;
+}
+
 .abidar-admin-card label {
 	display: block;
 	font-size: 0.82rem;
