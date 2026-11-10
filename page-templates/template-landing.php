@@ -29,6 +29,21 @@ $abidar_snap          = $abidar_landing_meta['snap'];
 $abidar_show_header   = $abidar_landing_meta['header'];
 $abidar_show_footer   = $abidar_landing_meta['footer'];
 
+/*
+ * برگه‌های ساخته‌شده با المنتور:
+ * خروجی المنتور یک سند کامل است و در حالت افقی تمام آن در «یک» پنل جا
+ * می‌گرفت؛ یعنی اسکرول افقی چیزی برای نمایش نداشت. بدتر اینکه شنونده
+ * wheel ما با ویرایشگر تداخل می‌کرد. پس دقیقاً مثل بقیه قالب‌ها، برای این
+ * برگه‌ها ریل و اسکرول افقی را کلاً کنار می‌گذاریم — از جمله کلاس بدنه،
+ * وگرنه CSS هنوز height:100vh و overflow را روی بوم اعمال می‌کرد.
+ */
+$abidar_landing_plain = abidar_is_elementor_page()
+	|| ( class_exists( 'Abidar_Elementor_Init' ) && Abidar_Elementor_Init::is_elementor_editor_context() );
+
+if ( $abidar_landing_plain ) {
+	$abidar_scroll_mode = 'vertical';
+}
+
 /**
  * کلاس‌های بدنه: حالت اسکرول + وضعیت هدر/فوتر.
  * بستار استفاده شده تا اعلان تابع در فایل قالب خطای «تابع تکراری» ندهد.
@@ -59,11 +74,26 @@ add_filter( 'body_class', $abidar_landing_body_class );
  * می‌کنیم، نه از حذف فراخوانی.
  */
 get_header();
+
+if ( $abidar_landing_plain ) {
+	?>
+	<div class="abidar-elementor-content abidar-landing__vertical">
+		<?php
+		while ( have_posts() ) :
+			the_post();
+			the_content();
+		endwhile;
+		?>
+	</div>
+	<?php
+	get_footer();
+	return;
+}
 ?>
 
 <?php
 /*
- * <div> عمداً، نه <main>: header.php خودش <main id="abidar-main-content"> را
+ * <div> عمداً، نه <main>: header.php خودش <main id="main-content"> را
  * باز می‌کند و footer.php می‌بندد. <main> تودرتو HTML نامعتبر است.
  */
 ?>
