@@ -738,6 +738,12 @@ class Abidar_Admin_Settings {
 				</div>
 			<?php endif; ?>
 
+			<?php if ( isset( $_GET['cleared'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+				<div class="notice notice-success is-dismissible">
+					<p><strong><?php esc_html_e( 'گزارش رویدادهای امنیتی پاک شد.', 'abidar-group' ); ?></strong></p>
+				</div>
+			<?php endif; ?>
+
 			<div class="abidar-admin-shell">
 				<!-- دکمه باز/بسته سایدبار در موبایل -->
 				<button type="button" class="abidar-admin-menu-toggle" id="abidar-menu-toggle" aria-expanded="false" aria-controls="abidar-settings-menu">

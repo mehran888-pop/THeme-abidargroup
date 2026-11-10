@@ -765,6 +765,33 @@
 	flex: 0 0 110px;
 }
 
+/*
+ * دکمه پاک‌کردن گزارش، کنش مخرب است: رنگ خطر می‌گیرد تا با «اعمال» فیلتر
+ * اشتباه گرفته نشود.
+ */
+.abidar-log-clear {
+	margin-inline-start: auto;
+	border-color: #dc2626 !important;
+	color: #b91c1c !important;
+	background: #fff !important;
+}
+
+.abidar-log-clear:hover {
+	background: #fef2f2 !important;
+}
+
+.abidar-log-clear:disabled {
+	opacity: 0.55;
+	cursor: progress;
+}
+
+@media (max-width: 782px) {
+	.abidar-log-clear {
+		margin-inline-start: 0;
+		width: 100%;
+	}
+}
+
 .abidar-log-toolbar__field > span {
 	font-size: 0.72rem;
 	font-weight: 700;
