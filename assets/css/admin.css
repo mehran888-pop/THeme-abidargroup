@@ -373,6 +373,99 @@
 	display: block;
 }
 
+/*
+ * با تفکیک صفحات، هر صفحه فقط یک کارت دارد؛ دیگر لازم نیست پنل‌ها با
+ * display:none پنهان شوند. این قواعد فقط برای سازگاری با پنل عیب‌یابی
+ * که همان ساختار section را دارد نگه داشته شده‌اند.
+ */
+
+/* --- سربرگ صفحه: مسیر راهنما و عنوان --- */
+.abidar-page-head {
+	margin: 0 0 16px;
+	padding: 0 2px;
+}
+
+.abidar-page-head__crumbs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.76rem;
+	color: #64748b;
+}
+
+.abidar-page-head__group {
+	color: #475569;
+	font-weight: 600;
+}
+
+.abidar-page-head__sep {
+	color: #cbd5e1;
+}
+
+.abidar-page-head__current {
+	color: #0b192c;
+	font-weight: 700;
+}
+
+.abidar-page-head__count {
+	margin-inline-start: auto;
+	background: #f1f5f9;
+	border: 1px solid #e2e8f0;
+	border-radius: 999px;
+	padding: 2px 10px;
+	font-size: 0.7rem;
+	color: #475569;
+}
+
+.abidar-page-head__title {
+	margin: 6px 0 0;
+	font-size: 1.35rem;
+	font-weight: 800;
+	color: #0b192c;
+	line-height: 1.4;
+}
+
+/* --- فوتر صفحه: ناوبری قبلی/بعدی + ذخیره --- */
+.abidar-admin-footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+}
+
+.abidar-admin-footer__nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.abidar-admin-footer__nav .button {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+}
+
+.abidar-admin-footer__save {
+	margin-inline-start: auto;
+}
+
+@media (max-width: 782px) {
+	.abidar-page-head__count {
+		margin-inline-start: 0;
+	}
+
+	.abidar-admin-footer__nav,
+	.abidar-admin-footer__save {
+		width: 100%;
+	}
+
+	.abidar-admin-footer__save .button {
+		width: 100%;
+	}
+}
+
 @keyframes abidar-admin-fade {
 	from { opacity: 0; transform: translateY(6px); }
 	to { opacity: 1; transform: translateY(0); }

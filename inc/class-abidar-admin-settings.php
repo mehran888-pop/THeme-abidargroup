@@ -70,6 +70,13 @@ class Abidar_Admin_Settings {
 				array( __CLASS__, 'render_settings_page' )
 			);
 		}
+
+		/*
+		 * add_menu_page یک آیتم زیرمنو با همان اسلاگ والد می‌سازد که نامش با
+		 * عنوان منوی اصلی یکی است و در فهرست پیشخوان تکراری دیده می‌شود.
+		 * حذفش می‌کنیم تا فهرست فقط گروه‌های واقعی را نشان دهد.
+		 */
+		remove_submenu_page( 'abidar-settings', 'abidar-settings' );
 	}
 
 	/**
@@ -113,6 +120,112 @@ class Abidar_Admin_Settings {
 	}
 
 	/**
+	 * آیا این فیلد به کارتِ در حال ذخیره تعلق دارد؟
+	 *
+	 * برای حلقه‌هایی که با isset محافظت شده‌اند امن است: اگر نقشی تعیین
+	 * نشده باشد، رفتار قبلی حفظ می‌شود. سوئیچ‌های بولی جداست چون نبودِ
+	 * چک‌باکس در POST یعنی «خاموش» و آنجا محافظت بیشتری لازم است.
+	 *
+	 * @param string     $field نام فیلد.
+	 * @param array|null $scope فهرست فیلدهای کارت جاری.
+	 * @return bool
+	 */
+	private static function in_scope( $field, $scope ) {
+		if ( ! is_array( $scope ) ) {
+			return false;
+		}
+
+		return in_array( $field, $scope, true );
+	}
+
+	/**
+	 * نقشهٔ مالکیت فیلدها: هر فیلد دقیقاً به یک کارت (یعنی یک صفحه) تعلق دارد.
+	 *
+	 * این نقشه قلب تفکیک صفحات است. اگر نباشد، ذخیرهٔ هر صفحه همهٔ
+	 * سوئیچ‌های صفحات دیگر را خاموش می‌کند، چون چک‌باکسِ ارسال‌نشده در
+	 * PHP یعنی «خاموش».
+	 *
+	 * اگر فیلد تازه‌ای اضافه کردید، اینجا هم ثبتش کنید؛ وگرنه هرگز ذخیره
+	 * نخواهد شد. تست خودکار انطباق این نقشه با فرم‌ها را بررسی می‌کند.
+	 *
+	 * @return array<string, array<int, string>>
+	 */
+	public static function get_card_fields() {
+		return array(
+			'blog-layout' => array(
+				'post_author_box', 'post_reading_progress', 'post_reading_time', 'post_related_articles',
+				'post_related_count', 'post_share_buttons', 'post_sticky_toc', 'single_post_layout',
+			),
+			'colors' => array(
+				'accent_color', 'primary_color', 'secondary_color', 'surface_dark_color',
+				'surface_light_color', 'text_main_color',
+			),
+			'floating-depts' => array(
+				'floating_departments',
+			),
+			'floating-general' => array(
+				'floating_contact_enabled', 'floating_position', 'floating_pulse', 'floating_socials',
+				'floating_subtitle_en', 'floating_subtitle_fa', 'floating_subtitle_zh',
+				'floating_title_en', 'floating_title_fa', 'floating_title_zh',
+			),
+			'fonts' => array(
+				'base_font_size', 'custom_font_name', 'custom_font_ttf_url', 'custom_font_woff2_url',
+				'custom_font_woff_url', 'font_family_en', 'font_family_fa', 'font_family_zh',
+				'h1_font_size', 'h2_font_size', 'h3_font_size',
+			),
+			'header-footer' => array(
+				'custom_footer_id', 'custom_header_id', 'footer_layout', 'header_layout', 'sticky_header',
+			),
+			// کارت‌هایی که فیلد فرم ندارند ولی صفحهٔ مستقل دارند. عمداً با
+			// آرایهٔ خالی ثبت می‌شوند تا «دامنهٔ هیچ» صریح و قابل بازبینی باشد،
+			// نه نتیجهٔ اتفاقیِ نبودن در نقشه.
+			'security-log'     => array(),
+			'diagnostics-status' => array(),
+			'demo-import'      => array(),
+			'lang-custom' => array(
+				'custom_languages',
+			),
+			'lang-default' => array(
+				'default_language', 'lang_switcher_style',
+			),
+			'layout-settings' => array(
+				'border_radius', 'container_width', 'grid_gap', 'layout_mode', 'mobile_breakpoint',
+				'section_padding',
+			),
+			'mobile-buttons' => array(
+				'mobile_nav_items',
+			),
+			'mobile-settings' => array(
+				'mobile_cta_text_en', 'mobile_cta_text_fa', 'mobile_cta_text_zh', 'mobile_cta_url',
+				'mobile_nav_enabled', 'mobile_nav_layout', 'mobile_quick_phone',
+			),
+			'preloader-settings' => array(
+				'preloader_accent_color', 'preloader_bg_color', 'preloader_duration', 'preloader_enabled',
+				'preloader_style', 'preloader_text_en', 'preloader_text_fa', 'preloader_text_zh',
+			),
+			'security-brute' => array(
+				'security_limit_login_enabled', 'security_lockout_duration', 'security_max_login_attempts',
+			),
+			'security-ip' => array(
+				'security_ip_whitelist',
+			),
+			'security-antispam' => array(
+				'security_antispam_honeypot',
+				'security_antispam_min_seconds',
+				'security_antispam_timetrap',
+				'security_block_user_enum',
+				'security_disable_xmlrpc',
+				'security_hide_wp_version',
+				'security_http_headers',
+				'security_math_captcha',
+			),
+			'security-login' => array(
+				'security_custom_login_enabled', 'security_custom_login_slug',
+			),
+		);
+	}
+
+	/**
 	 * پردازش و پاک‌سازی (Sanitization) کامل فرم تنظیمات قالب
 	 */
 	public static function handle_form_save() {
@@ -122,12 +235,33 @@ class Abidar_Admin_Settings {
 
 		check_admin_referer( 'abidar_save_settings_action', 'abidar_settings_nonce' );
 
+		/*
+		 * هر کارت یک صفحهٔ مستقل و یک فرم مستقل است. اگر همان منطق قبلی
+		 * (نوشتن بی‌قید همهٔ سوئیچ‌ها) اجرا شود، ذخیرهٔ صفحهٔ «فونت» تمام
+		 * گزینه‌های امنیتی و پیش‌بارگذار را false می‌کند، چون در آن فرم
+		 * هیچ چک‌باکسی ارسال نمی‌شود. پس فقط فیلدهای همان کارت لمس می‌شوند.
+		 */
+		$card_fields = self::get_card_fields();
+		$active_card = isset( $_POST['abidar_card'] ) ? sanitize_key( wp_unslash( $_POST['abidar_card'] ) ) : '';
+		/*
+		 * نکتهٔ ایمنی: اگر کارت ناشناخته باشد، دامنه «هیچ» است، نه «همه».
+		 * قبلاً null به معنی «بدون محدودیت» تفسیر می‌شد و همین باعث می‌شد
+		 * ذخیرهٔ کارتی که فیلد ندارد (مثل گزارش رویدادها) تمام سوئیچ‌های
+		 * امنیتی را خاموش کند.
+		 */
+		$scope = isset( $card_fields[ $active_card ] ) ? $card_fields[ $active_card ] : array();
+
 		$options = abidar_get_all_options();
 		$posted  = isset( $_POST['abidar'] ) && is_array( $_POST['abidar'] ) ? wp_unslash( $_POST['abidar'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 		// کدام تب ذخیره شده است؟ برای تشخیص «حذف همه ردیف‌ها» لازم است، چون در
 		// آن حالت مرورگر هیچ فیلدی از آن لیست ارسال نمی‌کند.
 		$submitted_panel = isset( $_POST['abidar_panel'] ) ? sanitize_key( wp_unslash( $_POST['abidar_panel'] ) ) : '';
+
+		// با تفکیک صفحات، «کدام بخش ذخیره شده» یعنی کدام کارت.
+		if ( '' === $submitted_panel ) {
+			$submitted_panel = $active_card;
+		}
 
 		// ۱. پاک‌سازی فیلدهای عددی
 		$int_fields = array(
@@ -149,7 +283,7 @@ class Abidar_Admin_Settings {
 			'security_antispam_min_seconds',
 		);
 		foreach ( $int_fields as $field ) {
-			if ( isset( $posted[ $field ] ) ) {
+			if ( isset( $posted[ $field ] ) && self::in_scope( $field, $scope ) ) {
 				$options[ $field ] = (int) $posted[ $field ];
 			}
 		}
@@ -166,7 +300,7 @@ class Abidar_Admin_Settings {
 			'preloader_accent_color',
 		);
 		foreach ( $color_fields as $field ) {
-			if ( isset( $posted[ $field ] ) ) {
+			if ( isset( $posted[ $field ] ) && self::in_scope( $field, $scope ) ) {
 				$color = sanitize_hex_color( $posted[ $field ] );
 				if ( $color ) {
 					$options[ $field ] = $color;
@@ -205,12 +339,13 @@ class Abidar_Admin_Settings {
 			'lang_switcher_style',
 		);
 		foreach ( $text_fields as $field ) {
-			if ( isset( $posted[ $field ] ) ) {
+			if ( isset( $posted[ $field ] ) && self::in_scope( $field, $scope ) ) {
 				$options[ $field ] = sanitize_text_field( $posted[ $field ] );
 			}
 		}
 
 		// لیست سفید IP: هر مقدار با کاما، فاصله یا خط جدید جدا می‌شود و اعتبارسنجی می‌گردد.
+		// فقط وقتی این صفحه مالک این فیلد است پردازش می‌شود تا با صفحات دیگر قفل نشود.
 		if ( isset( $posted['security_ip_whitelist'] ) ) {
 			$raw_ips   = preg_split( '/[\s,]+/', (string) $posted['security_ip_whitelist'] );
 			$valid_ips = array();
@@ -249,7 +384,7 @@ class Abidar_Admin_Settings {
 			'mobile_cta_url',
 		);
 		foreach ( $url_fields as $field ) {
-			if ( isset( $posted[ $field ] ) ) {
+			if ( isset( $posted[ $field ] ) && self::in_scope( $field, $scope ) ) {
 				$options[ $field ] = esc_url_raw( $posted[ $field ] );
 			}
 		}
@@ -278,11 +413,15 @@ class Abidar_Admin_Settings {
 			'security_http_headers',
 		);
 		foreach ( $bool_fields as $field ) {
+			// اگر این صفحه مالک فیلد نیست، به مقدار ذخیره‌شده دست نزن.
+			if ( ! self::in_scope( $field, $scope ) ) {
+				continue;
+			}
 			$options[ $field ] = ! empty( $posted[ $field ] );
 		}
 
 		// ۶. پاک‌سازی شبکه‌های اجتماعی دکمه شناور
-		if ( isset( $posted['floating_socials'] ) && is_array( $posted['floating_socials'] ) ) {
+		if ( isset( $posted['floating_socials'] ) && is_array( $posted['floating_socials'] ) && self::in_scope( 'floating_socials', $scope ) ) {
 			$clean_socials = array();
 			foreach ( $posted['floating_socials'] as $s_key => $s_val ) {
 				$clean_socials[ sanitize_key( $s_key ) ] = sanitize_text_field( $s_val );
@@ -293,7 +432,7 @@ class Abidar_Admin_Settings {
 		// ۷. پاک‌سازی بخش‌های چندگانه دکمه شناور تماس (Multi-Department Contact Hub)
 		// اگر کل ردیف‌ها حذف شده باشند، فیلد اصلاً ارسال نمی‌شود؛ در آن حالت
 		// باید لیست خالی ذخیره شود تا «حذف همه» واقعاً کار کند.
-		if ( array_key_exists( 'floating_departments', $posted ) ) {
+		if ( array_key_exists( 'floating_departments', $posted ) || 'floating-depts' === $submitted_panel ) {
 			$rows        = is_array( $posted['floating_departments'] ) ? $posted['floating_departments'] : array();
 			$clean_depts = array();
 			foreach ( $rows as $dept ) {
@@ -330,7 +469,7 @@ class Abidar_Admin_Settings {
 		}
 
 		// ۸. پاک‌سازی آیتم‌های ناوبری موبایل
-		if ( array_key_exists( 'mobile_nav_items', $posted ) || 'mobile-nav' === $submitted_panel ) {
+		if ( array_key_exists( 'mobile_nav_items', $posted ) || 'mobile-buttons' === $submitted_panel ) {
 			$rows      = ( isset( $posted['mobile_nav_items'] ) && is_array( $posted['mobile_nav_items'] ) ) ? $posted['mobile_nav_items'] : array();
 			$clean_mob = array();
 			foreach ( $rows as $m_item ) {
@@ -353,7 +492,7 @@ class Abidar_Admin_Settings {
 		}
 
 		// ۹. پاک‌سازی زبان‌های سفارشی اضافه‌شده علاوه بر ۳ زبان پیش‌فرض
-		if ( array_key_exists( 'custom_languages', $posted ) || 'languages' === $submitted_panel ) {
+		if ( array_key_exists( 'custom_languages', $posted ) || 'lang-custom' === $submitted_panel ) {
 			$row_list    = ( isset( $posted['custom_languages'] ) && is_array( $posted['custom_languages'] ) ) ? $posted['custom_languages'] : array();
 			$clean_langs = array();
 			foreach ( $row_list as $lang_row ) {
@@ -385,7 +524,20 @@ class Abidar_Admin_Settings {
 		update_option( ABIDAR_OPTION_KEY, $options );
 
 		$active_tab = isset( $_POST['active_tab'] ) ? sanitize_key( wp_unslash( $_POST['active_tab'] ) ) : 'layout';
-		wp_safe_redirect( add_query_arg( array( 'page' => 'abidar-settings', 'tab' => $active_tab, 'updated' => 'true' ), admin_url( 'admin.php' ) ) );
+		$back_card  = isset( $_POST['abidar_card'] ) ? sanitize_key( wp_unslash( $_POST['abidar_card'] ) ) : '';
+
+		$redirect_args = array(
+			'page'    => 'abidar-settings',
+			'tab'     => $active_tab,
+			'updated' => 'true',
+		);
+
+		// بعد از ذخیره، به همان کارت برگرد، نه به اولین کارت گروه.
+		if ( '' !== $back_card ) {
+			$redirect_args['card'] = $back_card;
+		}
+
+		wp_safe_redirect( add_query_arg( $redirect_args, admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -672,9 +824,11 @@ class Abidar_Admin_Settings {
 				'label'    => __( 'امنیت پیشرفته', 'abidar-group' ),
 				'icon'     => 'dashicons-shield',
 				'children' => array(
-					'security-login' => __( 'ورود و مسدودسازی', 'abidar-group' ),
-					'security-ip'    => __( 'لیست سفید IP', 'abidar-group' ),
-					'security-log'   => __( 'گزارش رویدادها', 'abidar-group' ),
+					'security-login'   => __( 'ورود سفارشی', 'abidar-group' ),
+					'security-brute'   => __( 'قفل حساب و تلاش ورود', 'abidar-group' ),
+					'security-ip'      => __( 'لیست سفید IP', 'abidar-group' ),
+					'security-antispam' => __( 'ضد اسپم و سخت‌سازی', 'abidar-group' ),
+					'security-log'     => __( 'گزارش رویدادها', 'abidar-group' ),
 				),
 			),
 			'languages'        => array(
@@ -712,6 +866,18 @@ class Abidar_Admin_Settings {
 		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'layout'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( ! isset( $menu[ $active_tab ] ) ) {
 			$active_tab = 'layout';
+		}
+
+		/*
+		 * هر زیرگروه یک صفحهٔ مستقل است، نه یک لنگر در همان صفحه.
+		 * ?card= می‌گوید کدام کارت رندر شود؛ اگر نیامده باشد، اولین
+		 * زیرگروهِ گروه فعال نمایش داده می‌شود.
+		 */
+		$card_keys = array_keys( $menu[ $active_tab ]['children'] );
+		$active_card = isset( $_GET['card'] ) ? sanitize_key( wp_unslash( $_GET['card'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( ! in_array( $active_card, $card_keys, true ) ) {
+			$active_card = reset( $card_keys );
 		}
 
 		$abidar_admin_dir = is_rtl() ? 'rtl' : 'ltr';
@@ -768,8 +934,12 @@ class Abidar_Admin_Settings {
 								<?php if ( ! empty( $group['children'] ) ) : ?>
 									<ul class="abidar-admin-submenu">
 										<?php foreach ( $group['children'] as $child_key => $child_label ) : ?>
+											<?php $child_is_active = ( $active_card === $child_key ); ?>
 											<li>
-												<a href="#<?php echo esc_attr( $child_key ); ?>" class="abidar-admin-submenu__link" data-scroll-target="<?php echo esc_attr( $child_key ); ?>">
+												<a href="<?php echo esc_url( add_query_arg( array( 'page' => 'abidar-settings', 'tab' => $group_key, 'card' => $child_key ), admin_url( 'admin.php' ) ) ); ?>"
+												   class="abidar-admin-submenu__link <?php echo $child_is_active ? 'is-active' : ''; ?>"
+												   data-card-target="<?php echo esc_attr( $child_key ); ?>"
+												   <?php echo $child_is_active ? 'aria-current="page"' : ''; ?>>
 													<?php echo esc_html( $child_label ); ?>
 												</a>
 											</li>
@@ -784,6 +954,45 @@ class Abidar_Admin_Settings {
 				<!-- محتوای تنظیمات -->
 				<div class="abidar-admin-content">
 
+			<?php
+			/*
+			 * عنوان صفحه و مسیر راهنما: چون هر زیرگروه یک صفحهٔ مستقل است،
+			 * مدیر باید بداند کجاست و بعدی/قبلی کدام است.
+			 */
+			$card_label = isset( $menu[ $active_tab ]['children'][ $active_card ] )
+				? $menu[ $active_tab ]['children'][ $active_card ]
+				: '';
+
+			$flat_pages = array();
+			foreach ( $menu as $g_key => $g ) {
+				foreach ( $g['children'] as $c_key => $c_label ) {
+					$flat_pages[] = array(
+						'group' => $g_key,
+						'card'  => $c_key,
+						'label' => $c_label,
+						'group_label' => $g['label'],
+					);
+				}
+			}
+			$page_index = 0;
+			foreach ( $flat_pages as $i => $pg ) {
+				if ( $pg['card'] === $active_card ) {
+					$page_index = $i;
+				}
+			}
+			$prev_page = $page_index > 0 ? $flat_pages[ $page_index - 1 ] : null;
+			$next_page = $page_index < count( $flat_pages ) - 1 ? $flat_pages[ $page_index + 1 ] : null;
+			?>
+			<div class="abidar-page-head">
+				<div class="abidar-page-head__crumbs">
+					<span class="abidar-page-head__group"><?php echo esc_html( $menu[ $active_tab ]['label'] ); ?></span>
+					<span class="abidar-page-head__sep" aria-hidden="true">/</span>
+					<span class="abidar-page-head__current"><?php echo esc_html( $card_label ); ?></span>
+					<span class="abidar-page-head__count"><?php printf( esc_html__( 'صفحهٔ %1$d از %2$d', 'abidar-group' ), (int) ( $page_index + 1 ), (int) count( $flat_pages ) ); ?></span>
+				</div>
+				<h2 class="abidar-page-head__title"><?php echo esc_html( $card_label ); ?></h2>
+			</div>
+
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="abidar-admin-form">
 				<input type="hidden" name="action" value="abidar_save_settings" />
 				<input type="hidden" name="active_tab" id="abidar-active-tab-input" value="<?php echo esc_attr( $active_tab ); ?>" />
@@ -794,7 +1003,8 @@ class Abidar_Admin_Settings {
 				 * پاک کرده است (مرورگر در آن حالت هیچ فیلدی نمی‌فرستد).
 				 */
 				?>
-				<input type="hidden" name="abidar_panel" value="<?php echo esc_attr( $active_tab ); ?>" data-abidar-panel-mirror />
+				<input type="hidden" name="abidar_card" value="<?php echo esc_attr( $active_card ); ?>" />
+				<input type="hidden" name="abidar_panel" value="<?php echo esc_attr( $active_card ); ?>" data-abidar-panel-mirror />
 				<?php wp_nonce_field( 'abidar_save_settings_action', 'abidar_settings_nonce' ); ?>
 
 				<!-- ================================================================
@@ -803,6 +1013,7 @@ class Abidar_Admin_Settings {
 				<section class="abidar-admin-panel <?php echo ( 'layout' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="layout" aria-hidden="<?php echo ( 'layout' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات طرح و چیدمان، رنگ‌بندی، تایپوگرافی و فونت اختصاصی', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
+						<?php if ( $active_card === 'layout-settings' ) : ?>
 						<div class="abidar-admin-card" id="layout-settings">
 							<h3><?php esc_html_e( 'ابعاد کانتینر و چیدمان صفحات', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'حالت چیدمان کلی قالب:', 'abidar-group' ); ?>
@@ -828,7 +1039,9 @@ class Abidar_Admin_Settings {
 								<input type="number" name="abidar[mobile_breakpoint]" value="<?php echo esc_attr( $options['mobile_breakpoint'] ); ?>" min="480" max="1024" />
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'colors' ) : ?>
 						<div class="abidar-admin-card" id="colors">
 							<h3><?php esc_html_e( 'پالت رنگ سازمانی گروه آبیدر', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'رنگ اصلی برند (طلایی معدنی و صنعتی):', 'abidar-group' ); ?>
@@ -850,7 +1063,9 @@ class Abidar_Admin_Settings {
 								<input type="text" name="abidar[text_main_color]" value="<?php echo esc_attr( $options['text_main_color'] ); ?>" class="abidar-color-picker" />
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'fonts' ) : ?>
 						<div class="abidar-admin-card" id="fonts">
 							<h3><?php esc_html_e( 'سایز فونت‌ها و بارگذاری فونت اختصاصی (WOFF2 / TTF)', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'سایز پایه متن سایت (px):', 'abidar-group' ); ?>
@@ -902,7 +1117,9 @@ class Abidar_Admin_Settings {
 								</div>
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'header-footer' ) : ?>
 						<div class="abidar-admin-card" id="header-footer">
 							<h3><?php esc_html_e( 'چیدمان هدر و فوتر (پیش‌فرض یا ساخته‌شده با المنتور رایگان)', 'abidar-group' ); ?></h3>
 							<label><?php esc_html_e( 'طرح هدر سایت:', 'abidar-group' ); ?>
@@ -938,6 +1155,7 @@ class Abidar_Admin_Settings {
 								<input type="number" name="abidar[custom_footer_id]" value="<?php echo esc_attr( $options['custom_footer_id'] ); ?>" min="0" dir="ltr" placeholder="0" />
 							</label>
 						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -947,6 +1165,7 @@ class Abidar_Admin_Settings {
 				<section class="abidar-admin-panel <?php echo ( 'mobile-nav' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="mobile-nav" aria-hidden="<?php echo ( 'mobile-nav' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات ناوبری حرفه‌ای موبایل (چیدمان‌های متفاوت + تعریف دکمه‌ها و لینک‌ها)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
+						<?php if ( $active_card === 'mobile-settings' ) : ?>
 						<div class="abidar-admin-card" id="mobile-settings">
 							<h3><?php esc_html_e( 'چیدمان و عملکرد منوی موبایل', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
@@ -977,7 +1196,9 @@ class Abidar_Admin_Settings {
 								<input type="text" name="abidar[mobile_quick_phone]" value="<?php echo esc_attr( $options['mobile_quick_phone'] ); ?>" dir="ltr" />
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'mobile-buttons' ) : ?>
 						<div class="abidar-admin-card" id="mobile-buttons">
 							<h3><?php esc_html_e( 'تعریف دکمه‌ها و لینک‌های نوار ناوبری موبایل', 'abidar-group' ); ?></h3>
 							<p class="description">
@@ -1005,6 +1226,7 @@ class Abidar_Admin_Settings {
 								+ <?php esc_html_e( 'افزودن دکمه جدید به منوی موبایل', 'abidar-group' ); ?>
 							</button>
 						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -1014,6 +1236,7 @@ class Abidar_Admin_Settings {
 				<section class="abidar-admin-panel <?php echo ( 'floating-contact' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="floating-contact" aria-hidden="<?php echo ( 'floating-contact' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات دکمه شناور ارتباط چندبخشی و شبکه‌های اجتماعی', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
+						<?php if ( $active_card === 'floating-general' ) : ?>
 						<div class="abidar-admin-card" id="floating-general">
 							<h3><?php esc_html_e( 'تنظیمات عمومی و لینک شبکه‌های اجتماعی', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
@@ -1068,7 +1291,9 @@ class Abidar_Admin_Settings {
 								<input type="email" name="abidar[floating_socials][email]" value="<?php echo esc_attr( $options['floating_socials']['email'] ?? '' ); ?>" dir="ltr" />
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'floating-depts' ) : ?>
 						<div class="abidar-admin-card" id="floating-depts">
 							<h3><?php esc_html_e( 'مدیریت بخش‌های مختلف در دکمه شناور تماس (معادن، انرژی، نفت، بین‌الملل و...)', 'abidar-group' ); ?></h3>
 							<p class="description"><?php esc_html_e( 'کاربر با کلیک روی دکمه شناور، لیست این بخش‌ها را مشاهده کرده و مستقیماً با همان بخش تماس می‌گیرد.', 'abidar-group' ); ?></p>
@@ -1129,6 +1354,7 @@ class Abidar_Admin_Settings {
 								<?php esc_html_e( 'اگر هیچ بخشی تعریف نشود، سایت از بخش‌های پیش‌فرض (معادن، انرژی، نفت و گاز، بین‌الملل) استفاده می‌کند.', 'abidar-group' ); ?>
 							</p>
 					</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -1138,6 +1364,7 @@ class Abidar_Admin_Settings {
 				<section class="abidar-admin-panel <?php echo ( 'blog' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="blog" aria-hidden="<?php echo ( 'blog' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات قالب پیش‌فرض مقاله و پست‌های خبری هلدینگ', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
+						<?php if ( $active_card === 'blog-layout' ) : ?>
 						<div class="abidar-admin-card" id="blog-layout">
 							<h3><?php esc_html_e( 'انتخاب قالب پیش‌فرض نمایش مقالات (Single Post Template)', 'abidar-group' ); ?></h3>
 							<p class="description"><?php esc_html_e( 'هر مقاله‌ای که در بخش نوشته‌های وردپرس منتشر شود، به صورت خودکار با این قالب حرفه‌ای نمایش داده می‌شود.', 'abidar-group' ); ?></p>
@@ -1176,6 +1403,7 @@ class Abidar_Admin_Settings {
 								<?php esc_html_e( 'نمایش دکمه‌های اشتراک‌گذاری مقاله', 'abidar-group' ); ?>
 							</label>
 						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -1185,6 +1413,7 @@ class Abidar_Admin_Settings {
 				<section class="abidar-admin-panel <?php echo ( 'preloader' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="preloader" aria-hidden="<?php echo ( 'preloader' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'تنظیمات پیش‌بارگذاری سایت (Preloader)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
+						<?php if ( $active_card === 'preloader-settings' ) : ?>
 						<div class="abidar-admin-card" id="preloader-settings">
 							<h3><?php esc_html_e( 'استایل و زمان‌بندی پیش‌بارگذاری', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
@@ -1217,6 +1446,7 @@ class Abidar_Admin_Settings {
 								<input type="number" name="abidar[preloader_duration]" value="<?php echo esc_attr( $options['preloader_duration'] ); ?>" min="300" max="4000" step="100" />
 							</label>
 						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -1226,6 +1456,7 @@ class Abidar_Admin_Settings {
 				<section class="abidar-admin-panel <?php echo ( 'security' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="security" aria-hidden="<?php echo ( 'security' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'سپر امنیتی پیشرفته گروه آبیدر (تغییر آدرس ادمین، محدودیت ورود، ضد اسپم)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
+						<?php if ( $active_card === 'security-login' ) : ?>
 						<div class="abidar-admin-card" id="security-login">
 							<h3><?php esc_html_e( '۱. تغییر آدرس ورود ادمین و مخفی‌سازی wp-login.php', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
@@ -1245,7 +1476,9 @@ class Abidar_Admin_Settings {
 								?>
 							</p>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'security-brute' ) : ?>
 						<div class="abidar-admin-card" id="security-brute">
 							<h3><?php esc_html_e( '۲. محدودیت تعداد تلاش ورود و جلوگیری از ورود بیش از حد (Brute-Force)', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
@@ -1259,7 +1492,9 @@ class Abidar_Admin_Settings {
 								<input type="number" name="abidar[security_lockout_duration]" value="<?php echo esc_attr( $options['security_lockout_duration'] ); ?>" min="5" max="1440" />
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'security-ip' ) : ?>
 						<div class="abidar-admin-card" id="security-ip">
 							<h3><?php esc_html_e( '۲ب. لیست سفید IPهای مجاز', 'abidar-group' ); ?></h3>
 							<p class="description">
@@ -1272,8 +1507,10 @@ class Abidar_Admin_Settings {
 								<?php esc_html_e( 'هر IP در یک خط، یا جداشده با کاما. محدوده CIDR هم پذیرفته می‌شود (مثل 198.51.100.0/24).', 'abidar-group' ); ?>
 							</p>
 						</div>
+						<?php endif; ?>
 
-						<div class="abidar-admin-card">
+						<?php if ( $active_card === 'security-antispam' ) : ?>
+						<div class="abidar-admin-card" id="security-antispam">
 							<h3><?php esc_html_e( '۳. جلوگیری از اسپم و سخت‌سازی هسته وردپرس', 'abidar-group' ); ?></h3>
 							<label class="abidar-checkbox-label">
 								<input type="checkbox" name="abidar[security_antispam_honeypot]" value="1" <?php checked( $options['security_antispam_honeypot'], true ); ?> />
@@ -1307,7 +1544,9 @@ class Abidar_Admin_Settings {
 								<?php esc_html_e( 'ارسال هدرهای امنیتی HTTP (XSS-Protection, Nosniff, Referrer-Policy)', 'abidar-group' ); ?>
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'security-log' ) : ?>
 						<div class="abidar-admin-card" id="security-log">
 							<h3><?php esc_html_e( '۴. گزارش رویدادهای امنیتی', 'abidar-group' ); ?></h3>
 							<?php
@@ -1473,6 +1712,7 @@ class Abidar_Admin_Settings {
 								<?php endif; ?>
 							<?php endif; ?>
 						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -1482,6 +1722,7 @@ class Abidar_Admin_Settings {
 				<section class="abidar-admin-panel <?php echo ( 'languages' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="languages" aria-hidden="<?php echo ( 'languages' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'مدیریت سیستم چندزبانه (فارسی، انگلیسی، چینی + افزودن زبان جدید)', 'abidar-group' ); ?></h2>
 					<div class="abidar-admin-grid">
+						<?php if ( $active_card === 'lang-default' ) : ?>
 						<div class="abidar-admin-card" id="lang-default">
 							<h3><?php esc_html_e( 'سه زبان پیش‌فرض فعال در هسته قالب', 'abidar-group' ); ?></h3>
 							<p><?php esc_html_e( 'زبان‌های فارسی (RTL)، انگلیسی (LTR) و چینی (中文 LTR) به صورت پیش‌فرض با دیکشنری کامل در قالب فعال هستند.', 'abidar-group' ); ?></p>
@@ -1518,7 +1759,9 @@ class Abidar_Admin_Settings {
 								</select>
 							</label>
 						</div>
+						<?php endif; ?>
 
+						<?php if ( $active_card === 'lang-custom' ) : ?>
 						<div class="abidar-admin-card" id="lang-custom">
 							<h3><?php esc_html_e( 'افزودن زبان‌های اضافی (جدا از سه زبان پیش‌فرض)', 'abidar-group' ); ?></h3>
 							<p class="description">
@@ -1555,6 +1798,7 @@ class Abidar_Admin_Settings {
 								<?php esc_html_e( 'پس از افزودن، زبان جدید بلافاصله در سوییچر زبان هدر و المان المنتور نمایش داده می‌شود.', 'abidar-group' ); ?>
 							</p>
 						</div>
+						<?php endif; ?>
 					</div>
 				</section>
 
@@ -1563,6 +1807,7 @@ class Abidar_Admin_Settings {
 				     ================================================================ -->
 				<section class="abidar-admin-panel <?php echo ( 'demo' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="demo" aria-hidden="<?php echo ( 'demo' === $active_tab ) ? 'false' : 'true'; ?>">
 					<h2><?php esc_html_e( 'ساخت خودکار برگه‌های دمو با صفحه‌ساز المنتور', 'abidar-group' ); ?></h2>
+					<?php if ( $active_card === 'demo-import' ) : ?>
 					<div class="abidar-admin-card" id="demo-import">
 						<p><?php esc_html_e( 'با کلیک روی دکمه زیر، تمامی ۷ برگه اصلی (صفحه اصلی، درباره ما، خدمات، پروژه‌ها، تیم ما، مدارک و اسناد، تماس با ما) در بخش «برگه‌ها»ی وردپرس ایجاد شده و ساختار کامل المان‌های اختصاصی المنتور روی آن‌ها بارگذاری می‌گردد.', 'abidar-group' ); ?></p>
 						<button type="button" class="button button-primary button-hero" id="abidar-run-demo-importer">
@@ -1570,17 +1815,44 @@ class Abidar_Admin_Settings {
 						</button>
 						<div id="abidar-demo-import-status" style="margin-top:16px;"></div>
 					</div>
+					<?php endif; ?>
 				</section>
 
-				<section id="diagnostics-status" class="abidar-admin-panel <?php echo ( 'diagnostics' === $active_tab ) ? 'is-active' : ''; ?>" data-tab-panel="diagnostics" aria-hidden="<?php echo ( 'diagnostics' === $active_tab ) ? 'false' : 'true'; ?>">
+				<?php if ( $active_card === 'diagnostics-status' ) : ?>
+				<section id="diagnostics-status" class="abidar-admin-panel is-active" data-tab-panel="diagnostics" aria-hidden="false">
 					<h2><?php esc_html_e( 'عیب‌یابی ویرایشگر المنتور', 'abidar-group' ); ?></h2>
 					<?php self::render_diagnostics_panel(); ?>
 				</section>
+				<?php endif; ?>
 
 				<div class="abidar-admin-footer">
-					<button type="submit" class="button button-primary button-large">
-						<?php esc_html_e( 'ذخیره تمامی تنظیمات قالب گروه آبیدر', 'abidar-group' ); ?>
-					</button>
+					<div class="abidar-admin-footer__nav">
+						<?php if ( $prev_page ) : ?>
+							<a class="button" href="<?php echo esc_url( add_query_arg( array( 'page' => 'abidar-settings', 'tab' => $prev_page['group'], 'card' => $prev_page['card'] ), admin_url( 'admin.php' ) ) ); ?>">
+								<span aria-hidden="true">→</span>
+								<?php echo esc_html( $prev_page['label'] ); ?>
+							</a>
+						<?php endif; ?>
+
+						<?php if ( $next_page ) : ?>
+							<a class="button" href="<?php echo esc_url( add_query_arg( array( 'page' => 'abidar-settings', 'tab' => $next_page['group'], 'card' => $next_page['card'] ), admin_url( 'admin.php' ) ) ); ?>">
+								<?php echo esc_html( $next_page['label'] ); ?>
+								<span aria-hidden="true">←</span>
+							</a>
+						<?php endif; ?>
+					</div>
+
+					<div class="abidar-admin-footer__save">
+						<button type="submit" class="button button-primary button-large">
+							<?php
+							printf(
+								/* translators: %s: settings page name. */
+								esc_html__( 'ذخیرهٔ «%s»', 'abidar-group' ),
+								esc_html( $card_label )
+							);
+							?>
+						</button>
+					</div>
 				</div>
 			</form>
 

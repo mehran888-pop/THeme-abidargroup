@@ -63,108 +63,62 @@
 	};
 
 	/* ======================================================================
-	 * 02. VERTICAL SETTINGS MENU
+	 * 02. SETTINGS MENU (per-page navigation)
 	 * ====================================================================
-	 * سایدبار عمودی: هر گروه اصلی یک پنل کامل نشان می‌دهد و زیرگروه‌ها
-	 * داخل همان پنل به بخش مربوطه اسکرول می‌کنند. چون همه چیز در یک فرم
-	 * است، جابه‌جایی بین گروه‌ها هیچ ورودی‌ای را از دست نمی‌دهد.
+	 * با تفکیک صفحات، هر گروه و زیرگروه یک آدرس واقعی است و مرورگر خودش
+	 * ناوبری را انجام می‌دهد. پس اینجا هیچ preventDefault و هیچ سوییچ
+	 * سمت‌کلاینتی نداریم — اگر داشته باشیم، کلیک روی گروه فقط یک پنل
+	 * خالی نشان می‌دهد و صفحه عوض نمی‌شود.
+	 *
+	 * فقط دو کار باقی می‌ماند: بستن سایدبار موبایل بعد از انتخاب، و
+	 * بازکردن گروهِ فعال.
 	 */
 	const initSettingsMenu = () => {
-		const menuLinks = $( '.abidar-admin-menu__link' );
-		const panels = $( '.abidar-admin-panel' );
-		const hiddenInput = $( '#abidar-active-tab-input' );
-		const panelInput = $( '[data-abidar-panel-mirror]' );
+		const groups = $( '.abidar-admin-menu__group' );
 
-		if ( ! menuLinks.length || ! panels.length ) {
+		if ( ! groups.length ) {
 			return;
 		}
 
-		/**
-		 * فعال کردن یک گروه: پنلش را نشان می‌دهد و بقیه را پنهان می‌کند.
-		 *
-		 * @param {string} target شناسه گروه.
-		 */
-		const activateGroup = ( target ) => {
-			menuLinks
-				.removeClass( 'is-active' )
-				.attr( 'aria-expanded', 'false' )
-				.closest( '.abidar-admin-menu__group' )
-				.removeClass( 'is-active' );
+		// گروهی که صفحهٔ جاری در آن است باز می‌ماند؛ بقیه جمع می‌شوند.
+		groups.each( function () {
+			const group = $( this );
+			group.toggleClass( 'is-active', group.find( '.abidar-admin-submenu__link.is-active' ).length > 0 );
+		} );
 
-			const link = menuLinks.filter( '[data-tab-target="' + target + '"]' );
-			link.addClass( 'is-active' )
-				.attr( 'aria-expanded', 'true' )
-				.closest( '.abidar-admin-menu__group' )
-				.addClass( 'is-active' );
+		// روی موبایل، بعد از انتخاب یک صفحه سایدبار بسته شود.
+		$( '.abidar-admin-menu__link, .abidar-admin-submenu__link' ).on( 'click', () => {
+			const sidebar = $( '.abidar-admin-sidebar' );
 
-			panels.removeClass( 'is-active' ).attr( 'aria-hidden', 'true' );
-			$( '[data-tab-panel="' + target + '"]' ).addClass( 'is-active' ).attr( 'aria-hidden', 'false' );
-
-			if ( hiddenInput.length ) {
-				hiddenInput.val( target );
-			}
-
-			if ( panelInput.length ) {
-				panelInput.val( target );
-			}
-		};
-
-		menuLinks.on( 'click', function ( event ) {
-			const target = $( this ).data( 'tab-target' );
-
-			if ( ! target || ! $( '[data-tab-panel="' + target + '"]' ).length ) {
+			if ( ! sidebar.length ) {
 				return;
 			}
 
-			event.preventDefault();
-			activateGroup( target );
+			// matchMedia در همهٔ محیط‌ها موجود نیست؛ نبودش نباید ناوبری را بشکند.
+			const isNarrow = 'function' !== typeof window.matchMedia
+				|| window.matchMedia( '(max-width: 960px)' ).matches;
 
-			// آدرس صفحه به‌روز می‌شود تا رفرش روی همان گروه بماند.
-			if ( window.history && window.history.replaceState ) {
-				const url = new URL( window.location.href );
-				url.searchParams.set( 'page', 'abidar-settings' );
-				url.searchParams.set( 'tab', target );
-				window.history.replaceState( {}, '', url.toString() );
-			}
-
-			// در موبایل، بعد از انتخاب گروه صفحه به بالای محتوا برمی‌گردد.
-			const content = $( '.abidar-admin-content' );
-			if ( content.length && window.matchMedia( '(max-width: 960px)' ).matches ) {
-				window.scrollTo( { top: content.offset().top - 40, behavior: 'smooth' } );
+			if ( isNarrow ) {
+				sidebar.removeClass( 'is-open' );
+				$( '#abidar-menu-toggle' ).attr( 'aria-expanded', 'false' );
 			}
 		} );
 
-		/**
-		 * زیرگروه‌ها: اسکرول نرم به بخش مربوطه داخل همان پنل.
+		/*
+		 * اگر لینک قدیمی با #anchor باز شود (نشانه‌گذاری نسخه‌های قبل)، به
+		 * صفحهٔ همان کارت هدایت می‌شود تا کاربر به بن‌بست نخورد.
 		 */
-		$( document ).on( 'click', '.abidar-admin-submenu__link', function ( event ) {
-			const anchor = $( this ).data( 'scroll-target' );
-			if ( ! anchor ) {
-				return;
-			}
-
-			const section = document.getElementById( anchor );
-			if ( ! section ) {
-				return;
-			}
-
-			event.preventDefault();
-			section.scrollIntoView( { behavior: 'smooth', block: 'start' } );
-
-			$( '.abidar-admin-submenu__link' ).removeClass( 'is-active' );
-			$( this ).addClass( 'is-active' );
-
-			// بخش هدف چند لحظه هایلایت می‌شود تا کاربر بفهمد کجا رفت.
-			$( section ).addClass( 'is-highlighted' );
-			window.setTimeout( () => $( section ).removeClass( 'is-highlighted' ), 1400 );
-		} );
-
-		// اگر آدرس صفحه شامل #anchor باشد، بعد از بارگذاری همان بخش باز شود.
 		if ( window.location.hash ) {
 			const hash = window.location.hash.replace( '#', '' );
-			const target = document.getElementById( hash );
-			if ( target ) {
-				window.setTimeout( () => target.scrollIntoView( { behavior: 'smooth', block: 'start' } ), 200 );
+			const link = $( '.abidar-admin-submenu__link[data-scroll-target="' + hash + '"], #' + hash );
+
+			if ( link.length ) {
+				window.setTimeout( () => {
+					const el = document.getElementById( hash );
+					if ( el ) {
+						el.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+					}
+				}, 200 );
 			}
 		}
 	};
@@ -189,7 +143,10 @@
 
 		// انتخاب یک گروه، سایدبار موبایل را می‌بندد.
 		$( document ).on( 'click', '.abidar-admin-menu__link', () => {
-			if ( window.matchMedia( '(max-width: 960px)' ).matches ) {
+			const isNarrow = 'function' !== typeof window.matchMedia
+				|| window.matchMedia( '(max-width: 960px)' ).matches;
+
+			if ( isNarrow ) {
 				sidebar.removeClass( 'is-open' );
 				toggle.attr( 'aria-expanded', 'false' );
 			}
